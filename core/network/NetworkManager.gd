@@ -6,13 +6,28 @@ var current_role: Role = Role.CLIENT
 var server_port: int = 9797
 var hub_server_port: int = 9797
 var dungeon_server_port: int = 9798
-var server_address: String = "34.158.30.12"
+var server_address: String = "127.0.0.1"
+#var server_address: String = "34.158.30.12"
 
 func _ready() -> void:
 	_parse_arguments()
 	
 	if current_role != Role.CLIENT:
 		start_server()
+	else:
+		# Clients listen for connection to hide loading screen
+		multiplayer.connected_to_server.connect(_on_connected_ok)
+		multiplayer.connection_failed.connect(_on_connected_fail)
+
+func _on_connected_ok():
+	print("[NetworkManager] Connected to server successfully.")
+	SceneManager.show_loading_screen(false)
+
+func _on_connected_fail():
+	print("[NetworkManager] Failed to connect to server.")
+	SceneManager.show_loading_screen(false)
+	# Maybe return to main menu here
+	SceneManager._load_scene(SceneManager.MENU_SCENE)
 
 func _parse_arguments() -> void:
 	# Use user arguments (passed after --)

@@ -47,6 +47,11 @@ Utilisation de la physique 3D pour les énigmes et le combat.
 Communication
 Mix de chat textuel (pour le RP et le commerce), emotes contextuelles et signes visuels (grades).
 
+L'Interaction Vocale (Spatial VOIP)
+Système de voix de proximité 3D (Spatial Audio) utilisant le codec Opus pour la performance.
+Indicateur visuel au-dessus du joueur lors de la parole.
+Réduction du bruit (RNNoise) et détection d'activité (VAD) avec Hang-Time pour une communication fluide.
+
 4. DIRECTION TECHNIQUE & ARTISTIQUE
 Moteur : 3D (pour l'immersion, la verticalité et la gestion des ombres portées).
 

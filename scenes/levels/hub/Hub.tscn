@@ -6,7 +6,7 @@
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_n3u0n"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_tgd1a"]
-size = Vector3(1.9858398, 0.027832031, 1.9937744)
+size = Vector3(1.9858398, 0.016174316, 1.9937744)
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_n5qrj"]
 
@@ -33,12 +33,12 @@ ambient_light_color = Color(0.93611366, 0.79331195, 0.93645346, 1)
 [sub_resource type="BoxShape3D" id="BoxShape3D_n5qrj"]
 size = Vector3(1, 2.6278076, 2.6778564)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_appr8"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_n3u0n"]
 transparency = 1
 albedo_color = Color(0, 0.6745098, 0.84313726, 0.7372549)
 
 [sub_resource type="BoxMesh" id="BoxMesh_aibxe"]
-material = SubResource("StandardMaterial3D_appr8")
+material = SubResource("StandardMaterial3D_n3u0n")
 
 [node name="Hub" type="Node3D" unique_id=1139020406]
 
@@ -57,7 +57,7 @@ transform = Transform3D(20, 0, 0, 0, 20, 0, 0, 0, 20, 0, 0, 0)
 physics_material_override = SubResource("PhysicsMaterial_n3u0n")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D" unique_id=1908130591]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0041503906, -8.189678e-05, -0.004333496)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0041503906, -0.005910754, -0.004333496)
 shape = SubResource("BoxShape3D_tgd1a")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D" unique_id=1934463278]
@@ -66,13 +66,20 @@ mesh = SubResource("PlaneMesh_n5qrj")
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=289860103]
 environment = SubResource("Environment_appr8")
 
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1436785091]
+transform = Transform3D(1, 0, 0, 0, 0.021622958, 0.99976623, 0, -0.99976623, 0.021622958, 1.707264, 5.0209494, 0)
+shadow_enabled = true
+
 [node name="Portal" type="Area3D" parent="." unique_id=1749710094]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.988897, 0, 0)
 script = ExtResource("2_tgd1a")
+target_scene = "uid://c7u4hx7klv3ag"
+target_port = 9798
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Portal" unique_id=404938700]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19.113758, 1.3296664, 0.08692384)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.57992697, 1.3296664, 0.08692384)
 shape = SubResource("BoxShape3D_n5qrj")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Portal" unique_id=69346872]
-transform = Transform3D(1, 0, 0, 0, 3.047385, 0, 0, 0, 2.7817354, 19.167425, 1.1232029, 0)
+transform = Transform3D(1, 0, 0, 0, 3.047385, 0, 0, 0, 2.7817354, 0.63359404, 1.1232029, 0)
 mesh = SubResource("BoxMesh_aibxe")

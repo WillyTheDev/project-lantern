@@ -1,11 +1,12 @@
 [gd_scene format=3 uid="uid://c7u4hx7klv3ag"]
 
 [ext_resource type="Script" uid="uid://upprqrl0a8v5" path="res://scenes/levels/dungeon/dungeon_multi_spawner.gd" id="1_1xixt"]
+[ext_resource type="Script" uid="uid://d1rhrdgwi7k5b" path="res://scenes/objects/Portal.gd" id="2_58ngf"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_5mhws"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1xixt"]
-size = Vector3(1.9858398, 0.027832031, 1.9937744)
+size = Vector3(1.9858398, 0.017333984, 1.9937744)
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_58ngf"]
 
@@ -29,6 +30,16 @@ sky = SubResource("Sky_n5qrj")
 ambient_light_source = 3
 ambient_light_color = Color(0.93611366, 0.79331195, 0.93645346, 1)
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_iuasy"]
+size = Vector3(1, 2.6278076, 2.6778564)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_n3u0n"]
+transparency = 1
+albedo_color = Color(0, 0.6745098, 0.84313726, 0.7372549)
+
+[sub_resource type="BoxMesh" id="BoxMesh_aaol2"]
+material = SubResource("StandardMaterial3D_n3u0n")
+
 [node name="Dungeon" type="Node3D" unique_id=14728333]
 
 [node name="MultiplayerPlayerSpawner" type="MultiplayerSpawner" parent="." unique_id=583756910]
@@ -42,11 +53,11 @@ unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7171544, 0)
 
 [node name="StaticBody3D" type="StaticBody3D" parent="." unique_id=65014870]
-transform = Transform3D(20, 0, 0, 0, 20, 0, 0, 0, 20, 0, 0, 0)
+transform = Transform3D(20, 0, 0, 0, 20, 0, 0, 0, 20, 0, -0.40124512, 0)
 physics_material_override = SubResource("PhysicsMaterial_5mhws")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D" unique_id=947196811]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0041503906, -8.189678e-05, -0.004333496)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0041503906, -0.00533092, -0.004333496)
 shape = SubResource("BoxShape3D_1xixt")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D" unique_id=1975323952]
@@ -54,3 +65,20 @@ mesh = SubResource("PlaneMesh_58ngf")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=2037289134]
 environment = SubResource("Environment_rxchr")
+
+[node name="Portal" type="Area3D" parent="." unique_id=1691893705]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.988897, 0, 0)
+script = ExtResource("2_58ngf")
+target_scene = "uid://bd01yoma7plap"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Portal" unique_id=1290228493]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.57992697, 1.3296664, 0.08692384)
+shape = SubResource("BoxShape3D_iuasy")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Portal" unique_id=2137339449]
+transform = Transform3D(1, 0, 0, 0, 3.047385, 0, 0, 0, 2.7817354, 0.63359404, 1.1232029, 0)
+mesh = SubResource("BoxMesh_aaol2")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1817687877]
+transform = Transform3D(1, 0, 0, 0, 0.021622956, 0.9997662, 0, -0.9997662, 0.021622956, 0, 8.211371, 0)
+shadow_enabled = true

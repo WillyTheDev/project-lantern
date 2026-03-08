@@ -15,10 +15,16 @@ run/main_scene="uid://bd01yoma7plap"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
+[audio]
+
+driver/enable_input=true
+driver/mix_rate=48000
+
 [autoload]
 
 NetworkManager="*res://core/network/NetworkManager.gd"
 SceneManager="*res://core/scene_manager/SceneManager.gd"
+VoiceManager="*res://core/network/VoiceManager.gd"
 
 [input]
 

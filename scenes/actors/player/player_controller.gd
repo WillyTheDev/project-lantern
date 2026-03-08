@@ -21,6 +21,12 @@ extends CharacterBody3D
 # This is the variable you will add to the MultiplayerSynchronizer!
 @export var shared_velocity: Vector3 = Vector3.ZERO
 
+# VOIP Variables
+var voice_playback: AudioStreamOpusChunked
+var voice_player: AudioStreamPlayer3D
+var local_mic_player: AudioStreamPlayer
+var voice_timer: float = 0.0
+
 const MOUSE_SENSIBILITY = 0.002
 const COYOTE_TIME = 0.15
 var coyote_timer = 0.0
@@ -36,23 +42,78 @@ func _ready() -> void:
 	if is_multiplayer_authority():
 		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 		$CameraPivot/SpringArm3D/Camera3D.make_current()
+		
+		# --- LOCAL MIC CAPTURE SETUP ---
+		# Create an AudioStreamPlayer that uses the Microphone stream
+		# and sends its output to our custom capture bus
+		local_mic_player = AudioStreamPlayer.new()
+		local_mic_player.stream = AudioStreamMicrophone.new()
+		local_mic_player.bus = VoiceManager.VOICE_BUS_NAME
+		add_child(local_mic_player)
+		local_mic_player.play()
+		print("[Player] Local mic capture started for player: ", player_id)
 	else:
 		$CameraPivot/SpringArm3D/Camera3D.current = false
+		
+		# --- REMOTE PLAYER VOIP SETUP ---
+		# Create a 3D player so we can hear this specific peer in 3D space
+		voice_player = AudioStreamPlayer3D.new()
+		voice_playback = AudioStreamOpusChunked.new()
+		voice_player.stream = voice_playback
+		# Standard proximity settings
+		voice_player.max_distance = 25.0
+		voice_player.unit_size = 5.0
+		add_child(voice_player)
+		voice_player.play()
+		
+		# Listen for voice packets for this specific peer
+		VoiceManager.voice_packet_received.connect(_on_voice_packet_received)
+		print("[Player] Remote spatial VOIP initialized for player: ", player_id)
 	
 	_update_nametag()
 
+func _on_voice_packet_received(peer_id: int, packet: PackedByteArray) -> void:
+	# Only process if the packet belongs to THIS player instance
+	if peer_id == player_id and voice_playback:
+		voice_timer = 0.2 # Keep indicator visible for ~200ms after last packet
+		if voice_playback.chunk_space_available():
+			voice_playback.push_opus_packet(packet, 0, 0)
+
 func _unhandled_input(event: InputEvent) -> void:
 	if not is_multiplayer_authority(): return
-	if event is InputEventMouseMotion:
+	if event is InputEventMouseMotion and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
 		rotate_y(-event.relative.x * MOUSE_SENSIBILITY)
 
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
-		if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
-			Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-		else:
-			Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+		_toggle_settings_menu()
+
+func _toggle_settings_menu() -> void:
+	var settings_scene = preload("res://ui/SettingsMenu.tscn")
+	# Check if menu is already open
+	var existing_menu = get_tree().root.get_node_or_null("SettingsMenu")
+	
+	if existing_menu:
+		existing_menu.queue_free()
+		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	else:
+		var menu = settings_scene.instantiate()
+		menu.name = "SettingsMenu"
+		get_tree().root.add_child(menu)
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
 func _physics_process(delta: float) -> void:
+	# --- VOICE ACTIVITY VISUALS ---
+	if is_multiplayer_authority():
+		# Sync local visual with the logic in VoiceManager
+		if VoiceManager.is_talking:
+			voice_timer = 0.2
+	
+	if voice_timer > 0:
+		voice_timer -= delta
+		$VoiceIndicator.visible = true
+	else:
+		$VoiceIndicator.visible = false
+
 	if is_multiplayer_authority():
 		# 1. Horizontal Movement
 		var input_dir = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
