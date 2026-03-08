@@ -1,0 +1,56 @@
+[gd_scene format=3 uid="uid://c7u4hx7klv3ag"]
+
+[ext_resource type="Script" uid="uid://upprqrl0a8v5" path="res://scenes/levels/dungeon/dungeon_multi_spawner.gd" id="1_1xixt"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_5mhws"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1xixt"]
+size = Vector3(1.9858398, 0.027832031, 1.9937744)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_58ngf"]
+
+[sub_resource type="Gradient" id="Gradient_1xixt"]
+colors = PackedColorArray(0.75502145, 0.2294415, 0.27381587, 1, 1, 1, 1, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_n3u0n"]
+gradient = SubResource("Gradient_1xixt")
+fill_from = Vector2(0.58641976, 1)
+fill_to = Vector2(0.54526746, 0)
+
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_aaol2"]
+panorama = SubResource("GradientTexture2D_n3u0n")
+
+[sub_resource type="Sky" id="Sky_n5qrj"]
+sky_material = SubResource("PanoramaSkyMaterial_aaol2")
+
+[sub_resource type="Environment" id="Environment_rxchr"]
+background_mode = 2
+sky = SubResource("Sky_n5qrj")
+ambient_light_source = 3
+ambient_light_color = Color(0.93611366, 0.79331195, 0.93645346, 1)
+
+[node name="Dungeon" type="Node3D" unique_id=14728333]
+
+[node name="MultiplayerPlayerSpawner" type="MultiplayerSpawner" parent="." unique_id=583756910]
+unique_name_in_owner = true
+spawn_path = NodePath("..")
+spawn_limit = 200
+script = ExtResource("1_1xixt")
+
+[node name="SpawnPoint" type="Node3D" parent="." unique_id=390733703]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7171544, 0)
+
+[node name="StaticBody3D" type="StaticBody3D" parent="." unique_id=65014870]
+transform = Transform3D(20, 0, 0, 0, 20, 0, 0, 0, 20, 0, 0, 0)
+physics_material_override = SubResource("PhysicsMaterial_5mhws")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D" unique_id=947196811]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0041503906, -8.189678e-05, -0.004333496)
+shape = SubResource("BoxShape3D_1xixt")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D" unique_id=1975323952]
+mesh = SubResource("PlaneMesh_58ngf")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=2037289134]
+environment = SubResource("Environment_rxchr")

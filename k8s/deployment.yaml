@@ -1,0 +1,147 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: project-lantern
+---
+# --- POCKETBASE (Internal Database) ---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pb-data-pvc
+  namespace: project-lantern
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pocketbase
+  namespace: project-lantern
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pocketbase
+  template:
+    metadata:
+      labels:
+        app: pocketbase
+    spec:
+      containers:
+        - name: pocketbase
+          image: adrianmusante/pocketbase:latest
+          ports:
+            - containerPort: 8090
+          volumeMounts:
+            - name: pb-data
+              mountPath: /pb/pb_data
+      volumes:
+        - name: pb-data
+          persistentVolumeClaim:
+            claimName: pb-data-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pocketbase
+  namespace: project-lantern
+spec:
+  selector:
+    app: pocketbase
+  ports:
+    - protocol: TCP
+      port: 8090
+      targetPort: 8090
+---
+# --- HUB SERVER ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hub-server
+  namespace: project-lantern
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hub-server
+  template:
+    metadata:
+      labels:
+        app: hub-server
+    spec:
+      imagePullSecrets:
+        - name: harbor-pull-secret
+      containers:
+        - name: game
+          image: harbor.kube.dungeonmomo.cc/project-lantern/project-lantern:latest
+          args: ["--headless", "--", "--hub"]
+          ports:
+            - containerPort: 9797
+              protocol: UDP
+          env:
+            - name: PB_URL
+              value: "http://pocketbase:8090"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hub-service
+  namespace: project-lantern
+spec:
+  type: NodePort
+  selector:
+    app: hub-server
+  ports:
+    - protocol: UDP
+      port: 9797
+      targetPort: 9797
+      nodePort: 31077
+---
+# --- DUNGEON SERVER ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dungeon-server
+  namespace: project-lantern
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dungeon-server
+  template:
+    metadata:
+      labels:
+        app: dungeon-server
+    spec:
+      imagePullSecrets:
+        - name: harbor-pull-secret
+      containers:
+        - name: game
+          image: harbor.kube.dungeonmomo.cc/project-lantern/project-lantern:latest
+          args: ["--headless", "--", "--dungeon"]
+          ports:
+            - containerPort: 9798
+              protocol: UDP
+          env:
+            - name: PB_URL
+              value: "http://pocketbase:8090"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dungeon-service
+  namespace: project-lantern
+spec:
+  type: NodePort
+  selector:
+    app: dungeon-server
+  ports:
+    - protocol: UDP
+      port: 9798
+      targetPort: 9798
+      nodePort: 32145

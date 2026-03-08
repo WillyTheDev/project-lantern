@@ -1,0 +1,78 @@
+[gd_scene format=3 uid="uid://bd01yoma7plap"]
+
+[ext_resource type="Script" uid="uid://lvuliw2qx4yr" path="res://scenes/levels/hub/hub_mult_spawner.gd" id="1_swoon"]
+[ext_resource type="Script" uid="uid://d1rhrdgwi7k5b" path="res://scenes/objects/Portal.gd" id="2_tgd1a"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_n3u0n"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_tgd1a"]
+size = Vector3(1.9858398, 0.027832031, 1.9937744)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_n5qrj"]
+
+[sub_resource type="Gradient" id="Gradient_swoon"]
+colors = PackedColorArray(0.5658063, 0.26241004, 0.10232607, 1, 0, 0.3855271, 0.92006344, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_swoon"]
+gradient = SubResource("Gradient_swoon")
+fill_from = Vector2(0.58641976, 1)
+fill_to = Vector2(0.54526746, 0)
+
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_tgd1a"]
+panorama = SubResource("GradientTexture2D_swoon")
+
+[sub_resource type="Sky" id="Sky_n3u0n"]
+sky_material = SubResource("PanoramaSkyMaterial_tgd1a")
+
+[sub_resource type="Environment" id="Environment_appr8"]
+background_mode = 2
+sky = SubResource("Sky_n3u0n")
+ambient_light_source = 3
+ambient_light_color = Color(0.93611366, 0.79331195, 0.93645346, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_n5qrj"]
+size = Vector3(1, 2.6278076, 2.6778564)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_appr8"]
+transparency = 1
+albedo_color = Color(0, 0.6745098, 0.84313726, 0.7372549)
+
+[sub_resource type="BoxMesh" id="BoxMesh_aibxe"]
+material = SubResource("StandardMaterial3D_appr8")
+
+[node name="Hub" type="Node3D" unique_id=1139020406]
+
+[node name="MultiplayerPlayerSpawner" type="MultiplayerSpawner" parent="." unique_id=2055912031]
+unique_name_in_owner = true
+spawn_path = NodePath("..")
+spawn_limit = 200
+script = ExtResource("1_swoon")
+
+[node name="SpawnPoint" type="Node3D" parent="." unique_id=1346235447]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7171544, 0)
+
+[node name="StaticBody3D" type="StaticBody3D" parent="." unique_id=19407595]
+transform = Transform3D(20, 0, 0, 0, 20, 0, 0, 0, 20, 0, 0, 0)
+physics_material_override = SubResource("PhysicsMaterial_n3u0n")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D" unique_id=1908130591]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0041503906, -8.189678e-05, -0.004333496)
+shape = SubResource("BoxShape3D_tgd1a")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D" unique_id=1934463278]
+mesh = SubResource("PlaneMesh_n5qrj")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=289860103]
+environment = SubResource("Environment_appr8")
+
+[node name="Portal" type="Area3D" parent="." unique_id=1749710094]
+script = ExtResource("2_tgd1a")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Portal" unique_id=404938700]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19.113758, 1.3296664, 0.08692384)
+shape = SubResource("BoxShape3D_n5qrj")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Portal" unique_id=69346872]
+transform = Transform3D(1, 0, 0, 0, 3.047385, 0, 0, 0, 2.7817354, 19.167425, 1.1232029, 0)
+mesh = SubResource("BoxMesh_aibxe")

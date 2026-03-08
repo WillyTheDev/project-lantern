@@ -1,0 +1,40 @@
+[gd_scene format=3 uid="uid://b7ufim4k2l4x3"]
+
+[ext_resource type="Script" uid="uid://bwt2p480e8hcy" path="res://scenes/actors/player/player_camera.gd" id="1_iugxn"]
+[ext_resource type="Script" uid="uid://b4tnuu40au7c5" path="res://scenes/actors/player/player_controller.gd" id="3_imb2f"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_u84y5"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_dsx4b"]
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_7otbr"]
+properties/0/path = NodePath(".:sync_position")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath(".:shared_velocity")
+properties/1/spawn = true
+properties/1/replication_mode = 1
+
+[node name="Player" type="CharacterBody3D" unique_id=166909891]
+script = ExtResource("3_imb2f")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1985360130]
+shape = SubResource("CapsuleShape3D_u84y5")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1704242223]
+mesh = SubResource("CapsuleMesh_dsx4b")
+
+[node name="NameTag" type="Label3D" parent="." unique_id=1377280571]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3438885, 0)
+
+[node name="CameraPivot" type="Node3D" parent="." unique_id=88516118]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0, 0)
+
+[node name="SpringArm3D" type="SpringArm3D" parent="CameraPivot" unique_id=1244885865]
+
+[node name="Camera3D" type="Camera3D" parent="CameraPivot/SpringArm3D" unique_id=103338500]
+transform = Transform3D(1, 0, 0, 0, 0.98284537, 0.18443166, 0, -0.18443166, 0.98284537, 0, 0, 0)
+script = ExtResource("1_iugxn")
+
+[node name="PlayerSynchronizer" type="MultiplayerSynchronizer" parent="." unique_id=599270974]
+replication_config = SubResource("SceneReplicationConfig_7otbr")
