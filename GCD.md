@@ -6,7 +6,7 @@ Plateforme : PC (3D stylisée)
 Pilier central : L'incarnation de "l'ordinaire" dans un monde persistant où la survie dépend de la coopération et du prestige social.
 
 1. LA BOUCLE DE JEU (Core Loop)
-PRÉPARER (Le Village) : Incarner son rôle, commercer avec les autres, fabriquer ou acheter des consommables (cordes, potions, nourriture).
+PRÉPARER (Le Village) : Incarner son rôle, interagir avec le **Coffre de Provisions (Supplies Chest)** pour s'équiper, commercer avec les autres, fabriquer ou acheter des consommables (lanternes, cordes, potions, nourriture).
 
 S'AVENTURER (Le Donjon) : Entrer dans une instance instable (D&D style) avec un groupe ou en solo pour récolter des trésors et matériaux rares.
 
@@ -62,8 +62,8 @@ Infrastructure : Hybride (Hub persistant massif + Instances de donjons synchroni
 5. OBJECTIF DU PROOF OF CONCEPT (PoC)
 Réaliser une "Vertical Slice" comprenant :
 
-Un contrôleur de personnage 3D
+- Un contrôleur de personnage 3D avec inventaire persistant.
 
-Un hub miniature avec un système de "grade" visuel simple.
+- Un hub miniature avec un **Coffre de Provisions** interactif pour tester l'acquisition et la sauvegarde d'objets.
 
-Une transition fonctionnelle vers une instance de 3 salles (1 Agilité, 1 Rencontre PvPvE, 1 Sortie).
+- Une transition fonctionnelle vers une instance de 3 salles (1 Agilité, 1 Rencontre PvPvE, 1 Sortie).

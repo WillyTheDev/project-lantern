@@ -1,7 +1,8 @@
-[gd_scene format=3 uid="uid://bd01yoma7plap"]
+[gd_scene load_steps=16 format=3 uid="uid://bd01yoma7plap"]
 
 [ext_resource type="Script" uid="uid://lvuliw2qx4yr" path="res://scenes/levels/hub/hub_mult_spawner.gd" id="1_swoon"]
 [ext_resource type="Script" uid="uid://d1rhrdgwi7k5b" path="res://scenes/objects/Portal.gd" id="2_tgd1a"]
+[ext_resource type="PackedScene" path="res://scenes/objects/SuppliesChest.tscn" id="3_chest"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_n3u0n"]
 
@@ -83,3 +84,6 @@ shape = SubResource("BoxShape3D_n5qrj")
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Portal" unique_id=69346872]
 transform = Transform3D(1, 0, 0, 0, 3.047385, 0, 0, 0, 2.7817354, 0.63359404, 1.1232029, 0)
 mesh = SubResource("BoxMesh_aibxe")
+
+[node name="SuppliesChest" parent="." instance=ExtResource("3_chest")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.30872, 0, 4.41708)

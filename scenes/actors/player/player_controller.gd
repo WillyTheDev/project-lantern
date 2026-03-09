@@ -31,6 +31,8 @@ const MOUSE_SENSIBILITY = 0.002
 const COYOTE_TIME = 0.15
 var coyote_timer = 0.0
 
+var interact_ray: RayCast3D
+
 func _enter_tree() -> void:
 	set_multiplayer_authority(player_id)
 	
@@ -41,7 +43,18 @@ func _ready() -> void:
 	# Check if this specific player instance belongs to the local machine
 	if is_multiplayer_authority():
 		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-		$CameraPivot/SpringArm3D/Camera3D.make_current()
+		var camera = $CameraPivot/SpringArm3D/Camera3D
+		camera.make_current()
+		
+		# Set display name from persistence
+		display_name = PersistenceManager.current_player_name
+		
+		# --- INTERACTION SETUP ---
+		# Create a RayCast3D to detect interactable objects
+		interact_ray = RayCast3D.new()
+		interact_ray.target_position = Vector3(0, 0, -2.5) # Reach of 2.5 meters
+		interact_ray.enabled = true
+		camera.add_child(interact_ray)
 		
 		# --- LOCAL MIC CAPTURE SETUP ---
 		# Create an AudioStreamPlayer that uses the Microphone stream
@@ -86,6 +99,19 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
 		_toggle_settings_menu()
+
+	if event.is_action_pressed("interact"):
+		_try_interact()
+
+func _try_interact() -> void:
+	if interact_ray and interact_ray.is_colliding():
+		var collider = interact_ray.get_collider()
+		if collider:
+			print("[Player] Interacting with: ", collider.name)
+			if collider.has_method("interact"):
+				collider.interact(self)
+			elif collider.get_parent().has_method("interact"):
+				collider.get_parent().interact(self)
 
 func _toggle_settings_menu() -> void:
 	var settings_scene = preload("res://ui/SettingsMenu.tscn")

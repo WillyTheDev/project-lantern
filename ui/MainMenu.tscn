@@ -38,6 +38,13 @@ theme_override_font_sizes/font_size = 48
 text = "PROJECT LANTERN"
 horizontal_alignment = 1
 
+[node name="UsernameInput" type="LineEdit" parent="CenterContainer/VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+placeholder_text = "Enter Username..."
+alignment = 1
+
 [node name="JoinButton" type="Button" parent="CenterContainer/VBoxContainer"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 60)

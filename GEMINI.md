@@ -56,3 +56,21 @@ The project uses a multi-stage Dockerfile to export a Linux binary and run it in
 - `core/network/NetworkManager.gd`: Role and port management.
 - `scenes/actors/player/player_controller.gd`: Main movement and networking logic.
 - `k8s/deployment.yaml`: Kubernetes infrastructure definition.
+
+## Iterative Development Roadmap
+
+### Iteration 1: Foundation & Network Loop
+- **Goal:** Establish multi-role architecture (Client, Hub Server, Dungeon Server) and basic player synchronization.
+- **Game Loop:** Launch client -> Connect to Hub -> Move around (Sync check) -> VOIP proximity check.
+
+### Iteration 2: The Hub & Social Loop (The Preparation Pillar)
+- **Goal:** Implement the "Supplies Chest" and persistent inventory via PocketBase.
+- **Game Loop:** Connect to Hub -> Interact with Supplies Chest -> "Take" items (Lantern/Potions) -> Data saved to PocketBase.
+
+### Iteration 3: The Dungeon & Extraction Loop
+- **Goal:** Implement the transition between Hub and Dungeon, plus the extraction mechanic.
+- **Game Loop:** Hub -> Enter Dungeon Portal -> Navigate Rooms -> Reach Extraction -> Return to Hub.
+
+### Iteration 4: The Encounter & Risk Loop (PvPvE)
+- **Goal:** Introduce interactable loot and risk management when encountering other players.
+- **Game Loop:** Enter Dungeon -> Collect Loot -> Encounter Player -> Choose (Cooperate/Compete) -> Extract or Lose Loot.
