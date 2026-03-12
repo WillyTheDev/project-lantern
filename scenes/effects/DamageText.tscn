@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3 uid="uid://dmgtxt4m6v2n"]
+
+[ext_resource type="Script" path="res://scenes/effects/DamageText.gd" id="1_script"]
+
+[node name="DamageText" type="Label3D"]
+billboard = 1
+double_sided = false
+no_depth_test = true
+render_priority = 10
+outline_render_priority = 9
+text = "10"
+font_size = 64
+outline_size = 16
+script = ExtResource("1_script")

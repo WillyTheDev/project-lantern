@@ -22,7 +22,6 @@ func _on_connection_success():
 # --- SERVER SIDE CALLBACKS ---
 
 func _on_server_player_login_completed(peer_id: int, data: Dictionary):
-	print("[Hub] [Server] Login completed for peer ", peer_id, ". Waiting 0.5s for client scene transition...")
 	# Wait a bit to ensure the client has finished loading the Hub scene
 	await get_tree().create_timer(0.5).timeout
 	
@@ -33,14 +32,11 @@ func _on_server_player_login_completed(peer_id: int, data: Dictionary):
 	# Safety: Don't spawn if node already exists
 	var player_name = "Player_%d" % peer_id
 	if get_node(%MultiplayerPlayerSpawner.spawn_path).has_node(player_name):
-		print("[Hub] [Server] Player node already exists for peer ", peer_id, ". Skipping spawn.")
 		return
 
-	print("[Hub] [Server] Spawning player node for peer: ", peer_id)
 	_spawn_player(peer_id, data)
 
 func _on_peer_disconnected(peer_id: int):
-	print("[Hub] Peer disconnected: ", peer_id)
 	var player_name = "Player_%d" % peer_id
 	var spawner = %MultiplayerPlayerSpawner
 	var spawn_path = spawner.spawn_path
@@ -48,7 +44,6 @@ func _on_peer_disconnected(peer_id: int):
 	var player_node = spawn_node.get_node_or_null(player_name)
 	if player_node:
 		player_node.queue_free()
-		print("[Hub] Removed player node: ", player_name)
 
 func _spawn_player(peer_id: int, pb_data: Dictionary):
 	var spawner = %MultiplayerPlayerSpawner
@@ -65,7 +60,6 @@ func _spawn_player(peer_id: int, pb_data: Dictionary):
 
 # --- HELPER FUNCTIONS ---
 func custom_spawn(data: Dictionary) -> Node3D:
-	print("[Hub] custom_spawn called on ", "Server" if multiplayer.is_server() else "Client", " for: ", data.player_name)
 	var p = preload("res://scenes/actors/player/Player.tscn").instantiate()
 	p.name = data.player_name
 	p.player_id = data.peer_id
@@ -74,5 +68,4 @@ func custom_spawn(data: Dictionary) -> Node3D:
 		var color_array = data.name_color
 		p.name_color = Color(color_array[0], color_array[1], color_array[2], 1.0)
 	p.global_position = data.pos
-	p.scale = Vector3(0.3, 0.3, 0.3)
 	return p

@@ -99,4 +99,5 @@ func _get_my_item_data() -> Variant:
 		"hotbar": return InventoryManager.hotbar[slot_index]
 		"bag": return InventoryManager.bag[slot_index]
 		"armor": return InventoryManager.armor[slot_index]
+		"external": return InventoryManager.external_inventory[slot_index]
 	return null

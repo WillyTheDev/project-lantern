@@ -58,6 +58,24 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_bg")
 layout_mode = 2
 theme_override_constants/separation = 20
 
+[node name="ExternalSection" type="VBoxContainer" parent="InventoryOverlay/CenterContainer/PanelContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="ExternalLabel" type="Label" parent="InventoryOverlay/CenterContainer/PanelContainer/VBoxContainer/ExternalSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.180392, 0.690196, 0.490196, 1)
+text = "LOOT / CONTAINER"
+horizontal_alignment = 1
+
+[node name="ExternalGrid" type="GridContainer" parent="InventoryOverlay/CenterContainer/PanelContainer/VBoxContainer/ExternalSection"]
+unique_name_in_owner = true
+layout_mode = 2
+columns = 10
+
+[node name="HSeparator" type="HSeparator" parent="InventoryOverlay/CenterContainer/PanelContainer/VBoxContainer/ExternalSection"]
+layout_mode = 2
+
 [node name="HBoxContainer" type="HBoxContainer" parent="InventoryOverlay/CenterContainer/PanelContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 40

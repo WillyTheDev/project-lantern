@@ -4,10 +4,17 @@ extends Area3D
 @export var target_port: int = 9797
 @export var portal_name: String = "Portal"
 
+enum PortalType { STANDARD, EXTRACTION }
+@export var portal_type: PortalType = PortalType.STANDARD
+
 func _ready() -> void:
-	print("[Portal] ", portal_name, " initialized. Role: ", "Server" if multiplayer.is_server() else "Client")
-	print("[Portal] Monitoring: ", monitoring, " Monitorable: ", monitorable)
-	print("[Portal] Layer: ", collision_layer, " Mask: ", collision_mask)
+	if multiplayer.has_multiplayer_peer():
+		print("[Portal] ", portal_name, " initialized. Role: ", "Server" if multiplayer.is_server() else "Client")
+		print("[Portal] Monitoring: ", monitoring, " Monitorable: ", monitorable)
+		print("[Portal] Layer: ", collision_layer, " Mask: ", collision_mask)
+	else:
+		print("[Portal] ", portal_name, " initialized (offline/loading).")
+	
 	body_entered.connect(_on_body_entered)
 
 func _on_body_entered(body: Node) -> void:
@@ -19,6 +26,10 @@ func _on_body_entered(body: Node) -> void:
 		var peer_id = body.get_multiplayer_authority() if body.has_method("get_multiplayer_authority") else body.player_id
 		
 		if peer_id == 1: return
+		
+		if portal_type == PortalType.EXTRACTION:
+			print("[Portal] ", portal_name, ": Player ", peer_id, " EXTRACTION SUCCESS.")
+			# Future: Call InventoryManager to "secure" loot found in dungeon
 			
 		print("[Portal] ", portal_name, ": Handoff peer ", peer_id, " to port ", target_port)
 		_request_client_switch.rpc_id(peer_id, NetworkManager.server_address, target_port, target_scene)

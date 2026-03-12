@@ -34,9 +34,9 @@ This document reviews the implementation of the persistence and inventory system
 
 ## 🚀 Possible Improvements & Technical Debt
 
-### 1. Security & Auth (High Priority)
-- **Current:** Simple "Guest" login via name matching.
-- **Improvement:** Implement PocketBase's official `authWithPassword` or `authWithOAuth2` and store the `auth_token` for all subsequent requests.
+### 1. Security & Auth (✅ Addressed)
+- **Status:** Refactored to use **JWT Token Handoff**.
+- **Implementation:** PocketBase `auth-with-password` is used for initial login. A JWT session token is returned and cached. During shard transitions, the token is reused via `auth-refresh`, eliminating the need to send passwords between servers.
 
 ### 2. Validation (Multiplayer Security)
 - **Current:** The client tells the server "I have a new item."

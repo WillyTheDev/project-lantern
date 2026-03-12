@@ -7,6 +7,7 @@ func _ready() -> void:
 	var spawner = %MultiplayerPlayerSpawner
 	spawner.spawn_function = custom_spawn
 	spawner.add_spawnable_scene("res://scenes/actors/player/Player.tscn")
+	spawner.add_spawnable_scene("res://scenes/world/interactables/LootDrop.tscn")
 	
 	# Server-side connection handling for Dungeon
 	if NetworkManager.current_role == NetworkManager.Role.DUNGEON_SERVER:
@@ -19,7 +20,6 @@ func _on_peer_connected(peer_id: int):
 	_spawn_player(peer_id)
 
 func _on_peer_disconnected(peer_id: int):
-	print("[Dungeon] Peer disconnected: ", peer_id)
 	var player_name = "Player_%d" % peer_id
 	var spawner = %MultiplayerPlayerSpawner
 	var spawn_path = spawner.spawn_path
@@ -27,7 +27,6 @@ func _on_peer_disconnected(peer_id: int):
 	var player_node = spawn_node.get_node_or_null(player_name)
 	if player_node:
 		player_node.queue_free()
-		print("[Dungeon] Removed player node: ", player_name)
 
 func _spawn_player(peer_id: int):
 	var spawner = %MultiplayerPlayerSpawner
@@ -44,13 +43,20 @@ func _spawn_player(peer_id: int):
 
 # --- HELPER FUNCTIONS ---
 func custom_spawn(data: Dictionary) -> Node3D:
-	var p = preload("res://scenes/actors/player/Player.tscn").instantiate()
-	p.name = data.player_name
-	p.player_id = data.peer_id
-	p.display_name = data.get("display_name", "Player_%d" % data.peer_id)
-	if "name_color" in data:
-		var color_array = data.name_color
-		p.name_color = Color(color_array[0], color_array[1], color_array[2], 1.0)
-	p.global_position = data.pos
-	p.scale = Vector3(0.3, 0.3, 0.3)
-	return p
+	var type = data.get("type", "player")
+	var node: Node3D
+	
+	if type == "loot":
+		node = preload("res://scenes/world/interactables/LootDrop.tscn").instantiate()
+		node.items = data.get("items", [])
+	else:
+		node = preload("res://scenes/actors/player/Player.tscn").instantiate()
+		node.name = data.player_name
+		node.player_id = data.peer_id
+		node.display_name = data.get("display_name", "Player_%d" % data.peer_id)
+		if "name_color" in data:
+			var color_array = data.name_color
+			node.name_color = Color(color_array[0], color_array[1], color_array[2], 1.0)
+		
+	node.global_position = data.pos
+	return node

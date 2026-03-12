@@ -6,6 +6,8 @@ extends CharacterBody3D
 @export var fall_acceleration = 20.0
 @export var interpolation_speed = 15.0
 @export var sync_position: Vector3
+@export var sync_rotation: float
+@export var sync_pivot_rotation: float # New variable for pitch
 
 @export var player_id: int = 1
 @export var player_name: String = ""
@@ -20,6 +22,16 @@ extends CharacterBody3D
 
 # This is the variable you will add to the MultiplayerSynchronizer!
 @export var shared_velocity: Vector3 = Vector3.ZERO
+
+# Vitality
+@export var max_health: float = 100.0
+@export var current_health: float = 100.0:
+	set(value):
+		current_health = clamp(value, 0, max_health)
+		if is_inside_tree():
+			_update_health_ui()
+		if multiplayer.is_server() and current_health <= 0:
+			_on_death()
 
 # VOIP Variables
 var voice_playback: AudioStreamOpusChunked
@@ -37,8 +49,23 @@ func _enter_tree() -> void:
 	set_multiplayer_authority(player_id)
 	
 func _ready() -> void:
+	# Enforce correct world scale
+	scale = Vector3(0.3, 0.3, 0.3)
+	
+	add_to_group("players")
 	# Exclude the player's own body from SpringArm3D collision
 	$CameraPivot/SpringArm3D.add_excluded_object(get_rid())
+
+	# --- INTERACTION SETUP (Required on both Client and Server for Auth validation) ---
+	interact_ray = RayCast3D.new()
+	interact_ray.position = Vector3(0, 1.2, 0)
+	# IMPORTANT: Point toward NEGATIVE Z (Forward) relative to the CameraPivot
+	# Since CameraPivot has a 180deg Y rotation in TSCN, we need to be careful.
+	# Let's use a very long ray for testing.
+	interact_ray.target_position = Vector3(0, 0, -10.0) 
+	interact_ray.enabled = true
+	interact_ray.add_exception(self)
+	$CameraPivot.add_child(interact_ray)
 
 	# Check if this specific player instance belongs to the local machine
 	if is_multiplayer_authority():
@@ -51,14 +78,6 @@ func _ready() -> void:
 		
 		# Set display name from persistence
 		display_name = PersistenceManager.current_player_name
-		
-		# --- INTERACTION SETUP ---
-		interact_ray = RayCast3D.new()
-		interact_ray.position.y = 0.5
-		interact_ray.target_position = Vector3(0, 0, 2.5) 
-		interact_ray.enabled = true
-		interact_ray.add_exception(self)
-		add_child(interact_ray)
 		
 		# --- INVENTORY SETUP ---
 		var inv_ui = get_node_or_null("GUILayer/InventoryUI")
@@ -78,6 +97,10 @@ func _ready() -> void:
 		add_child(local_mic_player)
 		local_mic_player.play()
 		print("[Player] Local mic capture started for player: ", player_id)
+		
+		# --- STATS & HEALTH SETUP ---
+		InventoryManager.stats_updated.connect(_on_stats_updated)
+		_on_stats_updated(InventoryManager.total_stats)
 	else:
 		$CameraPivot/SpringArm3D/Camera3D.current = false
 		
@@ -146,16 +169,37 @@ func _use_held_item() -> void:
 
 func _try_interact() -> void:
 	if interact_ray:
+		interact_ray.force_raycast_update()
 		if interact_ray.is_colliding():
 			var collider = interact_ray.get_collider()
 			if collider:
-				print("[Player] Ray colliding with: ", collider.name)
-				if collider.has_method("interact"):
-					collider.interact(self)
-				elif collider.get_parent() and collider.get_parent().has_method("interact"):
-					collider.get_parent().interact(self)
+				# Send the request to the server instead of calling locally
+				_request_interact_rpc.rpc_id(1, get_path_to(collider))
 		else:
-			print("[Player] Ray not colliding. Target: ", interact_ray.target_position)
+			print("[Player] No interaction target in range.")
+
+@rpc("any_peer", "call_remote", "reliable")
+func _request_interact_rpc(object_path: NodePath) -> void:
+	if not multiplayer.is_server(): return
+	
+	# Basic validation: ensure sender is this player
+	var sender_id = multiplayer.get_remote_sender_id()
+	if sender_id != player_id: return
+	
+	var target = get_node_or_null(object_path)
+	if target:
+		# Server-side distance check
+		var dist = global_position.distance_to(target.global_position)
+		if dist <= 5.0: # Match the raycast reach (scaled)
+			if target.has_method("interact"):
+				target.interact(self)
+			elif target.get_parent() and target.get_parent().has_method("interact"):
+				target.get_parent().interact(self)
+			print("[Server] Peer ", player_id, " interacted with ", target.name)
+		else:
+			print("[Server] Interaction REJECTED: Target too far (", dist, ")")
+	else:
+		print("[Server] Interaction REJECTED: Target node not found.")
 
 func _toggle_settings_menu() -> void:
 	var settings_scene = preload("res://ui/SettingsMenu.tscn")
@@ -206,9 +250,16 @@ func _physics_process(delta: float) -> void:
 			
 		shared_velocity = velocity
 		sync_position = global_position
+		sync_rotation = rotation.y
+		sync_pivot_rotation = $CameraPivot.rotation.x
 	else:
 		velocity = shared_velocity
 		move_and_slide()
+		
+		# Apply synced rotation on server/others
+		rotation.y = sync_rotation
+		$CameraPivot.rotation.x = sync_pivot_rotation
+		
 		if global_position.distance_to(sync_position) > 2.0:
 			global_position = sync_position
 		else:
@@ -229,3 +280,100 @@ func _update_nametag() -> void:
 		nametag.text = display_name if display_name != "" else "Player"
 		nametag.modulate = name_color
 		nametag.visible = not is_multiplayer_authority()
+
+# --- COMBAT & ATTACK ---
+
+func request_attack(damage: float, range: float) -> void:
+	if not is_multiplayer_authority(): return
+	# Request the server to perform the hit check
+	_perform_attack_rpc.rpc_id(1, damage, range)
+
+@rpc("any_peer", "call_remote", "reliable")
+func _perform_attack_rpc(damage: float, range: float) -> void:
+	if not multiplayer.is_server(): return
+	
+	# Basic validation: ensure the sender is actually this player
+	var sender_id = multiplayer.get_remote_sender_id()
+	if sender_id != player_id:
+		return
+		
+	# Force update the raycast on the server to reflect the synced rotation/position
+	if interact_ray:
+		interact_ray.force_raycast_update()
+		
+		if interact_ray.is_colliding():
+			var collider = interact_ray.get_collider()
+			if collider:
+				var dist = global_position.distance_to(collider.global_position)
+				# Check the object itself OR its parent for health
+				var target = collider
+				if not target.has_method("take_damage") and target.get_parent() and target.get_parent().has_method("take_damage"):
+					target = target.get_parent()
+					
+				if target.has_method("take_damage"):
+					if dist <= range + 3.0: # Generous buffer for third-person offset
+						target.take_damage(damage)
+						print("[Combat] Peer ", player_id, " hit ", target.name, " for ", damage)
+
+# --- HEALTH & STATS ---
+
+func _on_stats_updated(stats: Dictionary) -> void:
+	var stamina = stats.get("stamina", 10)
+	var old_max = max_health
+	max_health = 100.0 + (stamina - 10) * 10.0
+	
+	# If health is full, keep it full at new max. Otherwise keep current value.
+	if current_health == old_max:
+		current_health = max_health
+	
+	print("[Player] Max health updated: ", max_health, " (Stamina: ", stamina, ")")
+	
+	# Sync max health if we are authority
+	if is_multiplayer_authority():
+		_update_health_ui()
+
+func take_damage(amount: float) -> void:
+	if not multiplayer.is_server(): return
+	
+	# Since the Client is the authority of the player node,
+	# the Server must tell the Client to update their health.
+	# The Synchronizer will then sync it back to the server and other clients.
+	_apply_damage_rpc.rpc_id(player_id, amount)
+
+@rpc("any_peer", "call_local", "reliable")
+func _apply_damage_rpc(amount: float) -> void:
+	# Only allow the Server (Peer 1) to call this to prevent clients from damaging each other
+	if multiplayer.get_remote_sender_id() != 1 and not multiplayer.is_server():
+		return
+		
+	# This runs on the Client (the authority)
+	current_health -= amount
+	print("[Player] Applied ", amount, " damage. New Health: ", current_health)
+
+func _on_death() -> void:
+	if not multiplayer.is_server(): return
+	
+	print("[Player] ", display_name, " died.")
+	# For now, just respawn. In extraction loop, this will trigger exit to Hub.
+	if NetworkManager.current_role == NetworkManager.Role.DUNGEON_SERVER:
+		_trigger_extraction_fail()
+	else:
+		sync_respawn.rpc()
+		current_health = max_health
+
+func _trigger_extraction_fail() -> void:
+	# Signal the portal logic or directly transition back to hub
+	print("[Player] Extraction FAILED. Returning to Hub...")
+	# We can use the portal logic here
+	var portal = get_tree().root.find_child("Portal", true, false)
+	if portal and portal.has_method("_on_body_entered"):
+		portal._on_body_entered(self)
+
+func _update_health_ui() -> void:
+	if not is_multiplayer_authority(): return
+	
+	# We'll need to add a health bar to the GUILayer
+	var health_bar = %HealthBar if has_node("%HealthBar") else null
+	if health_bar:
+		health_bar.max_value = max_health
+		health_bar.value = current_health

@@ -1,8 +1,8 @@
-[gd_scene load_steps=7 format=3 uid="uid://b7ufim4k2l4x3"]
+[gd_scene format=3 uid="uid://b7ufim4k2l4x3"]
 
 [ext_resource type="Script" uid="uid://bwt2p480e8hcy" path="res://scenes/actors/player/player_camera.gd" id="1_iugxn"]
 [ext_resource type="Script" uid="uid://b4tnuu40au7c5" path="res://scenes/actors/player/player_controller.gd" id="3_imb2f"]
-[ext_resource type="PackedScene" uid="uid://dohmcqvp0t7tv" path="res://ui/inventory/InventoryUI.tscn" id="4_inv_ui"]
+[ext_resource type="PackedScene" path="res://ui/inventory/InventoryUI.tscn" id="4_inv_ui"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_u84y5"]
 
@@ -15,6 +15,21 @@ properties/0/replication_mode = 1
 properties/1/path = NodePath(".:shared_velocity")
 properties/1/spawn = true
 properties/1/replication_mode = 1
+properties/2/path = NodePath(".:current_health")
+properties/2/spawn = true
+properties/2/replication_mode = 1
+properties/3/path = NodePath(".:max_health")
+properties/3/spawn = true
+properties/3/replication_mode = 1
+properties/4/path = NodePath(".:sync_rotation")
+properties/4/spawn = true
+properties/4/replication_mode = 1
+properties/5/path = NodePath(".:sync_pivot_rotation")
+properties/5/spawn = true
+properties/5/replication_mode = 1
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dsx4b"]
+bg_color = Color(0.88100183, 0.1337547, 0.28620315, 1)
 
 [node name="Player" type="CharacterBody3D" unique_id=166909891]
 script = ExtResource("3_imb2f")
@@ -25,7 +40,7 @@ shape = SubResource("CapsuleShape3D_u84y5")
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1704242223]
 mesh = SubResource("CapsuleMesh_dsx4b")
 
-[node name="HandPoint" type="Marker3D" parent="MeshInstance3D"]
+[node name="HandPoint" type="Marker3D" parent="MeshInstance3D" unique_id=460723080]
 unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0.2, 0.5)
 
@@ -54,6 +69,15 @@ script = ExtResource("1_iugxn")
 [node name="PlayerSynchronizer" type="MultiplayerSynchronizer" parent="." unique_id=599270974]
 replication_config = SubResource("SceneReplicationConfig_7otbr")
 
-[node name="GUILayer" type="CanvasLayer" parent="."]
+[node name="GUILayer" type="CanvasLayer" parent="." unique_id=341093036]
 
-[node name="InventoryUI" parent="GUILayer" instance=ExtResource("4_inv_ui")]
+[node name="HealthBar" type="ProgressBar" parent="GUILayer" unique_id=686711719]
+unique_name_in_owner = true
+offset_right = 300.0
+offset_bottom = 20.0
+size_flags_vertical = 4
+theme_override_styles/fill = SubResource("StyleBoxFlat_dsx4b")
+value = 100.0
+show_percentage = false
+
+[node name="InventoryUI" parent="GUILayer" unique_id=147839645 instance=ExtResource("4_inv_ui")]

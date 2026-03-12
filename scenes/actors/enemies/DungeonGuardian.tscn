@@ -1,0 +1,46 @@
+[gd_scene load_steps=7 format=3 uid="uid://bod1bn28qfvip"]
+
+[ext_resource type="Script" uid="uid://0dlbyvu82pte" path="res://scenes/actors/enemies/DungeonGuardian.gd" id="1_fuuur"]
+[ext_resource type="Shader" path="res://scenes/effects/HitFlash.gdshader" id="2_shader"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_flash"]
+render_priority = 0
+shader = ExtResource("2_shader")
+shader_parameter/albedo = Color(0.09131398, 0.09131158, 0.13522676, 1)
+shader_parameter/hit_intensity = 0.0
+shader_parameter/hit_color = Color(1, 1, 1, 1)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_guardian"]
+radius = 0.4
+height = 1.8
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_guardian"]
+radius = 0.4
+height = 1.8
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_guardian"]
+properties/0/path = NodePath(".:sync_position")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath(".:sync_rotation")
+properties/1/spawn = true
+properties/1/replication_mode = 1
+
+[node name="DungeonGuardian" type="CharacterBody3D" unique_id=1259664814]
+script = ExtResource("1_fuuur")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1360569166]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_guardian")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=730604097]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+mesh = SubResource("CapsuleMesh_guardian")
+surface_material_override/0 = SubResource("ShaderMaterial_flash")
+
+[node name="EyeMesh" type="MeshInstance3D" parent="MeshInstance3D" unique_id=1460946077]
+transform = Transform3D(0.4, 0, 0, 0, 0.2, 0, 0, 0, 0.2, 0, 0.5, -0.35448974)
+mesh = SubResource("CapsuleMesh_guardian")
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="." unique_id=392437399]
+replication_config = SubResource("SceneReplicationConfig_guardian")

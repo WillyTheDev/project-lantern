@@ -1,24 +1,31 @@
-# TODO - Iteration 2: The Hub & Social Loop (The Preparation Pillar)
+# Project Lantern Development Roadmap
 
-## Tasks
-- [x] **PocketBase Integration**
-    - [x] Create a `PersistenceManager` autoload with REST helper methods.
-    - [x] Implement `login(username)` to get or create player records.
-- [x] **Inventory System**
-    - [x] Create an `InventoryManager` autoload to manage local items and sync with DB.
-    - [x] Link `InventoryManager` to `PersistenceManager` for automatic PATCH updates.
-- [x] **Interaction System**
-    - [x] Add `interact` action to Input Map.
-    - [x] Add `RayCast3D` based interaction to `player_controller.gd`.
-    - [x] Create `SuppliesChest` interactable object.
-- [x] **UI & Login**
-    - [x] Add `UsernameInput` to Main Menu.
-    - [x] Implement login flow: Login -> Connect -> Load Hub.
-- [x] **Hub Integration**
-    - [x] Place `SuppliesChest` in `Hub.tscn`.
+## ✅ Iteration 1: Foundations (Infrastructure) - COMPLETED
+## ✅ Iteration 2: The Hub & Social Loop - COMPLETED
+## ✅ Iteration 3: Combat & The Vertical Slice - COMPLETED
+- [x] **Vitality & Stats System**
+- [x] **The Extraction Pillar (Dungeon-Hub Loop)**
+- [x] **Server-Authoritative Interaction (Security Refactor)**
+- [x] **Dungeon Guardian AI**
+- [x] **Drag-and-Drop Loot System**
+- [x] **Floating Damage Indicators & Hit FX**
 
-## Verification
-- [ ] Connect to Hub with username "TestPlayer".
-- [ ] Interact with the Supplies Chest.
-- [ ] Verify console log: "[InventoryManager] Successfully synced inventory to DB."
-- [ ] Restart and verify inventory loads automatically.
+## 🚧 Iteration 4: Procedural Extraction & Hardening
+- [ ] **Procedural Dungeon Generation**
+    - [ ] Implement a room-based generator for unique layouts.
+    - [ ] Create multiple room templates (Agility, Combat, Reward).
+- [ ] **Consumables & Combat Polish**
+    - [ ] Implement Healing Potions.
+    - [ ] Add attack animations and sword swing trails.
+    - [ ] Add Guardian SFX and visual death particles.
+- [ ] **Server Hardening (Tech Debt)**
+    - [ ] Refactor Server `InventoryManager` to use Player Sessions.
+    - [ ] Implement distance validation for all loot interactions.
+- [ ] **Extraction Refinement**
+    - [ ] Add "Extraction Timer" (Hold E to extract).
+    - [ ] Penalty for Death: Lose un-extracted dungeon items.
+
+## Verification Checklist
+- [x] Survive combat with the Dungeon Guardian.
+- [x] Successfully drag loot from a defeated enemy into inventory.
+- [x] Extract via portal and verify items persisted in the Hub.

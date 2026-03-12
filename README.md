@@ -59,5 +59,15 @@ godot
 
 ## 📂 Architecture
 - **Hub:** Port 9797 (UDP) - Social persistent space.
-- **Dungeon:** Port 9798 (UDP) - Procedural extraction instance.
+- **Dungeon:** Port 9798 (UDP) - Extraction gameplay shard.
+- **Combat:** Server-authoritative sword-based combat.
+- **Vitality:** Stats-scaled health and death-to-hub loop.
+- **Looting:** Physical loot drops with drag-and-drop UI.
 - **Database:** PocketBase (Internal) - Handles player and inventory persistence.
+- **Transitions:** Secure token-based handoff (See [Shard Transitions](docs/SHARD_TRANSITIONS.md)).
+
+## 📖 Documentation
+- **[Shard Transitions & Token Handoff](docs/SHARD_TRANSITIONS.md)**: Detailed explanation of multi-server authentication.
+- **[Technical Debt Tracking](docs/TECH_DEBT.md)**: Known shortcuts and security vulnerabilities to address.
+- **[GCD (Game Design Document)](GCD.md)**: Original design and game pillars.
+- **[Iteration 2 Review](docs/ITERATION_2_REVIEW.md)**: Summary of the Hub & Social Loop implementation.

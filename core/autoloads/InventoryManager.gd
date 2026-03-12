@@ -5,6 +5,7 @@ extends Node
 
 signal inventory_updated
 signal active_slot_changed(index: int)
+signal stats_updated(stats: Dictionary)
 
 # Constants for slot counts
 const HOTBAR_SIZE = 10
@@ -18,6 +19,11 @@ var armor: Array = []
 var active_hotbar_index: int = 0
 
 var player_db_id: String = ""
+
+# External Inventory (for Loot/Chests)
+var external_inventory: Array = []
+var current_external_path: String = ""
+signal external_inventory_updated
 
 # Player Stats
 var base_stats: Dictionary = {
@@ -115,6 +121,7 @@ func recalculate_stats() -> void:
 				for stat in data.stats:
 					total_stats[stat] += data.stats[stat]
 	print("[InventoryManager] Stats recalculated: ", total_stats)
+	stats_updated.emit(total_stats)
 
 func _sync_and_emit() -> void:
 	inventory_updated.emit()
@@ -139,6 +146,14 @@ func move_item(from_type: String, from_idx: int, to_type: String, to_idx: int) -
 	if from_type == "armor" or to_type == "armor":
 		recalculate_stats()
 		
+	if from_type == "external" or to_type == "external":
+		external_inventory_updated.emit()
+		# If we took an item from an external container, notify the server
+		if from_type == "external" and current_external_path != "":
+			var target_node = get_tree().root.get_node_or_null(current_external_path)
+			if target_node and target_node.has_method("request_remove_item"):
+				target_node.request_remove_item.rpc_id(1, from_idx)
+		
 	_sync_and_emit()
 	
 	# If we moved something in/out of the active slot, notify systems
@@ -146,9 +161,20 @@ func move_item(from_type: String, from_idx: int, to_type: String, to_idx: int) -
 	   (to_type == "hotbar" and to_idx == active_hotbar_index):
 		active_slot_changed.emit(active_hotbar_index)
 
+func open_external_inventory(items: Array, path: NodePath = "") -> void:
+	external_inventory = items
+	current_external_path = path
+	external_inventory_updated.emit()
+
+func close_external_inventory() -> void:
+	external_inventory = []
+	current_external_path = ""
+	external_inventory_updated.emit()
+
 func _get_array_by_type(type: String) -> Variant:
 	match type:
 		"hotbar": return hotbar
 		"bag": return bag
 		"armor": return armor
+		"external": return external_inventory
 	return null

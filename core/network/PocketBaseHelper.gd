@@ -49,6 +49,7 @@ func request_login_with_token(token: String) -> void:
 		print("[PBHelper] ABORT: Attempted token login with empty token.")
 		return
 		
+	print("[PBHelper] Client requesting login with token.")
 	if multiplayer.is_server():
 		PersistenceManager.login_with_token(token)
 	else:

@@ -20,16 +20,17 @@ func _register_items() -> void:
 	lantern.item_icon_texture = default_icon
 	lantern.stackable = false
 	# Load the clean scene from disk
-	lantern.item_scene = load("res://scenes/objects/Lantern.tscn")
+	lantern.item_scene = load("res://scenes/items/lantern/Lantern.tscn")
 	_add_item(lantern)
 
 	# --- WEAPONS ---
 	var sword = ItemData.new()
 	sword.id = "rusty_sword"
 	sword.name = "Rusty Sword"
-	sword.description = "A basic blade."
+	sword.description = "A basic blade. Left-click to attack."
 	sword.type = ItemData.Type.WEAPON
 	sword.item_icon_texture = default_icon
+	sword.item_scene = load("res://scenes/items/weapons/RustySword.tscn")
 	sword.stats["strength"] = 2
 	sword.stackable = false
 	_add_item(sword)
