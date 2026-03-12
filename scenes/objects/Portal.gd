@@ -32,9 +32,10 @@ func _request_client_switch(address: String, port: int, scene_path: String) -> v
 	# 1. Start loading screen
 	SceneManager.show_loading_screen(true)
 	
-	# 2. Tell SceneManager to load scene AND use cached credentials for auto-login
-	# We pass cached credentials so SceneManager handles the post-load login
-	SceneManager._load_scene(scene_path, SceneManager.cached_username, SceneManager.cached_password)
+	# 2. Tell SceneManager to load scene. 
+	# Note: We don't pass credentials here anymore as NetworkManager 
+	# handles the auto-login via cached token once reconnected.
+	SceneManager._load_scene(scene_path)
 	
 	# 3. Reconnect
 	NetworkManager.switch_server(address, port)

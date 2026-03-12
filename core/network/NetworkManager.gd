@@ -28,11 +28,15 @@ func _on_connected_ok():
 	
 	# If we were switching shards, trigger the re-authentication automatically
 	if SceneManager.is_switching_shard:
-		if SceneManager.cached_username != "" and SceneManager.cached_password != "":
-			print("[NetworkManager] Shard switch detected. Requesting auto-login for: ", SceneManager.cached_username)
+		if SceneManager.cached_token != "":
+			print("[NetworkManager] Shard switch detected. Requesting auto-login via Token.")
+			PBHelper.request_login_with_token(SceneManager.cached_token)
+		elif SceneManager.cached_username != "" and SceneManager.cached_password != "":
+			# Fallback to password if token is missing but password exists
+			print("[NetworkManager] Shard switch detected. Requesting auto-login via Password.")
 			PBHelper.request_login(SceneManager.cached_username, SceneManager.cached_password)
 		else:
-			print("[NetworkManager] Shard switch detected, but cached credentials are empty. Aborting auto-login.")
+			print("[NetworkManager] Shard switch detected, but no credentials available. Aborting auto-login.")
 		SceneManager.is_switching_shard = false
 
 func _on_connected_fail():

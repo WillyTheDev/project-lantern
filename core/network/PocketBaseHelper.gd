@@ -44,6 +44,16 @@ func request_login(username: String, password: String) -> void:
 	else:
 		rpc_id(1, "server_request_login", username, password)
 
+func request_login_with_token(token: String) -> void:
+	if token == "":
+		print("[PBHelper] ABORT: Attempted token login with empty token.")
+		return
+		
+	if multiplayer.is_server():
+		PersistenceManager.login_with_token(token)
+	else:
+		rpc_id(1, "server_request_login_with_token", token)
+
 func request_sync_inventory(player_db_id: String, inventory: Dictionary) -> void:
 	if player_db_id == "": return
 	
@@ -81,6 +91,14 @@ func server_request_login(username: String, password: String, force_sender_id: i
 	PersistenceManager.login(username, password, sender_id)
 
 @rpc("any_peer", "call_remote", "reliable")
+func server_request_login_with_token(token: String, force_sender_id: int = -1) -> void:
+	var sender_id = force_sender_id if force_sender_id != -1 else multiplayer.get_remote_sender_id()
+	if not is_server_authenticated:
+		pending_requests.append({"type": "login_token", "token": token, "sender_id": sender_id})
+		return
+	PersistenceManager.login_with_token(token, sender_id)
+
+@rpc("any_peer", "call_remote", "reliable")
 func server_request_sync_inventory(player_db_id: String, inventory: Dictionary, force_sender_id: int = -1) -> void:
 	var sender_id = force_sender_id if force_sender_id != -1 else multiplayer.get_remote_sender_id()
 	if not is_server_authenticated:
@@ -94,6 +112,12 @@ func fulfill_login(data: Dictionary) -> void:
 	print("[PBHelper] Client received login data.")
 	PersistenceManager.current_player_id = data["id"]
 	PersistenceManager.current_player_name = data["name"]
+	
+	# Cache the token for shard handoffs
+	if data.has("auth_token"):
+		SceneManager.cached_token = data["auth_token"]
+		print("[PBHelper] Cached session token for shard handoffs.")
+		
 	player_data_loaded.emit(data)
 	InventoryManager.load_inventory(data["id"], data.get("inventory", {}))
 

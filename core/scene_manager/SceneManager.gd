@@ -7,12 +7,11 @@ const MENU_SCENE = "res://ui/MainMenu.tscn"
 const LOADING_SCREEN_PATH = "res://ui/LoadingScreen.tscn"
 
 var loading_screen_instance: Node = null
-var pending_username: String = ""
-var pending_password: String = ""
 
 # Persistent cache for shard handoffs
 var cached_username: String = ""
-var cached_password: String = ""
+var cached_password: String = "" # Keep for initial login retry if needed
+var cached_token: String = ""
 var is_switching_shard: bool = false # NEW FLAG
 
 func _ready() -> void:
@@ -32,50 +31,60 @@ func _load_scene(path: String, username: String = "", password: String = "") -> 
 	var tree = get_tree()
 	if not tree: return
 
-	# 1. Update/Restore Credentials
+	# 1. Update Credentials if provided (usually only from MainMenu)
 	if username != "":
-		print("[SceneManager] Updating credential cache for: ", username)
+		print("[SceneManager] Updating username cache for: ", username)
 		cached_username = username
-		# Only update password if provided, otherwise keep cached one
-		if password != "":
-			cached_password = password
-		
-		pending_username = cached_username
-		pending_password = cached_password
-	elif cached_username != "":
-		print("[SceneManager] Restoring credentials from cache: ", cached_username)
-		pending_username = cached_username
-		pending_password = cached_password
+	if password != "":
+		cached_password = password
 
 	# 2. Check if scene is already there
 	if tree.current_scene and tree.current_scene.scene_file_path == path:
 		print("[SceneManager] Scene already loaded: ", path)
-		# If we are already there and have a pending login, do it now
-		# (Note: we use PBHelper here because NetworkManager's connected signal might not fire)
-		if pending_username != "":
-			print("[SceneManager] Triggering re-login for existing scene.")
-			PBHelper.request_login(pending_username, pending_password)
-			pending_username = ""
-			pending_password = ""
+		if is_switching_shard:
+			print("[SceneManager] Re-triggering shard login for existing scene type.")
+			if cached_token != "":
+				PBHelper.request_login_with_token(cached_token)
+			elif cached_username != "" and cached_password != "":
+				PBHelper.request_login(cached_username, cached_password)
+			is_switching_shard = false
 		return
 
-	# 3. Perform Load
-	print("[SceneManager] Loading new scene: ", path)
+	# 3. Perform Asynchronous Load
+	print("[SceneManager] Loading new scene asynchronously: ", path)
 	show_loading_screen(true)
-	var err = tree.change_scene_to_file(path)
+
+	var err = ResourceLoader.load_threaded_request(path)
 	if err != OK:
-		printerr("[SceneManager] Failed to load scene: ", path)
+		printerr("[SceneManager] Failed to request threaded load: ", path)
 		return
-	
-	# 4. Cleanup pending login (handled by NetworkManager during shard handoff)
-	# If this WASN'T a shard handoff (e.g. initial login), we clear it here 
-	# because PBHelper.request_login was already called by the source scene
-	pending_username = ""
-	pending_password = ""
+
+	var progress = []
+	while true:
+		var status = ResourceLoader.load_threaded_get_status(path, progress)
+
+		if status == ResourceLoader.THREAD_LOAD_LOADED:
+			# Finished!
+			var new_scene_resource = ResourceLoader.load_threaded_get(path)
+			tree.change_scene_to_packed(new_scene_resource)
+			print("[SceneManager] Scene loaded successfully: ", path)
+			break
+		elif status == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+			# Update progress bar
+			if loading_screen_instance and loading_screen_instance.has_method("update_progress"):
+				loading_screen_instance.update_progress(progress[0])
+		else:
+			# Error (Failed or Invalid Resource)
+			printerr("[SceneManager] Error during threaded load: ", status)
+			show_loading_screen(false)
+			return
+
+		await tree.process_frame
 
 func reset_credentials() -> void:
 	cached_username = ""
 	cached_password = ""
+	cached_token = ""
 	is_switching_shard = false
 	print("[SceneManager] Credential cache cleared.")
 
@@ -88,6 +97,9 @@ func show_loading_screen(show: bool) -> void:
 			print("[SceneManager] Loading screen visible.")
 	else:
 		if loading_screen_instance:
-			loading_screen_instance.queue_free()
+			if loading_screen_instance.has_method("fade_out"):
+				loading_screen_instance.fade_out()
+			else:
+				loading_screen_instance.queue_free()
 			loading_screen_instance = null
-			print("[SceneManager] Loading screen removed.")
+			print("[SceneManager] Loading screen removal initiated (fade out).")

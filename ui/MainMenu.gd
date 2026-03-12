@@ -52,7 +52,8 @@ func _on_join_pressed() -> void:
 	# Seed the SceneManager cache here, BEFORE connecting
 	# This ensures that even if we are switching shards later, this cache is what we use
 	SceneManager.cached_username = username
-	SceneManager.cached_password = password
+	# Note: We no longer cache the password here.
+	# The session token will be cached automatically in PBHelper.fulfill_login.
 	
 	status_label.text = "Connecting to Hub..."
 	join_button.disabled = true

@@ -132,8 +132,10 @@ func login(identity: String, password: String, requester_id: int = 1) -> void:
 		
 		if response_code == 200 and json_result is Dictionary and json_result.has("record"):
 			var user_id = json_result["record"]["id"]
+			var token = json_result["token"]
 			pending_user_ids[requester_id] = user_id
-			get_records("players", "user='" + user_id + "'", requester_id)
+			# Pass the token through to finalize_login
+			_get_player_record(user_id, token, requester_id)
 		else:
 			var msg = "Invalid username or password."
 			if json_result is Dictionary and json_result.has("message"): msg = json_result["message"]
@@ -145,6 +147,64 @@ func login(identity: String, password: String, requester_id: int = 1) -> void:
 	var headers = ["Content-Type: application/json"]
 	if auth_token != "": headers.append("Authorization: " + auth_token)
 	http.request(url, headers, HTTPClient.METHOD_POST, JSON.stringify(body))
+
+## Token-based Login / Authenticate Player (Server-Authoritative)
+func login_with_token(token: String, requester_id: int = 1) -> void:
+	var url = base_url + "/api/collections/users/auth-refresh"
+	
+	var http = HTTPRequest.new()
+	add_child(http)
+	
+	print("[PersistenceManager] [Server] Authenticating with Token for peer: ", requester_id)
+	
+	http.request_completed.connect(func(result, response_code, _headers, _body):
+		var response_str = _body.get_string_from_utf8()
+		var json_result = JSON.parse_string(response_str)
+		
+		if response_code == 200 and json_result is Dictionary and json_result.has("record"):
+			var user_id = json_result["record"]["id"]
+			var new_token = json_result["token"]
+			pending_user_ids[requester_id] = user_id
+			pending_logins[requester_id] = json_result["record"].get("username", "Unknown")
+			_get_player_record(user_id, new_token, requester_id)
+		else:
+			var msg = "Session expired or invalid token."
+			if json_result is Dictionary and json_result.has("message"): msg = json_result["message"]
+			PBHelper.relay_login_failure(requester_id, msg)
+			_cleanup_pending(requester_id)
+		http.queue_free()
+	)
+	
+	# We use the user's OWN token to authenticate the refresh request
+	var headers = ["Content-Type: application/json", "Authorization: Bearer " + token]
+	http.request(url, headers, HTTPClient.METHOD_POST, "{}")
+
+func _get_player_record(user_id: String, token: String, requester_id: int) -> void:
+	var url = base_url + "/api/collections/players/records?filter=(user='" + user_id + "')"
+	var http = HTTPRequest.new()
+	add_child(http)
+	
+	http.request_completed.connect(func(result, response_code, _headers, _body):
+		var response_str = _body.get_string_from_utf8()
+		var json_result = JSON.parse_string(response_str)
+		
+		if response_code >= 200 and response_code < 300 and json_result is Dictionary:
+			if json_result.has("items") and json_result["items"].size() > 0:
+				var player_data = json_result["items"][0]
+				# Inject the token so fulfill_login can return it to client
+				player_data["auth_token"] = token
+				_finalize_login(requester_id, player_data)
+			else:
+				_create_new_player(requester_id, token)
+		else:
+			PBHelper.relay_login_failure(requester_id, "Failed to load player record.")
+			_cleanup_pending(requester_id)
+		http.queue_free()
+	)
+	
+	var headers = ["Content-Type: application/json"]
+	if auth_token != "": headers.append("Authorization: " + auth_token)
+	http.request(url, headers, HTTPClient.METHOD_GET)
 
 func create_record(collection: String, data: Dictionary, requester_id: int = 1) -> void:
 	_make_request(collection, HTTPClient.METHOD_POST, data, "", requester_id)
@@ -197,7 +257,7 @@ func _on_request_completed(collection: String, method: String, response_code: in
 			PBHelper.relay_login_failure(requester_id, msg)
 			_cleanup_pending(requester_id)
 
-func _create_new_player(requester_id: int) -> void:
+func _create_new_player(requester_id: int, token: String = "") -> void:
 	var username = pending_logins.get(requester_id, "UnknownPlayer")
 	var user_id = pending_user_ids.get(requester_id, "")
 	
@@ -207,7 +267,32 @@ func _create_new_player(requester_id: int) -> void:
 	for i in range(4): initial_inventory.armor.append(null)
 
 	var initial_data = {"name": username, "user": user_id, "inventory": initial_inventory}
-	create_record("players", initial_data, requester_id)
+	
+	# We need to pass the token through the POST request context
+	# Since create_record uses _make_request, we might need a better way to track this.
+	# For now, let's just make the request manually or use a pending map.
+	_make_request_with_token("players", HTTPClient.METHOD_POST, initial_data, requester_id, token)
+
+func _make_request_with_token(collection: String, method: int, data: Dictionary, requester_id: int, token: String) -> void:
+	var http = HTTPRequest.new()
+	add_child(http)
+	
+	var url = base_url + "/api/collections/" + collection + "/records"
+	var headers = ["Content-Type: application/json"]
+	if auth_token != "": headers.append("Authorization: " + auth_token)
+	
+	http.request_completed.connect(func(result, response_code, _headers, _body):
+		var response_str = _body.get_string_from_utf8()
+		var json_result = JSON.parse_string(response_str)
+		if response_code >= 200 and response_code < 300 and json_result is Dictionary:
+			json_result["auth_token"] = token
+			_finalize_login(requester_id, json_result)
+		else:
+			PBHelper.relay_login_failure(requester_id, "Failed to create player record.")
+			_cleanup_pending(requester_id)
+		http.queue_free()
+	)
+	http.request(url, headers, method, JSON.stringify(data))
 
 func _finalize_login(requester_id: int, data: Dictionary) -> void:
 	_cleanup_pending(requester_id)
