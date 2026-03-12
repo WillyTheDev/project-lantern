@@ -17,6 +17,7 @@ func _ready() -> void:
 	
 	# Initial UI state
 	email_input.visible = false
+	SceneManager.show_loading_screen(false)
 	
 	# Listen for connection success
 	NetworkManager.multiplayer.connected_to_server.connect(_on_connected)
@@ -48,16 +49,30 @@ func _on_join_pressed() -> void:
 	pending_password = password
 	pending_email = email
 	
+	# Seed the SceneManager cache here, BEFORE connecting
+	# This ensures that even if we are switching shards later, this cache is what we use
+	SceneManager.cached_username = username
+	SceneManager.cached_password = password
+	
 	status_label.text = "Connecting to Hub..."
 	join_button.disabled = true
 	username_input.editable = false
 	password_input.editable = false
 	email_input.editable = false
 	
+	# Show loading screen immediately
+	SceneManager.show_loading_screen(true)
+	
 	# Connect to server
 	NetworkManager.join_server(NetworkManager.server_address, NetworkManager.hub_server_port)
 
 func _on_connected() -> void:
+	if not is_inside_tree(): return
+	
+	# Only proceed if we are actually in the MainMenu scene
+	if get_tree().current_scene != self: 
+		return
+
 	if register_toggle.button_pressed:
 		status_label.text = "Registering..."
 		PBHelper.request_register(pending_username, pending_email, pending_password)
@@ -66,6 +81,10 @@ func _on_connected() -> void:
 		PBHelper.request_login(pending_username, pending_password)
 
 func _on_auth_success(_data: Dictionary) -> void:
+	# Only proceed if we are actually in the MainMenu scene
+	if get_tree().current_scene != self:
+		return
+		
 	status_label.text = "Success! Entering world..."
 	SceneManager.call_deferred("_load_scene", SceneManager.HUB_SCENE)
 
@@ -75,6 +94,10 @@ func _on_auth_failed(reason: String) -> void:
 	username_input.editable = true
 	password_input.editable = true
 	email_input.editable = true
+	
+	# Reset local data
+	InventoryManager.reset()
+	PersistenceManager.reset_session()
 	
 	if NetworkManager.multiplayer.multiplayer_peer:
 		NetworkManager.multiplayer.multiplayer_peer.close()

@@ -1,76 +1,30 @@
-# 🔦 GEMINI.md - Project Lantern
-
 ## Project Overview
 **Project Lantern** is a 3D stylized **Social-Extraction Crawler (PvPvE non-shooter)** built with **Godot 4.x**. The project features a persistent multiplayer world split into two main environments: a peaceful community **Hub** (The Village) and procedural **Dungeon** instances for exploration and loot.
 
 ### Key Technologies
 - **Game Engine:** Godot 4.x (using Jolt Physics and Forward Plus renderer).
-- **Networking:** Godot's ENet-based high-level multiplayer (UDP).
+- **Networking:** Godot's ENet-based high-level multiplayer (UDP) with **DTLS Encryption**.
 - **Architecture:** Multi-role binary (same image/build for client and servers).
-- **Persistence:** **PocketBase** for player data and "Visual Prestige" grades.
-- **Infrastructure:** Docker and Kubernetes (K8s) for server orchestration.
+- **Persistence:** **PocketBase** (Server-authoritative proxy model).
+- **Infrastructure:** Docker and Kubernetes (K8s) with Cert-Manager for TLS.
 
 ## Architecture & Core Systems
 
-### 1. Multi-Role Workflow
-The application uses CLI arguments to determine its role at startup:
-- **Client:** Default role (starts at Main Menu).
-- **Hub Server:** Started with `--hub` (starts at Hub scene, port 9797).
-- **Dungeon Server:** Started with `--dungeon` (starts at Dungeon scene, port 9798).
+### 1. Security & Infrastructure
+- **Server-Authoritative:** Only the Game Server communicates with PocketBase via a restricted **System Account** (Least Privilege).
+- **Encryption:** All multiplayer traffic is encrypted using **DTLS**. Certificates are managed by `TLSHelper`.
+- **Auth Proxy:** Clients send credentials to the Game Server via RPC; the server proxies the authentication to PocketBase.
 
 ### 2. Global Autoloads (Singletons)
-- `NetworkManager`: Handles role parsing and server/client connections.
-- `SceneManager`: Manages scene transitions and ensures login requests happen only after scenes are ready.
-- `PersistenceManager`: **Server-Only** REST interface for PocketBase. No direct client access.
-- `PBHelper` (`core/network/PocketBaseHelper.gd`): The high-level API used by the game. Handles RPC bridging between clients and the server-side PersistenceManager.
-- `InventoryManager`: Manages local player items and requests syncs via PBHelper.
-- `VoiceManager`: Manages spatial VOIP.
+- `NetworkManager`: Handles role parsing, secure server/client connections (DTLS).
+- `PersistenceManager`: **Server-Only** REST interface for PocketBase.
+- `PBHelper`: High-level API for the game. Handles RPC bridging and request queuing.
+- `InventoryManager`: Manages slot-based inventory (Hotbar, Bag, Armor) and player stats.
+- `ItemDB`: Central registry for all item definitions.
+- `TLSHelper`: Manages generation and loading of TLS certificates.
+- `SceneManager`: Manages scene transitions and post-load login requests.
 
-### 3. Networking & Sync (Server-Authoritative)
-- **Persistence Flow:** Client -> RPC Request -> Server -> PocketBase REST -> Server -> RPC Response -> Client.
-- **Spawning:** Managed by `MultiplayerSpawner`. The Hub server waits for PocketBase player data to be loaded before triggering a spawn, ensuring all clients see correct names/data immediately.
-
-## Building and Running
-
-### Local Development
-- **Run Client:** `godot`
-- **Run Hub Server (Headless):** `godot --headless -- --hub`
-- **Run Dungeon Server (Headless):** `godot --headless -- --dungeon`
-
-### Docker & Deployment
-The project uses a multi-stage Dockerfile to export a Linux binary and run it in a minimal Ubuntu environment.
-- **Build Image:** `docker build -t harbor.kube.dungeonmomo.cc/project-lantern/project-lantern:latest .`
-- **Deploy to K8s:** `kubectl apply -f k8s/deployment.yaml` (Deploys PocketBase, Hub, and Dungeon in the `project-lantern` namespace).
-
-## Development Conventions
-- **Scene Structure:**
-    - `core/`: Core engine logic and autoloads.
-    - `scenes/actors/`: Entity logic (Players, etc.).
-    - `scenes/levels/`: World scenes (Hub, Dungeon).
-    - `ui/`: Interface elements.
-- **Networking:** Always verify `is_multiplayer_authority()` before processing local input or physics in player-controlled nodes.
-- **Style:** 3D stylized art, Jolt Physics for interactions, and non-combat focused progression (cosmetic/prestige).
-
-## Key Files
-- `project.godot`: Main configuration, Jolt physics setup, and autoloads.
-- `core/network/NetworkManager.gd`: Role and port management.
-- `scenes/actors/player/player_controller.gd`: Main movement and networking logic.
-- `k8s/deployment.yaml`: Kubernetes infrastructure definition.
-
-## Iterative Development Roadmap
-
-### Iteration 1: Foundation & Network Loop
-- **Goal:** Establish multi-role architecture (Client, Hub Server, Dungeon Server) and basic player synchronization.
-- **Game Loop:** Launch client -> Connect to Hub -> Move around (Sync check) -> VOIP proximity check.
-
-### Iteration 2: The Hub & Social Loop (The Preparation Pillar)
-- **Goal:** Implement the "Supplies Chest" and persistent inventory via PocketBase.
-- **Game Loop:** Connect to Hub -> Interact with Supplies Chest -> "Take" items (Lantern/Potions) -> Data saved to PocketBase.
-
-### Iteration 3: The Dungeon & Extraction Loop
-- **Goal:** Implement the transition between Hub and Dungeon, plus the extraction mechanic.
-- **Game Loop:** Hub -> Enter Dungeon Portal -> Navigate Rooms -> Reach Extraction -> Return to Hub.
-
-### Iteration 4: The Encounter & Risk Loop (PvPvE)
-- **Goal:** Introduce interactable loot and risk management when encountering other players.
-- **Game Loop:** Enter Dungeon -> Collect Loot -> Encounter Player -> Choose (Cooperate/Compete) -> Extract or Lose Loot.
+### 3. Inventory & Stats
+- **Minecraft-style Slots:** 10 Action Slots (Hotbar), 30 Bag Slots, 4 Armor Slots.
+- **Stats System:** Agility (Crit), Strength (Damage), Intellect (Magic), Stamina (Health).
+- **Persistence:** Inventory state is automatically synced to PocketBase on changes.

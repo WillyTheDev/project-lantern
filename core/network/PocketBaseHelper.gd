@@ -35,18 +35,28 @@ func _on_server_auth_complete(success: bool) -> void:
 # --- Client Facing Methods ---
 
 func request_login(username: String, password: String) -> void:
+	if username == "" or password == "":
+		print("[PBHelper] ABORT: Attempted login with empty credentials.")
+		return
+		
 	if multiplayer.is_server():
 		PersistenceManager.login(username, password)
 	else:
 		rpc_id(1, "server_request_login", username, password)
 
 func request_sync_inventory(player_db_id: String, inventory: Dictionary) -> void:
+	if player_db_id == "": return
+	
 	if multiplayer.is_server():
 		PersistenceManager.update_record(COL_PLAYERS, player_db_id, {"inventory": inventory})
 	else:
 		rpc_id(1, "server_request_sync_inventory", player_db_id, inventory)
 
 func request_register(username: String, email: String, password: String) -> void:
+	if username == "" or email == "" or password == "":
+		print("[PBHelper] ABORT: Attempted registration with empty credentials.")
+		return
+		
 	if multiplayer.is_server():
 		PersistenceManager.register(username, email, password)
 	else:

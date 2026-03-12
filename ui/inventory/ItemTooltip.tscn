@@ -1,0 +1,81 @@
+[gd_scene load_steps=3 format=3]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tp"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.0509804, 0.0509804, 0.0705882, 0.941176)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.921569, 0.631373, 0.258824, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+shadow_color = Color(0, 0, 0, 0.392157)
+shadow_size = 4
+
+[sub_resource type="GDScript" id="GDScript_tooltip"]
+script/source = "extends PanelContainer
+
+@onready var name_label: Label = %ItemName
+@onready var desc_label: Label = %ItemDescription
+@onready var stats_label: Label = %ItemStats
+
+func display(item_id: String) -> void:
+	var data = ItemDB.get_item(item_id)
+	if not data: return
+	
+	name_label.text = data.name
+	desc_label.text = data.description
+	
+	var stats_text = \"\"
+	for stat in data.stats:
+		if data.stats[stat] != 0:
+			stats_text += \"%s: +%d\\n\" % [stat.capitalize(), data.stats[stat]]
+	
+	stats_label.text = stats_text.strip_edges()
+	stats_label.visible = stats_label.text != \"\"
+	
+	# Force refresh layout
+	custom_minimum_size = Vector2(250, 0)
+	size = Vector2.ZERO
+"
+
+[node name="ItemTooltip" type="PanelContainer"]
+z_index = 100
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_tp")
+script = SubResource("GDScript_tooltip")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 0
+mouse_filter = 2
+theme_override_constants/separation = 5
+
+[node name="ItemName" type="Label" parent="VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.921569, 0.631373, 0.258824, 1)
+theme_override_font_sizes/font_size = 18
+text = "Item Name"
+
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="ItemDescription" type="Label" parent="VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "This is a description of the item."
+
+[node name="ItemStats" type="Label" parent="VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.341176, 1, 0.380392, 1)
+theme_override_font_sizes/font_size = 14
+text = "Stats..."

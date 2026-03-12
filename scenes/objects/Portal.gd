@@ -5,37 +5,36 @@ extends Area3D
 @export var portal_name: String = "Portal"
 
 func _ready() -> void:
+	print("[Portal] ", portal_name, " initialized. Role: ", "Server" if multiplayer.is_server() else "Client")
+	print("[Portal] Monitoring: ", monitoring, " Monitorable: ", monitorable)
+	print("[Portal] Layer: ", collision_layer, " Mask: ", collision_mask)
 	body_entered.connect(_on_body_entered)
 
 func _on_body_entered(body: Node) -> void:
-	# Only the server of the CURRENT instance handles the handoff
-	if not multiplayer.is_server():
-		return
-		
-	# Check if the body that entered is a player
+	# Debug print for both server and client to confirm signal firing
+	print("[Portal] ", portal_name, " - Body entered: ", body.name, " (Is Server: ", multiplayer.is_server(), ")")
+	
+	if not multiplayer.is_server(): return
 	if body.has_method("get_multiplayer_authority") or "player_id" in body:
-		# Use the peer ID (authority) to target the RPC
 		var peer_id = body.get_multiplayer_authority() if body.has_method("get_multiplayer_authority") else body.player_id
 		
-		# SAFETY: Don't tell the server (peer 1) to switch servers.
-		# This avoids the "RPC on yourself" error and prevents the server from disconnecting itself.
-		if peer_id == 1:
-			return
+		if peer_id == 1: return
 			
-		print("[Portal] ", portal_name, ": Player ", peer_id, " entering. Handoff to port ", target_port)
-		
-		# RPC to the specific client to tell them to switch servers
+		print("[Portal] ", portal_name, ": Handoff peer ", peer_id, " to port ", target_port)
 		_request_client_switch.rpc_id(peer_id, NetworkManager.server_address, target_port, target_scene)
 
 @rpc("authority", "call_local", "reliable")
 func _request_client_switch(address: String, port: int, scene_path: String) -> void:
-	print("[Client] Received portal request: Moving to ", scene_path, " on port ", port)
+	print("[Client] Shard Handoff Trace: User=", SceneManager.cached_username, " Path=", scene_path, " Port=", port)
 	
-	# 1. Show Loading Screen (via SceneManager)
+	SceneManager.is_switching_shard = true # Mark the transition
+	
+	# 1. Start loading screen
 	SceneManager.show_loading_screen(true)
 	
-	# 2. Load the scene locally first (so we have the world ready)
-	SceneManager._load_scene(scene_path)
+	# 2. Tell SceneManager to load scene AND use cached credentials for auto-login
+	# We pass cached credentials so SceneManager handles the post-load login
+	SceneManager._load_scene(scene_path, SceneManager.cached_username, SceneManager.cached_password)
 	
-	# 3. Reconnect to the new server shard
+	# 3. Reconnect
 	NetworkManager.switch_server(address, port)

@@ -1,8 +1,8 @@
-[gd_scene load_steps=16 format=3 uid="uid://bd01yoma7plap"]
+[gd_scene format=3 uid="uid://bcoxc2ehku3wg"]
 
-[ext_resource type="Script" uid="uid://lvuliw2qx4yr" path="res://scenes/levels/hub/hub_mult_spawner.gd" id="1_swoon"]
-[ext_resource type="Script" uid="uid://d1rhrdgwi7k5b" path="res://scenes/objects/Portal.gd" id="2_tgd1a"]
-[ext_resource type="PackedScene" path="res://scenes/objects/SuppliesChest.tscn" id="3_chest"]
+[ext_resource type="Script" uid="uid://lvuliw2qx4yr" path="res://scenes/levels/hub/hub_mult_spawner.gd" id="1_unjod"]
+[ext_resource type="PackedScene" uid="uid://bajnbtxhvsyka" path="res://scenes/objects/portal.tscn" id="2_tgd1a"]
+[ext_resource type="PackedScene" path="res://scenes/objects/SuppliesChest.tscn" id="3_p4vco"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_n3u0n"]
 
@@ -31,23 +31,13 @@ sky = SubResource("Sky_n3u0n")
 ambient_light_source = 3
 ambient_light_color = Color(0.93611366, 0.79331195, 0.93645346, 1)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_n5qrj"]
-size = Vector3(1, 2.6278076, 2.6778564)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_n3u0n"]
-transparency = 1
-albedo_color = Color(0, 0.6745098, 0.84313726, 0.7372549)
-
-[sub_resource type="BoxMesh" id="BoxMesh_aibxe"]
-material = SubResource("StandardMaterial3D_n3u0n")
-
 [node name="Hub" type="Node3D" unique_id=1139020406]
 
 [node name="MultiplayerPlayerSpawner" type="MultiplayerSpawner" parent="." unique_id=2055912031]
 unique_name_in_owner = true
 spawn_path = NodePath("..")
 spawn_limit = 200
-script = ExtResource("1_swoon")
+script = ExtResource("1_unjod")
 
 [node name="SpawnPoint" type="Node3D" parent="." unique_id=1346235447]
 unique_name_in_owner = true
@@ -71,19 +61,8 @@ environment = SubResource("Environment_appr8")
 transform = Transform3D(1, 0, 0, 0, 0.021622958, 0.99976623, 0, -0.99976623, 0.021622958, 1.707264, 5.0209494, 0)
 shadow_enabled = true
 
-[node name="Portal" type="Area3D" parent="." unique_id=1749710094]
+[node name="Portal" parent="." unique_id=642339472 instance=ExtResource("2_tgd1a")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.988897, 0, 0)
-script = ExtResource("2_tgd1a")
-target_scene = "uid://c7u4hx7klv3ag"
-target_port = 9798
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Portal" unique_id=404938700]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.57992697, 1.3296664, 0.08692384)
-shape = SubResource("BoxShape3D_n5qrj")
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Portal" unique_id=69346872]
-transform = Transform3D(1, 0, 0, 0, 3.047385, 0, 0, 0, 2.7817354, 0.63359404, 1.1232029, 0)
-mesh = SubResource("BoxMesh_aibxe")
-
-[node name="SuppliesChest" parent="." instance=ExtResource("3_chest")]
+[node name="SuppliesChest" parent="." unique_id=1269416041 instance=ExtResource("3_p4vco")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.30872, 0, 4.41708)

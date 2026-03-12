@@ -7,7 +7,7 @@ var server_port: int = 9797
 var hub_server_port: int = 9797
 var dungeon_server_port: int = 9798
 var server_address: String = "127.0.0.1"
-#var server_address: String = "34.158.30.12"
+var is_switching_server: bool = false
 
 func _ready() -> void:
 	_parse_arguments()
@@ -24,17 +24,31 @@ func _ready() -> void:
 
 func _on_connected_ok():
 	print("[NetworkManager] Connected to server successfully (DTLS).")
-	SceneManager.show_loading_screen(false)
+	is_switching_server = false
+	
+	# If we were switching shards, trigger the re-authentication automatically
+	if SceneManager.is_switching_shard:
+		if SceneManager.cached_username != "" and SceneManager.cached_password != "":
+			print("[NetworkManager] Shard switch detected. Requesting auto-login for: ", SceneManager.cached_username)
+			PBHelper.request_login(SceneManager.cached_username, SceneManager.cached_password)
+		else:
+			print("[NetworkManager] Shard switch detected, but cached credentials are empty. Aborting auto-login.")
+		SceneManager.is_switching_shard = false
 
 func _on_connected_fail():
 	print("[NetworkManager] Failed to connect to server.")
 	SceneManager.show_loading_screen(false)
-	# Maybe return to main menu here
+	
+	if is_switching_server:
+		print("[NetworkManager] Handoff failed during server switch.")
+		is_switching_server = false
+		# You might want to show an error message or try reconnecting to Hub
+		return
+		
+	# Standard connection fail: return to main menu
 	SceneManager._load_scene(SceneManager.MENU_SCENE)
 
 func _parse_arguments() -> void:
-	# Use user arguments (passed after --)
-	# Example: godot --headless -- --hub
 	var args = OS.get_cmdline_user_args()
 	
 	if "--hub" in args:
@@ -56,8 +70,6 @@ func start_server() -> void:
 		printerr("[NetworkManager] Failed to start server: ", err)
 		return
 	
-	# Correct way to enable DTLS in Godot 4: 
-	# Access the ENetConnection host and setup DTLS
 	var host = peer.get_host()
 	var server_tls = TLSHelper.get_server_options()
 	host.dtls_server_setup(server_tls)
@@ -75,11 +87,8 @@ func join_server(address: String, port: int) -> void:
 		printerr("[NetworkManager] Failed to connect: ", err)
 		return
 	
-	# Correct way to enable DTLS in Godot 4:
 	var host = peer.get_host()
 	var client_tls = TLSHelper.get_client_options()
-	# Use host.dtls_client_setup(hostname, options)
-	# Hostname is used for SNI/Verification
 	host.dtls_client_setup(address, client_tls)
 	
 	multiplayer.multiplayer_peer = peer
@@ -92,11 +101,13 @@ func _on_peer_disconnected(id: int) -> void:
 
 func switch_server(address: String, port: int) -> void:
 	print("[NetworkManager] Switching to server: ", address, ":", port)
+	is_switching_server = true
+	
 	# Disconnect current peer
 	if multiplayer.multiplayer_peer:
 		multiplayer.multiplayer_peer.close()
 		multiplayer.multiplayer_peer = null
 	
-	# Wait a frame to ensure cleanup
-	await get_tree().process_frame
+	# Wait a bit longer to ensure signals are processed and state is clean
+	await get_tree().create_timer(0.2).timeout
 	join_server(address, port)

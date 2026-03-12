@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/objects/Lantern.gd" id="1_script"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_1"]
+size = Vector3(0.2, 0.3, 0.2)
+
+[node name="Lantern" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_1")
+
+[node name="Light" type="OmniLight3D" parent="."]
+visible = false
+light_color = Color(1, 0.8, 0.4, 1)
+light_energy = 2.0
+omni_range = 10.0

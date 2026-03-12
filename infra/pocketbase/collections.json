@@ -107,24 +107,11 @@
         "id": "field_inv000001",
         "name": "inventory",
         "type": "json",
-        "required": false,
+        "required": true,
         "presentable": false,
         "unique": false,
         "options": {
           "maxSize": 2000000
-        }
-      },
-      {
-        "id": "field_pres00001",
-        "name": "prestige",
-        "type": "number",
-        "required": false,
-        "presentable": false,
-        "unique": false,
-        "options": {
-          "min": 0,
-          "max": null,
-          "noDecimal": true
         }
       },
       {

@@ -91,12 +91,20 @@ func register(username: String, email: String, password: String, requester_id: i
 		if (response_code == 200 or response_code == 204) and json_result is Dictionary:
 			var user_id = json_result.get("id", "")
 			if user_id != "":
-				var player_data = {"name": username, "user": user_id, "inventory": {"init": true}, "prestige": 0}
+				var initial_inventory = {"hotbar": [], "bag": [], "armor": []}
+				for i in range(10): initial_inventory.hotbar.append(null)
+				for i in range(30): initial_inventory.bag.append(null)
+				for i in range(4): initial_inventory.armor.append(null)
+				
+				var player_data = {
+					"name": username, 
+					"user": user_id, 
+					"inventory": initial_inventory
+				}
 				create_record("players", player_data, requester_id)
 				http.queue_free()
 				return
 		
-		# Fallthrough: Failure
 		var msg = "Registration failed."
 		if json_result is Dictionary and json_result.has("message"): msg = json_result["message"]
 		PBHelper.relay_login_failure(requester_id, msg)
@@ -192,10 +200,13 @@ func _on_request_completed(collection: String, method: String, response_code: in
 func _create_new_player(requester_id: int) -> void:
 	var username = pending_logins.get(requester_id, "UnknownPlayer")
 	var user_id = pending_user_ids.get(requester_id, "")
-	if user_id == "":
-		PBHelper.relay_login_failure(requester_id, "Auth state lost. Please try again.")
-		return
-	var initial_data = {"name": username, "user": user_id, "inventory": {"init": true}, "prestige": 0}
+	
+	var initial_inventory = {"hotbar": [], "bag": [], "armor": []}
+	for i in range(10): initial_inventory.hotbar.append(null)
+	for i in range(30): initial_inventory.bag.append(null)
+	for i in range(4): initial_inventory.armor.append(null)
+
+	var initial_data = {"name": username, "user": user_id, "inventory": initial_inventory}
 	create_record("players", initial_data, requester_id)
 
 func _finalize_login(requester_id: int, data: Dictionary) -> void:
@@ -204,6 +215,13 @@ func _finalize_login(requester_id: int, data: Dictionary) -> void:
 
 func _finalize_update(requester_id: int, data: Dictionary) -> void:
 	PBHelper.relay_update_success(requester_id, data)
+
+func reset_session() -> void:
+	current_player_id = ""
+	current_player_name = ""
+	pending_logins.clear()
+	pending_user_ids.clear()
+	print("[PersistenceManager] Session reset.")
 
 func _cleanup_pending(requester_id: int) -> void:
 	pending_logins.erase(requester_id)

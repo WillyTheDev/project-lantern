@@ -46,6 +46,14 @@ func _on_disconnect_pressed() -> void:
 	if multiplayer.multiplayer_peer:
 		multiplayer.multiplayer_peer.close()
 	
+	# Reset local data
+	InventoryManager.reset()
+	PersistenceManager.reset_session()
+	SceneManager.reset_credentials()
+	
+	# Ensure mouse is visible for main menu
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	
 	# Transition back to main menu
 	SceneManager._load_scene(SceneManager.MENU_SCENE)
 	queue_free()

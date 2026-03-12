@@ -60,4 +60,4 @@ godot
 ## 📂 Architecture
 - **Hub:** Port 9797 (UDP) - Social persistent space.
 - **Dungeon:** Port 9798 (UDP) - Procedural extraction instance.
-- **Database:** PocketBase (Internal) - Handles player persistence and "Visual Prestige" grades.
+- **Database:** PocketBase (Internal) - Handles player and inventory persistence.
