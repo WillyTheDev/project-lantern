@@ -44,10 +44,8 @@ func _sync_to_db() -> void:
 	if player_db_id == "":
 		return
 	
-	# Persist to PocketBase
-	PersistenceManager.update_record("players", player_db_id, {
-		"inventory": inventory
-	})
+	# Persist to PocketBase via the Helper (requests the server to do it)
+	PBHelper.request_sync_inventory(player_db_id, inventory)
 
 func _on_persistence_completed(collection: String, method: String, response_code: int, result: Variant) -> void:
 	if collection == "players" and method == "PATCH":

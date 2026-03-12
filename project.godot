@@ -25,6 +25,7 @@ driver/mix_rate=48000
 InventoryManager="*res://core/autoloads/InventoryManager.gd"
 NetworkManager="*res://core/network/NetworkManager.gd"
 PersistenceManager="*res://core/network/PersistenceManager.gd"
+PBHelper="*res://core/network/PocketBaseHelper.gd"
 SceneManager="*res://core/scene_manager/SceneManager.gd"
 VoiceManager="*res://core/network/VoiceManager.gd"
 

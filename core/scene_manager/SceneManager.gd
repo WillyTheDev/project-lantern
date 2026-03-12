@@ -7,6 +7,7 @@ const MENU_SCENE = "res://ui/MainMenu.tscn"
 const LOADING_SCREEN_PATH = "res://ui/LoadingScreen.tscn"
 
 var loading_screen_instance: Node = null
+var pending_username: String = ""
 
 func _ready() -> void:
 	# ... (keep existing _ready logic)
@@ -25,16 +26,40 @@ func _ready() -> void:
 			# Clients start in the Main Menu
 			_load_scene.call_deferred(MENU_SCENE)
 
-func _load_scene(path: String) -> void:
-	# Don't reload the same scene if it's already active
-	if get_tree().current_scene and get_tree().current_scene.scene_file_path == path:
-		print("[SceneManager] Scene already loaded: ", path)
+func _load_scene(path: String, username: String = "") -> void:
+	if not is_inside_tree():
+		print("[SceneManager] ERROR: SceneManager not in tree when trying to load: ", path)
+		return
+		
+	var tree = get_tree()
+	if not tree:
 		return
 
+	# Don't reload the same scene if it's already active
+	if tree.current_scene and tree.current_scene.scene_file_path == path:
+		print("[SceneManager] Scene already loaded: ", path)
+		# Still request login if username is provided
+		if username != "":
+			PBHelper.request_login(username)
+		return
+
+	if username != "":
+		pending_username = username
+
 	print("[SceneManager] Loading scene: ", path)
-	var err = get_tree().change_scene_to_file(path)
+	var err = tree.change_scene_to_file(path)
 	if err != OK:
 		printerr("[SceneManager] Failed to load scene: ", path, " Error: ", err)
+		return
+	
+	# If we have a username, we need to request login ONCE the new scene is ready
+	if pending_username != "":
+		# Wait for the next frame so the new scene is the 'current_scene'
+		# Use tree instead of get_tree() since we are in an await
+		await tree.process_frame
+		print("[SceneManager] New scene ready, requesting login for: ", pending_username)
+		PBHelper.request_login(pending_username)
+		pending_username = "" # Clear it
 
 func show_loading_screen(show: bool) -> void:
 	if show:

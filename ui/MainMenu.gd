@@ -4,10 +4,12 @@ extends Control
 @onready var status_label: Label = %StatusLabel
 @onready var username_input: LineEdit = %UsernameInput
 
+var pending_username: String = ""
+
 func _ready() -> void:
 	join_button.pressed.connect(_on_join_pressed)
 	
-	# Listen for connection success to change scene
+	# Listen for connection success
 	NetworkManager.multiplayer.connected_to_server.connect(_on_connected)
 	NetworkManager.multiplayer.connection_failed.connect(_on_failed)
 
@@ -17,25 +19,19 @@ func _on_join_pressed() -> void:
 		status_label.text = "Please enter a username!"
 		return
 		
-	status_label.text = "Logging in..."
+	pending_username = username
+	status_label.text = "Connecting to Hub..."
 	join_button.disabled = true
 	username_input.editable = false
 	
-	# 1. Login to PocketBase first
-	PersistenceManager.login(username)
-	
-	# Wait for login to complete (we'll just use a timer or a simple delay for now)
-	# In a real app, we'd wait for a signal from PersistenceManager
-	await get_tree().create_timer(1.0).timeout
-	
-	status_label.text = "Connecting to Hub..."
-	# 2. Join the Hub Server (Port 9797)
+	# 1. Connect to Hub Server first (Server must be the gateway to PocketBase)
 	NetworkManager.join_server(NetworkManager.server_address, NetworkManager.hub_server_port)
 
 func _on_connected() -> void:
-	status_label.text = "Connected! Loading Hub..."
-	# Tell SceneManager to load the Hub scene
-	SceneManager._load_scene(SceneManager.HUB_SCENE)
+	status_label.text = "Loading Hub..."
+	# 2. Tell SceneManager to load scene AND remember username for the login
+	# Use call_deferred to avoid tree state issues during signal callback
+	SceneManager.call_deferred("_load_scene", SceneManager.HUB_SCENE, pending_username)
 
 func _on_failed() -> void:
 	status_label.text = "Connection Failed. Is the Hub Server running?"

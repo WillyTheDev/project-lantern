@@ -52,9 +52,13 @@ func _ready() -> void:
 		# --- INTERACTION SETUP ---
 		# Create a RayCast3D to detect interactable objects
 		interact_ray = RayCast3D.new()
-		interact_ray.target_position = Vector3(0, 0, -2.5) # Reach of 2.5 meters
+		# Attach to player root, point +Z (forward for this character)
+		# Offset slightly up to be at "chest" height
+		interact_ray.position.y = 0.5
+		interact_ray.target_position = Vector3(0, 0, 2.5) 
 		interact_ray.enabled = true
-		camera.add_child(interact_ray)
+		interact_ray.add_exception(self)
+		add_child(interact_ray)
 		
 		# --- LOCAL MIC CAPTURE SETUP ---
 		# Create an AudioStreamPlayer that uses the Microphone stream
@@ -104,14 +108,21 @@ func _unhandled_input(event: InputEvent) -> void:
 		_try_interact()
 
 func _try_interact() -> void:
-	if interact_ray and interact_ray.is_colliding():
-		var collider = interact_ray.get_collider()
-		if collider:
-			print("[Player] Interacting with: ", collider.name)
-			if collider.has_method("interact"):
-				collider.interact(self)
-			elif collider.get_parent().has_method("interact"):
-				collider.get_parent().interact(self)
+	if interact_ray:
+		if interact_ray.is_colliding():
+			var collider = interact_ray.get_collider()
+			if collider:
+				print("[Player] Ray colliding with: ", collider.name, " (Layer: ", collider.collision_layer, ")")
+				if collider.has_method("interact"):
+					collider.interact(self)
+				elif collider.get_parent() and collider.get_parent().has_method("interact"):
+					collider.get_parent().interact(self)
+				else:
+					print("[Player] Collider has no interact method.")
+		else:
+			print("[Player] Ray not colliding with anything. Target: ", interact_ray.target_position)
+	else:
+		print("[Player] interact_ray is null!")
 
 func _toggle_settings_menu() -> void:
 	var settings_scene = preload("res://ui/SettingsMenu.tscn")

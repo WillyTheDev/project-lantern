@@ -19,16 +19,16 @@ The application uses CLI arguments to determine its role at startup:
 - **Dungeon Server:** Started with `--dungeon` (starts at Dungeon scene, port 9798).
 
 ### 2. Global Autoloads (Singletons)
-- `NetworkManager` (`core/network/NetworkManager.gd`): Handles role parsing, server startup (Hub/Dungeon), and client connections.
-- `SceneManager` (`core/scene_manager/SceneManager.gd`): Automatically loads the correct scene (`Hub.tscn`, `Dungeon.tscn`, or `MainMenu.tscn`) based on the active `NetworkManager` role.
-- `VoiceManager` (`core/network/VoiceManager.gd`): Manages spatial VOIP, VAD (Voice Activity Detection), and Opus packet relay.
+- `NetworkManager`: Handles role parsing and server/client connections.
+- `SceneManager`: Manages scene transitions and ensures login requests happen only after scenes are ready.
+- `PersistenceManager`: **Server-Only** REST interface for PocketBase. No direct client access.
+- `PBHelper` (`core/network/PocketBaseHelper.gd`): The high-level API used by the game. Handles RPC bridging between clients and the server-side PersistenceManager.
+- `InventoryManager`: Manages local player items and requests syncs via PBHelper.
+- `VoiceManager`: Manages spatial VOIP.
 
-### 3. Networking & Sync
-- **VOIP Implementation:** Uses the `two-voip-godot-4` GDExtension for Opus compression and RNNoise denoising.
-- **VAD & Hang-Time:** Voice packets are only sent when volume exceeds a threshold (adjustable in Settings). A 0.8s "Hang-Time" ensures smooth transitions.
-- **Spawning:** Managed by `MultiplayerSpawner` with custom spawn functions (`hub_mult_spawner.gd`) to handle peer-to-peer data initialization.
-- **Synchronization:** Uses `MultiplayerSynchronizer` for player movement, position interpolation, and velocity sync.
-- **Communication:** RPCs are used for discrete events like `sync_respawn`.
+### 3. Networking & Sync (Server-Authoritative)
+- **Persistence Flow:** Client -> RPC Request -> Server -> PocketBase REST -> Server -> RPC Response -> Client.
+- **Spawning:** Managed by `MultiplayerSpawner`. The Hub server waits for PocketBase player data to be loaded before triggering a spawn, ensuring all clients see correct names/data immediately.
 
 ## Building and Running
 
