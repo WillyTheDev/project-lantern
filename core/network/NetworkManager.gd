@@ -12,6 +12,9 @@ var server_address: String = "127.0.0.1"
 func _ready() -> void:
 	_parse_arguments()
 	
+	# Ensure DTLS certificates are ready
+	TLSHelper.ensure_certs()
+	
 	if current_role != Role.CLIENT:
 		start_server()
 	else:
@@ -20,7 +23,7 @@ func _ready() -> void:
 		multiplayer.connection_failed.connect(_on_connected_fail)
 
 func _on_connected_ok():
-	print("[NetworkManager] Connected to server successfully.")
+	print("[NetworkManager] Connected to server successfully (DTLS).")
 	SceneManager.show_loading_screen(false)
 
 func _on_connected_fail():
@@ -48,13 +51,19 @@ func _parse_arguments() -> void:
 
 func start_server() -> void:
 	var peer = ENetMultiplayerPeer.new()
-	var err = peer.create_server(server_port)
+	var err = peer.create_server(server_port, 32)
 	if err != OK:
 		printerr("[NetworkManager] Failed to start server: ", err)
 		return
+	
+	# Correct way to enable DTLS in Godot 4: 
+	# Access the ENetConnection host and setup DTLS
+	var host = peer.get_host()
+	var server_tls = TLSHelper.get_server_options()
+	host.dtls_server_setup(server_tls)
 		
 	multiplayer.multiplayer_peer = peer
-	print("[NetworkManager] Server started on port ", server_port)
+	print("[NetworkManager] Secure DTLS Server started on port ", server_port)
 	
 	multiplayer.peer_connected.connect(_on_peer_connected)
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
@@ -65,6 +74,14 @@ func join_server(address: String, port: int) -> void:
 	if err != OK:
 		printerr("[NetworkManager] Failed to connect: ", err)
 		return
+	
+	# Correct way to enable DTLS in Godot 4:
+	var host = peer.get_host()
+	var client_tls = TLSHelper.get_client_options()
+	# Use host.dtls_client_setup(hostname, options)
+	# Hostname is used for SNI/Verification
+	host.dtls_client_setup(address, client_tls)
+	
 	multiplayer.multiplayer_peer = peer
 
 func _on_peer_connected(id: int) -> void:

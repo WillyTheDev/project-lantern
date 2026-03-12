@@ -8,9 +8,9 @@ const LOADING_SCREEN_PATH = "res://ui/LoadingScreen.tscn"
 
 var loading_screen_instance: Node = null
 var pending_username: String = ""
+var pending_password: String = ""
 
 func _ready() -> void:
-	# ... (keep existing _ready logic)
 	# Wait for NetworkManager to finish its _ready
 	await get_tree().process_frame
 	
@@ -26,7 +26,7 @@ func _ready() -> void:
 			# Clients start in the Main Menu
 			_load_scene.call_deferred(MENU_SCENE)
 
-func _load_scene(path: String, username: String = "") -> void:
+func _load_scene(path: String, username: String = "", password: String = "") -> void:
 	if not is_inside_tree():
 		print("[SceneManager] ERROR: SceneManager not in tree when trying to load: ", path)
 		return
@@ -40,11 +40,12 @@ func _load_scene(path: String, username: String = "") -> void:
 		print("[SceneManager] Scene already loaded: ", path)
 		# Still request login if username is provided
 		if username != "":
-			PBHelper.request_login(username)
+			PBHelper.request_login(username, password)
 		return
 
 	if username != "":
 		pending_username = username
+		pending_password = password
 
 	print("[SceneManager] Loading scene: ", path)
 	var err = tree.change_scene_to_file(path)
@@ -55,11 +56,11 @@ func _load_scene(path: String, username: String = "") -> void:
 	# If we have a username, we need to request login ONCE the new scene is ready
 	if pending_username != "":
 		# Wait for the next frame so the new scene is the 'current_scene'
-		# Use tree instead of get_tree() since we are in an await
 		await tree.process_frame
 		print("[SceneManager] New scene ready, requesting login for: ", pending_username)
-		PBHelper.request_login(pending_username)
-		pending_username = "" # Clear it
+		PBHelper.request_login(pending_username, pending_password)
+		pending_username = ""
+		pending_password = ""
 
 func show_loading_screen(show: bool) -> void:
 	if show:

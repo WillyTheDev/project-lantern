@@ -3,6 +3,7 @@ extends Control
 @onready var mic_option: OptionButton = %MicOptionButton
 @onready var sensitivity_slider: HSlider = %SensitivitySlider
 @onready var resume_button: Button = %ResumeButton
+@onready var disconnect_button: Button = %DisconnectButton
 
 func _ready() -> void:
 	# 1. Populate Microphone List and Slider
@@ -13,6 +14,7 @@ func _ready() -> void:
 	mic_option.item_selected.connect(_on_mic_selected)
 	sensitivity_slider.value_changed.connect(_on_sensitivity_changed)
 	resume_button.pressed.connect(_on_resume_pressed)
+	disconnect_button.pressed.connect(_on_disconnect_pressed)
 	
 	# Initial focus for controller support (optional)
 	resume_button.grab_focus()
@@ -39,7 +41,16 @@ func _on_mic_selected(index: int) -> void:
 func _on_sensitivity_changed(value: float) -> void:
 	VoiceManager.voice_threshold = value
 
+func _on_disconnect_pressed() -> void:
+	print("[Settings] Disconnecting from server...")
+	if multiplayer.multiplayer_peer:
+		multiplayer.multiplayer_peer.close()
+	
+	# Transition back to main menu
+	SceneManager._load_scene(SceneManager.MENU_SCENE)
+	queue_free()
+
 func _on_resume_pressed() -> void:
-	# Close the menu (the player controller handles visibility usually, but we emit a signal or just queue_free)
+	# Close the menu
 	queue_free()
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)

@@ -10,67 +10,108 @@ const COL_PLAYERS = "players"
 # Signals for UI/Game logic
 signal player_data_loaded(data: Dictionary)
 signal player_data_sync_failed(error_msg: String)
-signal server_player_data_ready(peer_id: int, data: Dictionary) # New signal for server-side logic
+signal server_player_login_completed(peer_id: int, data: Dictionary) # Renamed for clarity
+signal server_auth_complete(success: bool)
+
+var is_server_authenticated: bool = false
+var pending_requests: Array = [] 
 
 func _ready() -> void:
-	# Servers listen to generic request completed if they need to do extra logic
 	if multiplayer.is_server():
 		PersistenceManager.request_completed.connect(_on_server_request_completed)
+		server_auth_complete.connect(_on_server_auth_complete)
+
+func _on_server_auth_complete(success: bool) -> void:
+	is_server_authenticated = success
+	if success:
+		print("[PBHelper] Server ready. Processing ", pending_requests.size(), " pending requests.")
+		for req in pending_requests:
+			match req.type:
+				"login": server_request_login(req.username, req.password, req.sender_id)
+				"sync": server_request_sync_inventory(req.db_id, req.inventory, req.sender_id)
+				"register": server_request_register(req.username, req.email, req.password, req.sender_id)
+		pending_requests.clear()
 
 # --- Client Facing Methods ---
 
-## CLIENT CALL: Requests login from the server
-func request_login(username: String) -> void:
+func request_login(username: String, password: String) -> void:
 	if multiplayer.is_server():
-		PersistenceManager.login(username)
+		PersistenceManager.login(username, password)
 	else:
-		rpc_id(1, "server_request_login", username)
+		rpc_id(1, "server_request_login", username, password)
 
-## CLIENT CALL: Requests inventory sync from the server
 func request_sync_inventory(player_db_id: String, inventory: Dictionary) -> void:
 	if multiplayer.is_server():
 		PersistenceManager.update_record(COL_PLAYERS, player_db_id, {"inventory": inventory})
 	else:
 		rpc_id(1, "server_request_sync_inventory", player_db_id, inventory)
 
+func request_register(username: String, email: String, password: String) -> void:
+	if multiplayer.is_server():
+		PersistenceManager.register(username, email, password)
+	else:
+		rpc_id(1, "server_request_register", username, email, password)
+
 # --- RPC Methods ---
 
-## SERVER SIDE: Handles login request from client
 @rpc("any_peer", "call_remote", "reliable")
-func server_request_login(username: String) -> void:
-	var sender_id = multiplayer.get_remote_sender_id()
-	print("[PBHelper] Server received login request from peer ", sender_id, " for user: ", username)
-	PersistenceManager.login(username, sender_id) # Pass sender_id!
+func server_request_register(username: String, email: String, password: String, force_sender_id: int = -1) -> void:
+	var sender_id = force_sender_id if force_sender_id != -1 else multiplayer.get_remote_sender_id()
+	if not is_server_authenticated:
+		pending_requests.append({"type": "register", "username": username, "email": email, "password": password, "sender_id": sender_id})
+		return
+	PersistenceManager.register(username, email, password, sender_id)
 
-## SERVER SIDE: Handles sync request from client
 @rpc("any_peer", "call_remote", "reliable")
-func server_request_sync_inventory(player_db_id: String, inventory: Dictionary) -> void:
-	var sender_id = multiplayer.get_remote_sender_id()
-	print("[PBHelper] Server received sync request from peer ", sender_id)
+func server_request_login(username: String, password: String, force_sender_id: int = -1) -> void:
+	var sender_id = force_sender_id if force_sender_id != -1 else multiplayer.get_remote_sender_id()
+	if not is_server_authenticated:
+		pending_requests.append({"type": "login", "username": username, "password": password, "sender_id": sender_id})
+		return
+	PersistenceManager.login(username, password, sender_id)
+
+@rpc("any_peer", "call_remote", "reliable")
+func server_request_sync_inventory(player_db_id: String, inventory: Dictionary, force_sender_id: int = -1) -> void:
+	var sender_id = force_sender_id if force_sender_id != -1 else multiplayer.get_remote_sender_id()
+	if not is_server_authenticated:
+		pending_requests.append({"type": "sync", "db_id": player_db_id, "inventory": inventory, "sender_id": sender_id})
+		return
 	PersistenceManager.update_record(COL_PLAYERS, player_db_id, {"inventory": inventory}, sender_id)
 
-## CLIENT SIDE: Server calls this to deliver data
+## CLIENT SIDE: Deliver full profile (triggers spawning logic)
 @rpc("authority", "call_remote", "reliable")
 func fulfill_login(data: Dictionary) -> void:
-	print("[PBHelper] Client received login data from server.")
+	print("[PBHelper] Client received login data.")
 	PersistenceManager.current_player_id = data["id"]
 	PersistenceManager.current_player_name = data["name"]
-	
 	player_data_loaded.emit(data)
-	# Also update InventoryManager locally
 	InventoryManager.load_inventory(data["id"], data.get("inventory", {}))
+
+## CLIENT SIDE: Deliver updated data (silent sync)
+@rpc("authority", "call_remote", "reliable")
+func fulfill_update(data: Dictionary) -> void:
+	print("[PBHelper] Client received sync update.")
+	# Just update inventory without triggering a "login" event
+	InventoryManager.load_inventory(data["id"], data.get("inventory", {}))
+
+@rpc("authority", "call_remote", "reliable")
+func fulfill_login_failure(reason: String) -> void:
+	player_data_sync_failed.emit(reason)
 
 # --- Server Internal ---
 
-## SERVER SIDE: Called by PersistenceManager when a request finishes
 func relay_login_success(peer_id: int, data: Dictionary) -> void:
-	# Emit signal for other server systems (like Spawner)
-	server_player_data_ready.emit(peer_id, data)
-	
-	if peer_id == 1: # Local server login (if any)
-		fulfill_login(data)
-	else:
-		rpc_id(peer_id, "fulfill_login", data)
+	server_player_login_completed.emit(peer_id, data)
+	if peer_id == 1: fulfill_login(data)
+	else: rpc_id(peer_id, "fulfill_login", data)
+
+func relay_update_success(peer_id: int, data: Dictionary) -> void:
+	if peer_id == 1: fulfill_update(data)
+	else: rpc_id(peer_id, "fulfill_update", data)
+
+func relay_login_failure(peer_id: int, reason: String) -> void:
+	if peer_id == 1: fulfill_login_failure(reason)
+	else: rpc_id(peer_id, "fulfill_login_failure", reason)
 
 func _on_server_request_completed(collection: String, method: String, response_code: int, result: Variant) -> void:
 	if response_code >= 400:

@@ -50,11 +50,35 @@
     "deleteRule": "id = @request.auth.id",
     "options": {
       "allowEmailAuth": true,
-      "allowOAuth2Auth": true,
+      "allowOAuth2Auth": false,
       "allowUsernameAuth": true,
       "exceptEmailDomains": null,
       "manageRule": null,
       "minPasswordLength": 8,
+      "onlyEmailDomains": null,
+      "onlyVerified": false,
+      "requireEmail": false
+    }
+  },
+  {
+    "id": "sys_accounts_01",
+    "name": "system_accounts",
+    "type": "auth",
+    "system": false,
+    "schema": [],
+    "indexes": [],
+    "listRule": "id = @request.auth.id",
+    "viewRule": "id = @request.auth.id",
+    "createRule": null,
+    "updateRule": "id = @request.auth.id",
+    "deleteRule": null,
+    "options": {
+      "allowEmailAuth": true,
+      "allowOAuth2Auth": false,
+      "allowUsernameAuth": true,
+      "exceptEmailDomains": null,
+      "manageRule": null,
+      "minPasswordLength": 12,
       "onlyEmailDomains": null,
       "onlyVerified": false,
       "requireEmail": false
@@ -83,7 +107,7 @@
         "id": "field_inv000001",
         "name": "inventory",
         "type": "json",
-        "required": true,
+        "required": false,
         "presentable": false,
         "unique": false,
         "options": {
@@ -102,13 +126,28 @@
           "max": null,
           "noDecimal": true
         }
+      },
+      {
+        "id": "player_user_rel",
+        "name": "user",
+        "type": "relation",
+        "required": true,
+        "presentable": false,
+        "unique": true,
+        "options": {
+          "collectionId": "_pb_users_auth_",
+          "cascadeDelete": true,
+          "minSelect": null,
+          "maxSelect": 1,
+          "displayFields": null
+        }
       }
     ],
     "indexes": [],
-    "listRule": "",
-    "viewRule": "",
-    "createRule": "",
-    "updateRule": "",
+    "listRule": "@request.auth.collectionName = 'system_accounts'",
+    "viewRule": "@request.auth.collectionName = 'system_accounts'",
+    "createRule": "@request.auth.collectionName = 'system_accounts'",
+    "updateRule": "@request.auth.collectionName = 'system_accounts'",
     "deleteRule": null,
     "options": {}
   }

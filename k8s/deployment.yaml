@@ -3,6 +3,33 @@ kind: Namespace
 metadata:
   name: project-lantern
 ---
+# --- SECRETS (Passwords) ---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: lantern-secrets
+  namespace: project-lantern
+type: Opaque
+stringData:
+  # Change these to your actual system user/pass created in PocketBase UI
+  pb-system-user: "hub_server"
+  pb-system-pass: "changeme123"
+---
+# --- TLS CERTIFICATE (Cert-Manager) ---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: project-lantern-tls
+  namespace: project-lantern
+spec:
+  secretName: project-lantern-tls-secret
+  commonName: game.dungeonmomo.cc
+  dnsNames:
+    - game.dungeonmomo.cc
+  issuerRef:
+    name: letsencrypt-prod # Ensure this matches your ClusterIssuer name
+    kind: ClusterIssuer
+---
 # --- POCKETBASE (Internal Database) ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -79,13 +106,36 @@ spec:
       containers:
         - name: game
           image: harbor.kube.dungeonmomo.cc/project-lantern/project-lantern:latest
-          args: ["--headless", "--", "--hub"]
+          args: [
+            "--headless", "--", 
+            "--hub", 
+            "--cert=/mnt/certs/tls.crt", 
+            "--key=/mnt/certs/tls.key"
+          ]
           ports:
             - containerPort: 9797
               protocol: UDP
           env:
             - name: PB_URL
               value: "http://pocketbase:8090"
+            - name: PB_SYSTEM_USER
+              valueFrom:
+                secretKeyRef:
+                  name: lantern-secrets
+                  key: pb-system-user
+            - name: PB_SYSTEM_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: lantern-secrets
+                  key: pb-system-pass
+          volumeMounts:
+            - name: certs
+              mountPath: "/mnt/certs"
+              readOnly: true
+      volumes:
+        - name: certs
+          secret:
+            secretName: project-lantern-tls-secret
 ---
 apiVersion: v1
 kind: Service
@@ -123,13 +173,36 @@ spec:
       containers:
         - name: game
           image: harbor.kube.dungeonmomo.cc/project-lantern/project-lantern:latest
-          args: ["--headless", "--", "--dungeon"]
+          args: [
+            "--headless", "--", 
+            "--dungeon", 
+            "--cert=/mnt/certs/tls.crt", 
+            "--key=/mnt/certs/tls.key"
+          ]
           ports:
             - containerPort: 9798
               protocol: UDP
           env:
             - name: PB_URL
               value: "http://pocketbase:8090"
+            - name: PB_SYSTEM_USER
+              valueFrom:
+                secretKeyRef:
+                  name: lantern-secrets
+                  key: pb-system-user
+            - name: PB_SYSTEM_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: lantern-secrets
+                  key: pb-system-pass
+          volumeMounts:
+            - name: certs
+              mountPath: "/mnt/certs"
+              readOnly: true
+      volumes:
+        - name: certs
+          secret:
+            secretName: project-lantern-tls-secret
 ---
 apiVersion: v1
 kind: Service

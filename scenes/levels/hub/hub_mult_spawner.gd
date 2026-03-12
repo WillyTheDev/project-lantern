@@ -10,8 +10,8 @@ func _ready() -> void:
 	
 	# Server-side connection handling
 	if NetworkManager.current_role == NetworkManager.Role.HUB_SERVER:
-		# We wait for PB data before spawning
-		PBHelper.server_player_data_ready.connect(_on_server_player_data_ready)
+		# We wait for login success before spawning
+		PBHelper.server_player_login_completed.connect(_on_server_player_login_completed)
 		NetworkManager.multiplayer.peer_disconnected.connect(_on_peer_disconnected)
 
 # --- CLIENT SIDE CALLBACKS ---
@@ -21,10 +21,21 @@ func _on_connection_success():
 
 # --- SERVER SIDE CALLBACKS ---
 
-func _on_server_player_data_ready(peer_id: int, data: Dictionary):
-	print("[Hub] [Server] Data ready for peer ", peer_id, ". Waiting 0.5s for client scene transition...")
+func _on_server_player_login_completed(peer_id: int, data: Dictionary):
+	print("[Hub] [Server] Login completed for peer ", peer_id, ". Waiting 0.5s for client scene transition...")
 	# Wait a bit to ensure the client has finished loading the Hub scene
 	await get_tree().create_timer(0.5).timeout
+	
+	# Safety: Don't spawn if peer disconnected during the timer
+	if not multiplayer.get_peers().has(peer_id) and peer_id != 1:
+		return
+		
+	# Safety: Don't spawn if node already exists
+	var player_name = "Player_%d" % peer_id
+	if get_node(%MultiplayerPlayerSpawner.spawn_path).has_node(player_name):
+		print("[Hub] [Server] Player node already exists for peer ", peer_id, ". Skipping spawn.")
+		return
+
 	print("[Hub] [Server] Spawning player node for peer: ", peer_id)
 	_spawn_player(peer_id, data)
 
