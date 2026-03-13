@@ -2,7 +2,8 @@
 
 [ext_resource type="Script" uid="uid://lvuliw2qx4yr" path="res://scenes/levels/hub/hub_mult_spawner.gd" id="1_unjod"]
 [ext_resource type="PackedScene" uid="uid://bajnbtxhvsyka" path="res://scenes/world/portals/portal.tscn" id="2_tgd1a"]
-[ext_resource type="PackedScene" uid="uid://cb4pvnrvhx7ka" path="res://scenes/world/interactables/SuppliesChest.tscn" id="3_p4vco"]
+[ext_resource type="PackedScene" path="res://scenes/world/interactables/SuppliesChest.tscn" id="3_p4vco"]
+[ext_resource type="PackedScene" uid="uid://brahepbog8dwn" path="res://scenes/world/interactables/StashChest.tscn" id="4_n5qrj"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_n3u0n"]
 
@@ -66,3 +67,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.988897, 0, 0)
 
 [node name="SuppliesChest" parent="." unique_id=1269416041 instance=ExtResource("3_p4vco")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.30872, 0, 4.41708)
+
+[node name="StashChest" parent="." unique_id=1044908059 instance=ExtResource("4_n5qrj")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.020477295, 0.04352963, 4.696176)

@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://brahepbog8dwn"]
+
+[ext_resource type="Script" uid="uid://bk2o5me5jnx1j" path="res://scenes/world/interactables/StashChest.gd" id="1_v4m3n"]
+[ext_resource type="PackedScene" uid="uid://bjkbtsh2k8ce3" path="res://assets/kay_dungeon/gltf/chest.gltf" id="2_r1uhu"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ip3qx"]
+size = Vector3(1, 0.8, 0.6)
+
+[node name="StashChest" type="StaticBody3D" unique_id=1044908059]
+script = ExtResource("1_v4m3n")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=2096650511]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
+shape = SubResource("BoxShape3D_ip3qx")
+
+[node name="chest2" parent="." unique_id=887202804 instance=ExtResource("2_r1uhu")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0.022002459, 0, -0.04992047)
+
+[node name="Label3D" type="Label3D" parent="." unique_id=1937878926]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+billboard = 1
+text = "Stash Chest [E]"
+font_size = 48

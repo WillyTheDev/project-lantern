@@ -89,8 +89,10 @@ func register(username: String, email: String, password: String, requester_id: i
 		if (code == 200 or code == 204) and res is Dictionary:
 			var user_id = res.get("id", "")
 			if user_id != "":
-				var initial_inventory = InventoryData.new().to_dict()
-				create_record("players", {"name": username, "user": user_id, "inventory": initial_inventory}, requester_id)
+				var initial_inv = InventoryData.new().to_dict()
+				initial_inv["stash"] = InventoryData.new().to_dict()
+				initial_inv["stats"] = PlayerStats.new().to_dict()
+				create_record("players", {"name": username, "user": user_id, "inventory": initial_inv}, requester_id)
 				return
 		
 		var msg = res.get("message", "Registration failed.") if res is Dictionary else "Registration failed."
@@ -176,8 +178,12 @@ func _on_request_completed(collection: String, method: String, response_code: in
 func _create_new_player(requester_id: int, token: String = "") -> void:
 	var username = pending_logins.get(requester_id, "UnknownPlayer")
 	var user_id = pending_user_ids.get(requester_id, "")
-	var initial_inventory = InventoryData.new().to_dict()
-	var initial_data = {"name": username, "user": user_id, "inventory": initial_inventory}
+	
+	var initial_inv = InventoryData.new().to_dict()
+	initial_inv["stash"] = InventoryData.new().to_dict()
+	initial_inv["stats"] = PlayerStats.new().to_dict()
+	
+	var initial_data = {"name": username, "user": user_id, "inventory": initial_inv}
 	
 	var url = base_url + "/api/collections/players/records"
 	_send_request(url, HTTPClient.METHOD_POST, initial_data, func(code, res):

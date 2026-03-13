@@ -17,25 +17,49 @@ const TOOLTIP_SCENE = preload("res://ui/inventory/ItemTooltip.tscn")
 var is_local_authority: bool = false
 var current_tooltip: Control = null
 var external_slot_count: int = 0
+var player_ref: Node3D = null
 
 func _ready() -> void:
 	_setup_slots()
-	InventoryManager.inventory_updated.connect(refresh)
+	# Global service signals
 	InventoryManager.active_slot_changed.connect(_on_active_slot_changed)
 	InventoryManager.external_inventory_updated.connect(_on_external_inventory_updated)
-	InventoryManager.stats_updated.connect(_on_stats_updated)
+	InventoryManager.total_stats_updated.connect(_on_total_stats_updated)
 	
 	inventory_overlay.visible = false
 	external_section.visible = false
 	hotbar_hud.visible = true
 	visible = true
+
+func initialize_for_player(player: Node3D) -> void:
+	if player_ref:
+		player_ref.inventory.inventory_updated.disconnect(refresh)
+		player_ref.stats.stats_changed.disconnect(_on_base_stats_updated)
+		
+	player_ref = player
+	player_ref.inventory.inventory_updated.connect(refresh)
+	player_ref.stats.stats_changed.connect(_on_base_stats_updated)
 	
 	refresh()
-	_on_stats_updated(InventoryManager.player_stats)
+	_on_base_stats_updated(player_ref.stats)
 
-func _on_stats_updated(stats: PlayerStats) -> void:
-	stats_label.text = "STR: %d\nAGI: %d\nINT: %d\nSTA: %d" % [
-		stats.strength, stats.agility, stats.intellect, stats.stamina
+func _on_base_stats_updated(_stats: PlayerStats) -> void:
+	# Refresh UI when base stats (Level/XP) change
+	_update_stats_label()
+
+func _on_total_stats_updated(_total_stats: Dictionary) -> void:
+	_update_stats_label()
+
+func _update_stats_label() -> void:
+	if not player_ref: return
+	var stats = player_ref.stats
+	var total_agi = InventoryManager.get_total_agility()
+	var total_str = InventoryManager.get_total_strength()
+	var total_int = InventoryManager.get_total_intellect()
+	var total_sta = InventoryManager.get_total_stamina()
+	
+	stats_label.text = "LVL: %d (XP: %d)\nSTR: %d\nAGI: %d\nINT: %d\nSTA: %d" % [
+		stats.level, stats.experience, total_str, total_agi, total_int, total_sta
 	]
 
 func _on_external_inventory_updated() -> void:
@@ -47,6 +71,11 @@ func _on_external_inventory_updated() -> void:
 		inventory_overlay.visible = true
 		hotbar_hud.visible = false
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+		
+		# Update title if it's a stash
+		var title = external_section.get_node_or_null("Title")
+		if title:
+			title.text = "STASH" if InventoryManager.current_external_type == "stash" else "LOOT"
 	else:
 		external_section.visible = false
 		external_slot_count = 0
@@ -59,7 +88,7 @@ func _setup_external_slots(count: int) -> void:
 	for i in range(count):
 		var slot = SLOT_SCENE.instantiate()
 		slot.slot_index = i
-		slot.inventory_type = "external"
+		slot.inventory_type = InventoryManager.current_external_type
 		slot.mouse_entered.connect(_on_slot_mouse_entered.bind(slot))
 		slot.mouse_exited.connect(_on_slot_mouse_exited)
 		external_grid.add_child(slot)

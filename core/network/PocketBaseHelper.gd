@@ -134,14 +134,18 @@ func fulfill_login(data: Dictionary) -> void:
 		print("[PBHelper] Cached session token for shard handoffs.")
 		
 	player_data_loaded.emit(data)
-	InventoryManager.load_inventory(data["id"], data.get("inventory", {}))
+	
+	# Load into local player
+	var p = InventoryManager.get_local_player()
+	InventoryManager.load_inventory_for_player(p, data["id"], data.get("inventory", {}))
 
 ## CLIENT SIDE: Deliver updated data (silent sync)
 @rpc("authority", "call_remote", "reliable")
 func fulfill_update(data: Dictionary) -> void:
 	print("[PBHelper] Client received sync update.")
 	# Just update inventory without triggering a "login" event
-	InventoryManager.load_inventory(data["id"], data.get("inventory", {}))
+	var p = InventoryManager.get_local_player()
+	InventoryManager.load_inventory_for_player(p, data["id"], data.get("inventory", {}))
 
 @rpc("authority", "call_remote", "reliable")
 func fulfill_login_failure(reason: String) -> void:
@@ -151,18 +155,23 @@ func fulfill_login_failure(reason: String) -> void:
 
 func relay_login_success(peer_id: int, data: Dictionary) -> void:
 	server_player_login_completed.emit(peer_id, data)
+	
+	# Update the server-side player node's inventory directly
+	if multiplayer.is_server():
+		var players = get_tree().get_nodes_in_group("players").filter(func(p): return p.player_id == peer_id)
+		if players.size() > 0:
+			InventoryManager.load_inventory_for_player(players[0], data["id"], data.get("inventory", {}))
+	
 	if peer_id == 1: fulfill_login(data)
 	else: rpc_id(peer_id, "fulfill_login", data)
 
 func relay_update_success(peer_id: int, data: Dictionary) -> void:
-	# Update the server-side player node's inventory cache if it exists
+	# Update the server-side player node's inventory
 	if multiplayer.is_server():
-		var player_node = get_tree().get_nodes_in_group("players").filter(func(p): return p.player_id == peer_id)
-		if player_node.size() > 0:
-			var p = player_node[0]
-			if "server_inventory" in p and p.server_inventory:
-				p.server_inventory.load_from_dict(data.get("inventory", {}))
-				p.refresh_held_item() # Trigger refresh on server
+		var players = get_tree().get_nodes_in_group("players").filter(func(p): return p.player_id == peer_id)
+		if players.size() > 0:
+			InventoryManager.load_inventory_for_player(players[0], data["id"], data.get("inventory", {}))
+			players[0].refresh_held_item() # Trigger refresh on server
 	
 	if peer_id == 1: fulfill_update(data)
 	else: rpc_id(peer_id, "fulfill_update", data)

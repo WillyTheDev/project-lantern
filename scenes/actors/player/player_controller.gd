@@ -16,6 +16,17 @@ var animations: PlayerAnimationManager
 
 @export var player_id: int = 1
 @export var player_name: String = ""
+
+# --- DATA OWNERSHIP ---
+@export var stats: PlayerStats = PlayerStats.new()
+@export var inventory: InventoryData = InventoryData.new()
+@export var stash: InventoryData = InventoryData.new()
+# Server-only storage for remote player inventories to allow item spawning
+var server_inventory: InventoryData = null:
+	set(v):
+		server_inventory = v
+		inventory = v # For simpler access
+
 @export var display_name: String = "": set = _set_display_name
 @export var name_color: Color = Color.WHITE: set = _set_name_color
 
@@ -24,8 +35,8 @@ var animations: PlayerAnimationManager
 @export var current_health: float = 100.0:
 	set(value):
 		current_health = value
-		if is_multiplayer_authority():
-			InventoryManager.player_stats.current_health = value
+		if is_multiplayer_authority() and stats:
+			stats.current_health = value
 		
 		if is_inside_tree():
 			_update_health_ui()
@@ -44,9 +55,6 @@ const MOUSE_SENSIBILITY = 0.002
 		active_slot_index = v
 		if is_inside_tree():
 			refresh_held_item()
-
-# Server-only storage for remote player inventories to allow item spawning
-var server_inventory: InventoryData = null
 
 func _enter_tree() -> void:
 	set_multiplayer_authority(player_id)
@@ -92,12 +100,13 @@ func _setup_local_player() -> void:
 	if inv_ui:
 		inv_ui.is_local_authority = true
 		inv_ui.visible = true 
+		inv_ui.initialize_for_player(self) # Bind UI to THIS player
 	
-	InventoryManager.active_slot_changed.connect(refresh_held_item)
-	InventoryManager.stats_updated.connect(_on_stats_updated)
+	inventory.active_slot_changed.connect(refresh_held_item)
+	stats.stats_changed.connect(_on_stats_updated)
 	
 	voip.setup_local()
-	_on_stats_updated(InventoryManager.player_stats)
+	_on_stats_updated()
 	
 	# Initial refresh
 	await get_tree().create_timer(0.2).timeout
@@ -124,10 +133,10 @@ func refresh_held_item(_index: int = -1) -> void:
 
 	var item = null
 	if is_multiplayer_authority():
-		item = InventoryManager.get_active_item()
-	elif multiplayer.is_server() and server_inventory:
-		server_inventory.active_hotbar_index = active_slot_index
-		item = server_inventory.get_active_item()
+		item = inventory.get_active_item()
+	elif multiplayer.is_server() and inventory:
+		inventory.active_hotbar_index = active_slot_index
+		item = inventory.get_active_item()
 	
 	if not item: return
 	
@@ -144,10 +153,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed:
 		if event.keycode >= KEY_1 and event.keycode <= KEY_9:
 			var idx = event.keycode - KEY_1
-			InventoryManager.set_active_slot(idx)
+			inventory.set_active_slot(idx)
 			active_slot_index = idx # Triggers sync and local refresh
 		elif event.keycode == KEY_0:
-			InventoryManager.set_active_slot(9)
+			inventory.set_active_slot(9)
 			active_slot_index = 9
 
 	if event is InputEventMouseMotion and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
@@ -163,7 +172,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		_use_held_item()
 
 func _use_held_item() -> void:
-	var item_stack = InventoryManager.get_active_item()
+	var item_stack = inventory.get_active_item()
 	if not item_stack: return
 	
 	var data = ItemDB.get_item(item_stack.id)
@@ -275,9 +284,9 @@ func _apply_damage_rpc(amount: float) -> void:
 	if multiplayer.get_remote_sender_id() != 1 and not multiplayer.is_server(): return
 	current_health -= amount
 
-func _on_stats_updated(stats: PlayerStats) -> void:
+func _on_stats_updated() -> void:
+	max_health = stats.max_health
 	if is_multiplayer_authority():
-		max_health = stats.max_health
 		# Keep current_health in sync with stats resource for local UI
 		if current_health != stats.current_health:
 			current_health = stats.current_health
@@ -289,6 +298,10 @@ func _on_death() -> void:
 	if not multiplayer.is_server(): return
 	if is_dead: return
 	is_dead = true
+	
+	print("[Player] Player died: ", player_name)
+	# InventoryService now handles the logic for a specific player's data
+	InventoryManager.handle_death_for_player(self)
 	
 	play_general_animation.rpc("general/Death_A")
 	await get_tree().create_timer(1.5).timeout

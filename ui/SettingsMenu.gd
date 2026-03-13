@@ -1,4 +1,4 @@
-extends Control
+extends CanvasLayer
 
 @onready var mic_option: OptionButton = %MicOptionButton
 @onready var sensitivity_slider: HSlider = %SensitivitySlider

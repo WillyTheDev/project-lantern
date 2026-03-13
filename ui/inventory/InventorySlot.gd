@@ -44,6 +44,7 @@ func get_item_stack() -> ItemStack:
 		"hotbar": return InventoryManager.data.hotbar[slot_index]
 		"bag": return InventoryManager.data.bag[slot_index]
 		"armor": return InventoryManager.data.armor[slot_index]
+		"stash": return InventoryManager.stash.bag[slot_index]
 		"external": return InventoryManager.external_inventory[slot_index]
 	return null
 
