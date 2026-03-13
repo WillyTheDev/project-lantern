@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://di7dq8payc6io"
+path="res://.godot/imported/bartop_A_medium.obj-666373331525a06dda3d34e468cea265.mesh"
+
+[deps]
+
+files=["res://.godot/imported/bartop_A_medium.obj-666373331525a06dda3d34e468cea265.mesh"]
+
+source_file="res://assets/kay_dungeon/obj/bartop_A_medium.obj"
+dest_files=["res://.godot/imported/bartop_A_medium.obj-666373331525a06dda3d34e468cea265.mesh", "res://.godot/imported/bartop_A_medium.obj-666373331525a06dda3d34e468cea265.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

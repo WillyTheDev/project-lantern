@@ -17,12 +17,14 @@ var target_player: Node3D = null
 var last_attack_time: float = 0.0
 
 func _ready() -> void:
+	add_to_group("enemies")
+	
 	# Only the server runs the AI logic
 	if not multiplayer.is_server():
 		set_physics_process(false)
 		return
 	
-	print("[Guardian] Initialized on Server.")
+	print("[Guardian] Initialized on Server: ", name)
 
 func _physics_process(delta: float) -> void:
 	if not target_player:
@@ -74,13 +76,11 @@ func _find_closest_player() -> void:
 			
 	if closest_player:
 		target_player = closest_player
-		print("[Guardian] Targeted player: ", target_player.name)
 
 func _try_attack() -> void:
 	var current_time = Time.get_ticks_msec() / 1000.0
 	if current_time - last_attack_time >= attack_cooldown:
 		if target_player and target_player.has_method("take_damage"):
-			print("[Guardian] Attacking player!")
 			target_player.take_damage(damage_amount)
 			last_attack_time = current_time
 
@@ -88,7 +88,6 @@ func take_damage(amount: float) -> void:
 	if not multiplayer.is_server(): return
 	
 	current_health -= amount
-	print("[Guardian] Took damage: ", amount, ". Remaining health: ", current_health)
 	
 	# Play effects on all clients
 	_play_damage_fx.rpc(amount)
@@ -103,7 +102,6 @@ func _play_damage_fx(amount: float) -> void:
 	var text_instance = text_scene.instantiate()
 	get_tree().root.add_child(text_instance)
 	
-	# Position at enemy head level with slight random offset
 	var offset = Vector3(randf_range(-0.5, 0.5), 1.8, randf_range(-0.5, 0.5))
 	text_instance.global_position = global_position + offset
 	if text_instance.has_method("setup"):
@@ -120,20 +118,15 @@ func _play_damage_fx(amount: float) -> void:
 func _die() -> void:
 	# 1. Spawn loot on the server
 	_spawn_loot()
-	
-	# 2. Sync removal to clients
-	_sync_death.rpc()
+	# 2. Server-side removal (Synchronizer will handle it for clients)
+	queue_free()
 
 func _spawn_loot() -> void:
 	if not multiplayer.is_server(): return
 	
-	# Find the spawner in the scene
 	var spawner = get_tree().root.find_child("MultiplayerPlayerSpawner", true, false)
-	if not spawner:
-		print("[Guardian] ERROR: Could not find MultiplayerPlayerSpawner to drop loot.")
-		return
+	if not spawner: return
 		
-	# Random loot generation
 	var possible_items = ["lantern", "rusty_sword", "leather_cap"]
 	var item_id = possible_items[randi() % possible_items.size()]
 	var loot_data = {
@@ -141,19 +134,15 @@ func _spawn_loot() -> void:
 		"items": [{"id": item_id, "quantity": 1}],
 		"pos": global_position
 	}
-	
 	spawner.spawn(loot_data)
-	print("[Guardian] Dropped loot via spawner: ", item_id)
-
-@rpc("authority", "call_local", "reliable")
-func _sync_death() -> void:
-	print("[Guardian] Defeated and removed.")
-	queue_free()
 
 func _process(delta: float) -> void:
-	if not multiplayer.has_multiplayer_peer(): return
+	if not multiplayer.has_multiplayer_peer() or multiplayer.is_server(): return
 	
-	if not multiplayer.is_server():
-		# Clients just interpolate to the synced position/rotation
+	# Clients interpolate (with snapping for large distances/spawn)
+	if global_position.distance_to(sync_position) > 2.0:
+		global_position = sync_position
+	else:
 		global_position = global_position.lerp(sync_position, 10 * delta)
-		rotation.y = lerp_angle(rotation.y, sync_rotation, 10 * delta)
+		
+	rotation.y = lerp_angle(rotation.y, sync_rotation, 10 * delta)

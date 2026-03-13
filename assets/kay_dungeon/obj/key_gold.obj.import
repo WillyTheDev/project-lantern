@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://dvsdfpaxxt41w"
+path="res://.godot/imported/key_gold.obj-f8c275dab367ca041adec271f15aafaf.mesh"
+
+[deps]
+
+files=["res://.godot/imported/key_gold.obj-f8c275dab367ca041adec271f15aafaf.mesh"]
+
+source_file="res://assets/kay_dungeon/obj/key_gold.obj"
+dest_files=["res://.godot/imported/key_gold.obj-f8c275dab367ca041adec271f15aafaf.mesh", "res://.godot/imported/key_gold.obj-f8c275dab367ca041adec271f15aafaf.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

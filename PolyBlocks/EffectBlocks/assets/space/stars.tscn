@@ -1,0 +1,83 @@
+[gd_scene format=3 uid="uid://8cj2skdi87my"]
+
+[ext_resource type="Texture2D" uid="uid://60nciysoontj" path="res://PolyBlocks/EffectBlocks/source_files/textures/sparkle.png" id="1_tcwcx"]
+
+[sub_resource type="Curve" id="Curve_i2gxn"]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.169776, 1), 0.0, 0.0, 0, 0, Vector2(0.83209, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 4
+
+[sub_resource type="CurveTexture" id="CurveTexture_ayo58"]
+curve = SubResource("Curve_i2gxn")
+
+[sub_resource type="Curve" id="Curve_027wq"]
+_limits = [0.0, 4.0, 0.0, 1.0]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.134328, 3.71441), 0.0, 0.0, 0, 0, Vector2(0.20709, 3.30316), 0.0, 0.0, 0, 0, Vector2(0.330224, 4), 0.0, 0.0, 0, 0, Vector2(0.419776, 3.2232), 0.0, 0.0, 0, 0, Vector2(0.490672, 4), 0.0, 0.0, 0, 0, Vector2(0.617537, 3.029), 0.0, 0.0, 0, 0, Vector2(0.720149, 4), 0.0, 0.0, 0, 0, Vector2(0.772388, 3.05185), 0.0, 0.0, 0, 0, Vector2(0.833955, 3.62302), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 11
+
+[sub_resource type="CurveTexture" id="CurveTexture_83blr"]
+curve = SubResource("Curve_027wq")
+
+[sub_resource type="Curve" id="Curve_bny3m"]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.376866, 1), 0.0, 0.0, 0, 0, Vector2(0.475746, 0.845782), 0.0, 0.0, 0, 0, Vector2(0.589552, 0.974297), 0.0, 0.0, 0, 0, Vector2(0.701493, 0.891476), 0.0, 0.0, 0, 0, Vector2(0.798508, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 7
+
+[sub_resource type="CurveTexture" id="CurveTexture_curwx"]
+curve = SubResource("Curve_bny3m")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_s47sw"]
+lifetime_randomness = 0.26
+particle_flag_rotate_y = true
+emission_shape = 1
+emission_sphere_radius = 10.0
+gravity = Vector3(0, 0, 0)
+scale_min = 0.05
+scale_max = 0.2
+scale_curve = SubResource("CurveTexture_curwx")
+color = Color(2.2679527, 2.1281676, 0, 1)
+alpha_curve = SubResource("CurveTexture_ayo58")
+emission_curve = SubResource("CurveTexture_83blr")
+hue_variation_min = -1.0
+hue_variation_max = 0.99999994
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7usrv"]
+transparency = 1
+blend_mode = 1
+vertex_color_use_as_albedo = true
+albedo_texture = ExtResource("1_tcwcx")
+emission_enabled = true
+emission = Color(1.6, 0.3, 0, 1)
+emission_energy_multiplier = 5.0
+billboard_mode = 3
+billboard_keep_scale = true
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="QuadMesh_4q8s7"]
+material = SubResource("StandardMaterial3D_7usrv")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_nutbn"]
+transparency = 1
+blend_mode = 1
+vertex_color_use_as_albedo = true
+albedo_color = Color(1, 1, 1, 0.0470588)
+albedo_texture = ExtResource("1_tcwcx")
+emission_enabled = true
+emission = Color(0.641591, 0.577104, 0.387274, 1)
+emission_energy_multiplier = 1.49
+billboard_mode = 3
+billboard_keep_scale = true
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="QuadMesh_43hvs"]
+material = SubResource("StandardMaterial3D_nutbn")
+size = Vector2(1.5, 1.5)
+
+[node name="Stars" type="GPUParticles3D" unique_id=1190492320]
+fixed_fps = 60
+process_material = SubResource("ParticleProcessMaterial_s47sw")
+draw_passes = 2
+draw_pass_1 = SubResource("QuadMesh_4q8s7")
+draw_pass_2 = SubResource("QuadMesh_43hvs")

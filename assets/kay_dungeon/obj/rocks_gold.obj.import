@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://b6f7pwj3m8y3s"
+path="res://.godot/imported/rocks_gold.obj-868c93ebc7fac3575690e664e7d26e24.mesh"
+
+[deps]
+
+files=["res://.godot/imported/rocks_gold.obj-868c93ebc7fac3575690e664e7d26e24.mesh"]
+
+source_file="res://assets/kay_dungeon/obj/rocks_gold.obj"
+dest_files=["res://.godot/imported/rocks_gold.obj-868c93ebc7fac3575690e664e7d26e24.mesh", "res://.godot/imported/rocks_gold.obj-868c93ebc7fac3575690e664e7d26e24.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

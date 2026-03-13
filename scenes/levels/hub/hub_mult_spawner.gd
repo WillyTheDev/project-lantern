@@ -53,8 +53,9 @@ func _spawn_player(peer_id: int, pb_data: Dictionary):
 		"player_name": "Player_%d" % peer_id,
 		"peer_id": peer_id,
 		"display_name": pb_data.get("name", "Player_%d" % peer_id),
-		"name_color": [0.8, 0.8, 0.8], # Default color
-		"pos": spawn_pos + Vector3(randf_range(-1, 1), 0, randf_range(-1, 1))
+		"name_color": [0.8, 0.8, 0.8],
+		"pos": spawn_pos + Vector3(randf_range(-1, 1), 0, randf_range(-1, 1)),
+		"inventory": pb_data.get("inventory", {})
 	}
 	spawner.spawn(data)
 
@@ -62,10 +63,20 @@ func _spawn_player(peer_id: int, pb_data: Dictionary):
 func custom_spawn(data: Dictionary) -> Node3D:
 	var p = preload("res://scenes/actors/player/Player.tscn").instantiate()
 	p.name = data.player_name
+	
+	# Safety check: Ensure the script is actually loaded before assigning
+	if p.get_script() == null:
+		print("[Spawner] ERROR: Player script not loaded on node!")
+	
 	p.player_id = data.peer_id
 	p.display_name = data.get("display_name", "Player_%d" % data.peer_id)
 	if "name_color" in data:
 		var color_array = data.name_color
 		p.name_color = Color(color_array[0], color_array[1], color_array[2], 1.0)
-	p.global_position = data.pos
+	
+	if multiplayer.is_server() and data.has("inventory"):
+		p.server_inventory = InventoryData.new()
+		p.server_inventory.load_from_dict(data.inventory)
+		
+	p.position = data.pos
 	return p

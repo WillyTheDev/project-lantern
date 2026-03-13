@@ -3,7 +3,6 @@
 [ext_resource type="Script" uid="uid://upprqrl0a8v5" path="res://scenes/levels/dungeon/dungeon_multi_spawner.gd" id="1_1xixt"]
 [ext_resource type="PackedScene" uid="uid://bajnbtxhvsyka" path="res://scenes/world/portals/portal.tscn" id="2_58ngf"]
 [ext_resource type="PackedScene" uid="uid://dpixntxhvsyka" path="res://scenes/world/hazards/HazardArea.tscn" id="3_hazard"]
-[ext_resource type="PackedScene" uid="uid://bod1bn28qfvip" path="res://scenes/actors/enemies/DungeonGuardian.tscn" id="4_aaol2"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_5mhws"]
 
@@ -72,5 +71,5 @@ portal_type = 1
 [node name="HazardArea" parent="." unique_id=1713038359 instance=ExtResource("3_hazard")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 10)
 
-[node name="DungeonGuardian" parent="." unique_id=1259664814 instance=ExtResource("4_aaol2")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.907713, -0.3345232, 11.189869)
+[node name="EnemySpawner" type="Marker3D" parent="." unique_id=1837299852 groups=["enemy_spawners"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.052461624, 0, 16.070576)

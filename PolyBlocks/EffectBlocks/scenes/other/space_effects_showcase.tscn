@@ -1,0 +1,30 @@
+[gd_scene format=3 uid="uid://b2knoe1vwk782"]
+
+[ext_resource type="PackedScene" uid="uid://bpcgc2dlgnqc2" path="res://PolyBlocks/EffectBlocks/assets/space/asteroid_field.tscn" id="1_ur0lc"]
+[ext_resource type="PackedScene" uid="uid://dq2p6ceguska5" path="res://PolyBlocks/EffectBlocks/assets/space/worm_hole.tscn" id="2_k4aix"]
+[ext_resource type="PackedScene" uid="uid://dur3567gxjaf4" path="res://PolyBlocks/EffectBlocks/assets/space/blackhole.tscn" id="3_a3yhk"]
+[ext_resource type="PackedScene" uid="uid://8cj2skdi87my" path="res://PolyBlocks/EffectBlocks/assets/space/stars.tscn" id="4_wdjje"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_k4aix"]
+radius = 1.0
+height = 2.0
+
+[node name="SpaceEffectsShowcase" type="Node3D" unique_id=1993236402]
+
+[node name="DebrisField" parent="." unique_id=2145199697 instance=ExtResource("1_ur0lc")]
+
+[node name="Spaceship" type="GPUParticlesCollisionSphere3D" parent="." unique_id=2074676455]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.1302, 0, 1.69021)
+metadata/_edit_group_ = true
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Spaceship" unique_id=1942547151]
+mesh = SubResource("SphereMesh_k4aix")
+
+[node name="WormHole" parent="." unique_id=1041009894 instance=ExtResource("2_k4aix")]
+transform = Transform3D(-1, 0, 8.74228e-08, 0, 1, 0, -8.74228e-08, 0, -1, 14.6439, 0, -0.945169)
+
+[node name="Blackhole" parent="." unique_id=526913566 instance=ExtResource("3_a3yhk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.6594, 0, 0)
+
+[node name="Stars" parent="." unique_id=1190492320 instance=ExtResource("4_wdjje")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.0196495, 1, 12.487089)

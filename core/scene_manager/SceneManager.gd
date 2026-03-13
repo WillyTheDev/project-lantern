@@ -17,6 +17,11 @@ var is_switching_shard: bool = false # NEW FLAG
 func _ready() -> void:
 	await get_tree().process_frame
 	if not is_inside_tree(): return
+	
+	# Listen for failures to clear loading screen
+	PBHelper.player_data_sync_failed.connect(_on_critical_failure)
+	NetworkManager.multiplayer.connection_failed.connect(func(): _on_critical_failure("Connection failed"))
+	NetworkManager.multiplayer.server_disconnected.connect(func(): _on_critical_failure("Server disconnected"))
 
 	match NetworkManager.current_role:
 		NetworkManager.Role.HUB_SERVER:
@@ -25,6 +30,11 @@ func _ready() -> void:
 			_load_scene.call_deferred(DUNGEON_SCENE)
 		NetworkManager.Role.CLIENT:
 			_load_scene.call_deferred(MENU_SCENE)
+
+func _on_critical_failure(_reason: String) -> void:
+	if loading_screen_instance:
+		print("[SceneManager] Critical failure detected while loading screen active. Hiding.")
+		show_loading_screen(false)
 
 func _load_scene(path: String, username: String = "", password: String = "") -> void:
 	if not is_inside_tree(): return
@@ -43,6 +53,7 @@ func _load_scene(path: String, username: String = "", password: String = "") -> 
 		print("[SceneManager] Scene already loaded: ", path)
 		if is_switching_shard:
 			print("[SceneManager] Re-triggering shard login for existing scene type.")
+			show_loading_screen(true, "Synchronizing with Server...")
 			if cached_token != "":
 				PBHelper.request_login_with_token(cached_token)
 			elif cached_username != "" and cached_password != "":
@@ -52,7 +63,8 @@ func _load_scene(path: String, username: String = "", password: String = "") -> 
 
 	# 3. Perform Asynchronous Load
 	print("[SceneManager] Loading new scene asynchronously: ", path)
-	show_loading_screen(true)
+	var scene_name = "Hub" if "Hub" in path else ("Dungeon" if "Dungeon" in path else "Game")
+	show_loading_screen(true, "Preparing " + scene_name + "...")
 
 	var err = ResourceLoader.load_threaded_request(path)
 	if err != OK:
@@ -65,6 +77,7 @@ func _load_scene(path: String, username: String = "", password: String = "") -> 
 
 		if status == ResourceLoader.THREAD_LOAD_LOADED:
 			# Finished!
+			update_status("Finalizing " + scene_name + "...")
 			var new_scene_resource = ResourceLoader.load_threaded_get(path)
 			tree.change_scene_to_packed(new_scene_resource)
 			print("[SceneManager] Scene loaded successfully: ", path)
@@ -73,6 +86,10 @@ func _load_scene(path: String, username: String = "", password: String = "") -> 
 			# Update progress bar
 			if loading_screen_instance and loading_screen_instance.has_method("update_progress"):
 				loading_screen_instance.update_progress(progress[0])
+				if progress[0] > 0.9:
+					update_status("Almost there...")
+				elif progress[0] > 0.5:
+					update_status("Streaming World Data...")
 		else:
 			# Error (Failed or Invalid Resource)
 			printerr("[SceneManager] Error during threaded load: ", status)
@@ -88,13 +105,17 @@ func reset_credentials() -> void:
 	is_switching_shard = false
 	print("[SceneManager] Credential cache cleared.")
 
-func show_loading_screen(show: bool) -> void:
+func show_loading_screen(show: bool, initial_status: String = "Loading...") -> void:
 	if show:
 		if not loading_screen_instance:
 			var scene = load(LOADING_SCREEN_PATH)
 			loading_screen_instance = scene.instantiate()
 			get_tree().root.add_child(loading_screen_instance)
+			if loading_screen_instance.has_method("set_status"):
+				loading_screen_instance.set_status(initial_status)
 			print("[SceneManager] Loading screen visible.")
+		else:
+			update_status(initial_status)
 	else:
 		if loading_screen_instance:
 			if loading_screen_instance.has_method("fade_out"):
@@ -103,3 +124,7 @@ func show_loading_screen(show: bool) -> void:
 				loading_screen_instance.queue_free()
 			loading_screen_instance = null
 			print("[SceneManager] Loading screen removal initiated (fade out).")
+
+func update_status(text: String) -> void:
+	if loading_screen_instance and loading_screen_instance.has_method("set_status"):
+		loading_screen_instance.set_status(text)

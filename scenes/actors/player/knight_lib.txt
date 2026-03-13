@@ -1,0 +1,18 @@
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_merged"]
+_data = {
+"Attack_1": SubResource("Animation_4vlco"),
+"Attack_2": SubResource("Animation_ix1hy"),
+"Attack_3": SubResource("Animation_udmxq"),
+"Death_A": SubResource("Animation_qdmhy"),
+"Idle_A": SubResource("Animation_45a5t"),
+"Interact": SubResource("Animation_le8m3"),
+"Jump_Full_Long": SubResource("Animation_44c1r"),
+"Jump_Idle": SubResource("Animation_7gfnf"),
+"Jump_Land": SubResource("Animation_l8qr5"),
+"Jump_Start": SubResource("Animation_mjkrn"),
+"PickUp": SubResource("Animation_1kfig"),
+"Spawn_Air": SubResource("Animation_qr7xj"),
+"Walking_A": SubResource("Animation_8vqis"),
+"Walking_B": SubResource("Animation_hedor"),
+"Walking_C": SubResource("Animation_e6itp")
+}

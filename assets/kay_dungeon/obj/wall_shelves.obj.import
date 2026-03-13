@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://discqt70walkp"
+path="res://.godot/imported/wall_shelves.obj-25f4d8fd6e34a9ae74542e699b01bb03.mesh"
+
+[deps]
+
+files=["res://.godot/imported/wall_shelves.obj-25f4d8fd6e34a9ae74542e699b01bb03.mesh"]
+
+source_file="res://assets/kay_dungeon/obj/wall_shelves.obj"
+dest_files=["res://.godot/imported/wall_shelves.obj-25f4d8fd6e34a9ae74542e699b01bb03.mesh", "res://.godot/imported/wall_shelves.obj-25f4d8fd6e34a9ae74542e699b01bb03.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

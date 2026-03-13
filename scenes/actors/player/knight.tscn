@@ -1,0 +1,57 @@
+[gd_scene format=3 uid="uid://xyoy4v01ig8q"]
+
+[ext_resource type="PackedScene" uid="uid://cmlcvrrlp4lqe" path="res://assets/kay_character/model/heroes/Characters/gltf/Knight.glb" id="1_r2t8o"]
+[ext_resource type="AnimationLibrary" uid="uid://coytjx42kf2ax" path="res://scenes/actors/player/combat.res" id="2_hn385"]
+[ext_resource type="AnimationLibrary" uid="uid://cpmbf0xsv3coy" path="res://scenes/actors/player/general.res" id="3_6ebon"]
+[ext_resource type="AnimationLibrary" uid="uid://cllxx0iewjt0t" path="res://scenes/actors/player/movement.res" id="4_rvyqs"]
+[ext_resource type="AnimationLibrary" uid="uid://mw2vfj41wc6" path="res://scenes/actors/player/ranged.res" id="5_pcycx"]
+
+[node name="Knight" unique_id=2112750636 instance=ExtResource("1_r2t8o")]
+
+[node name="Skeleton3D" parent="Rig_Medium" parent_id_path=PackedInt32Array(927178679) index="0" unique_id=1271872948]
+bones/1/position = Vector3(0, 0.39206383, 0)
+bones/1/rotation = Quaternion(-1.11122625e-10, 0.043157753, 2.5724098e-09, 0.9990683)
+bones/2/rotation = Quaternion(-6.938893e-18, 7.1054274e-15, 4.93038e-32, 1)
+bones/3/rotation = Quaternion(8.271806e-25, 3.7252903e-09, -2.75506e-40, 1)
+bones/4/position = Vector3(0.21200736, 0.13413203, 7.9299625e-08)
+bones/4/rotation = Quaternion(-0.5599063, -0.060880348, -0.6439745, 0.5177794)
+bones/5/rotation = Quaternion(3.7650654e-08, -5.1384802e-08, -0.4947193, 0.8690529)
+bones/6/rotation = Quaternion(7.250843e-09, 9.200791e-09, 0.026658095, 0.99964464)
+bones/6/scale = Vector3(0.99999994, 1, 1.0000001)
+bones/7/rotation = Quaternion(-0.32106528, -0.32531866, 0.1457259, 0.8774103)
+bones/8/position = Vector3(-6.936717e-09, 0.096125185, -0.057500005)
+bones/8/rotation = Quaternion(6.9489685e-09, -3.587743e-09, -0.7071068, 0.7071067)
+bones/9/position = Vector3(-0.21200737, 0.13413203, 8.6813984e-08)
+bones/9/rotation = Quaternion(-0.6182439, 0.08072865, 0.61801153, 0.47887278)
+bones/10/rotation = Quaternion(2.1687793e-08, 6.223694e-08, 0.5179393, 0.8554175)
+bones/11/rotation = Quaternion(7.300499e-09, -7.3388096e-09, -0.0266581, 0.99964464)
+bones/11/scale = Vector3(1.0000001, 1, 1)
+bones/12/rotation = Quaternion(-0.31929126, 0.30052418, -0.22734974, 0.8695117)
+bones/13/position = Vector3(-1.541501e-08, 0.096125126, -0.057499975)
+bones/13/rotation = Quaternion(-9.53579e-10, -4.3147743e-09, 0.7071068, 0.7071067)
+bones/14/rotation = Quaternion(-5.8060785e-11, -0.031341746, -1.880125e-09, 0.99950874)
+bones/15/position = Vector3(-0.17094508, 0.11358732, 1.557549e-08)
+bones/15/rotation = Quaternion(0.9973222, -0.029457364, 0.03152927, 0.05904832)
+bones/16/rotation = Quaternion(0.2740081, -6.3812955e-08, 1.927607e-07, 0.9617275)
+bones/17/rotation = Quaternion(-0.5590394, 0.11451276, -0.008627633, 0.82115)
+bones/18/rotation = Quaternion(-8.934892e-05, 0.9202217, -0.3913977, 2.0290998e-05)
+bones/19/position = Vector3(0.17094508, 0.1135872, 1.5994095e-08)
+bones/19/rotation = Quaternion(0.9925089, 0.073577166, -0.09013844, -0.03725043)
+bones/20/rotation = Quaternion(0.16501392, 8.071145e-08, -1.0972214e-07, 0.9862912)
+bones/21/rotation = Quaternion(-0.53554744, -0.12492985, 0.0538403, 0.8334763)
+bones/22/rotation = Quaternion(-5.381821e-06, 0.92025304, -0.391324, 1.328151e-06)
+
+[node name="BoneAttachment3D" type="BoneAttachment3D" parent="Rig_Medium/Skeleton3D" index="2" unique_id=494264040]
+transform = Transform3D(-0.5788955, -0.47172317, -0.66509867, -0.24008825, -0.6809017, 0.6919025, -0.77925396, 0.5602217, 0.28091606, -0.38818896, 0.96536034, -0.085939616)
+bone_name = "hand.r"
+bone_idx = 10
+
+[node name="HandPoint" type="Marker3D" parent="Rig_Medium/Skeleton3D/BoneAttachment3D" index="0" unique_id=151760391]
+unique_name_in_owner = true
+transform = Transform3D(-0.23148277, 0.065714896, 0.97061706, 0.0657147, 0.9964936, -0.0517945, -0.9706171, 0.051794276, -0.23498945, 0.021728039, 0.40718007, -8.940697e-08)
+
+[node name="MainAnimationPlayer" type="AnimationPlayer" parent="." index="1" unique_id=1645134617]
+libraries/combat = ExtResource("2_hn385")
+libraries/general = ExtResource("3_6ebon")
+libraries/movement = ExtResource("4_rvyqs")
+libraries/ranged = ExtResource("5_pcycx")

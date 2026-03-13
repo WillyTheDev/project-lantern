@@ -1,6 +1,6 @@
-[gd_scene load_steps=3 format=3 uid="uid://dj4t5y4m6v2n"]
+[gd_scene format=3 uid="uid://dj4t5y4m6v2n"]
 
-[ext_resource type="Script" path="res://ui/LoadingScreen.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://6mqont6nxfka" path="res://ui/LoadingScreen.gd" id="1_script"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_progress"]
 bg_color = Color(0.180392, 0.690196, 0.490196, 1)
@@ -48,8 +48,11 @@ layout_mode = 2
 theme_override_styles/fill = SubResource("StyleBoxFlat_progress")
 value = 50.0
 show_percentage = false
+indeterminate = true
+editor_preview_indeterminate = false
 
-[node name="SubLabel" type="Label" parent="CenterContainer/VBoxContainer" unique_id=40044096]
+[node name="StatusLabel" type="Label" parent="CenterContainer/VBoxContainer" unique_id=40044096]
+unique_name_in_owner = true
 layout_mode = 2
 text = "Connecting to shard..."
 horizontal_alignment = 1

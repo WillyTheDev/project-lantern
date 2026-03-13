@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://48h5jgv34fqi"
+path="res://.godot/imported/stool_round.obj-5599cff3ae339775cd9b50a29b459894.mesh"
+
+[deps]
+
+files=["res://.godot/imported/stool_round.obj-5599cff3ae339775cd9b50a29b459894.mesh"]
+
+source_file="res://assets/kay_dungeon/obj/stool_round.obj"
+dest_files=["res://.godot/imported/stool_round.obj-5599cff3ae339775cd9b50a29b459894.mesh", "res://.godot/imported/stool_round.obj-5599cff3ae339775cd9b50a29b459894.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

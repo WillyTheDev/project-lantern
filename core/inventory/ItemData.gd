@@ -13,6 +13,7 @@ enum ArmorSlot { NONE, HEAD, CHEST, LEGS, FEET }
 @export var item_scene: PackedScene # Scene to spawn when dropped or equipped
 @export var stackable: bool = true
 @export var max_stack: int = 99
+@export var use_animation: String = "pickUp" # Default animation for using/consuming
 
 ## Stats: agility, strength, intellect, stamina
 @export var stats: Dictionary = {

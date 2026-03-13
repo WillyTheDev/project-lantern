@@ -28,8 +28,14 @@ func _on_server_auth_complete(success: bool) -> void:
 		for req in pending_requests:
 			match req.type:
 				"login": server_request_login(req.username, req.password, req.sender_id)
+				"login_token": server_request_login_with_token(req.token, req.sender_id)
 				"sync": server_request_sync_inventory(req.db_id, req.inventory, req.sender_id)
 				"register": server_request_register(req.username, req.email, req.password, req.sender_id)
+		pending_requests.clear()
+	else:
+		printerr("[PBHelper] Server authentication FAILED. Failing ", pending_requests.size(), " pending requests.")
+		for req in pending_requests:
+			relay_login_failure(req.sender_id, "Server initialization failed (Database unreachable).")
 		pending_requests.clear()
 
 # --- Client Facing Methods ---
@@ -80,6 +86,7 @@ func server_request_register(username: String, email: String, password: String, 
 	var sender_id = force_sender_id if force_sender_id != -1 else multiplayer.get_remote_sender_id()
 	if not is_server_authenticated:
 		pending_requests.append({"type": "register", "username": username, "email": email, "password": password, "sender_id": sender_id})
+		rpc_id(sender_id, "notify_client_status", "Waiting for server database initialization...")
 		return
 	PersistenceManager.register(username, email, password, sender_id)
 
@@ -88,6 +95,7 @@ func server_request_login(username: String, password: String, force_sender_id: i
 	var sender_id = force_sender_id if force_sender_id != -1 else multiplayer.get_remote_sender_id()
 	if not is_server_authenticated:
 		pending_requests.append({"type": "login", "username": username, "password": password, "sender_id": sender_id})
+		rpc_id(sender_id, "notify_client_status", "Waiting for server database initialization...")
 		return
 	PersistenceManager.login(username, password, sender_id)
 
@@ -96,8 +104,14 @@ func server_request_login_with_token(token: String, force_sender_id: int = -1) -
 	var sender_id = force_sender_id if force_sender_id != -1 else multiplayer.get_remote_sender_id()
 	if not is_server_authenticated:
 		pending_requests.append({"type": "login_token", "token": token, "sender_id": sender_id})
+		rpc_id(sender_id, "notify_client_status", "Waiting for server database initialization...")
 		return
 	PersistenceManager.login_with_token(token, sender_id)
+
+@rpc("authority", "call_remote", "reliable")
+func notify_client_status(message: String) -> void:
+	print("[PBHelper] Server Notification: ", message)
+	SceneManager.update_status(message)
 
 @rpc("any_peer", "call_remote", "reliable")
 func server_request_sync_inventory(player_db_id: String, inventory: Dictionary, force_sender_id: int = -1) -> void:
@@ -141,6 +155,15 @@ func relay_login_success(peer_id: int, data: Dictionary) -> void:
 	else: rpc_id(peer_id, "fulfill_login", data)
 
 func relay_update_success(peer_id: int, data: Dictionary) -> void:
+	# Update the server-side player node's inventory cache if it exists
+	if multiplayer.is_server():
+		var player_node = get_tree().get_nodes_in_group("players").filter(func(p): return p.player_id == peer_id)
+		if player_node.size() > 0:
+			var p = player_node[0]
+			if "server_inventory" in p and p.server_inventory:
+				p.server_inventory.load_from_dict(data.get("inventory", {}))
+				p.refresh_held_item() # Trigger refresh on server
+	
 	if peer_id == 1: fulfill_update(data)
 	else: rpc_id(peer_id, "fulfill_update", data)
 

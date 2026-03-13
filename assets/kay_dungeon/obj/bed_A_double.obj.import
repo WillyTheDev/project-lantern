@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://cy6el0rgq1d0g"
+path="res://.godot/imported/bed_A_double.obj-1a4327e8125d64b6c3e9da695febe46e.mesh"
+
+[deps]
+
+files=["res://.godot/imported/bed_A_double.obj-1a4327e8125d64b6c3e9da695febe46e.mesh"]
+
+source_file="res://assets/kay_dungeon/obj/bed_A_double.obj"
+dest_files=["res://.godot/imported/bed_A_double.obj-1a4327e8125d64b6c3e9da695febe46e.mesh", "res://.godot/imported/bed_A_double.obj-1a4327e8125d64b6c3e9da695febe46e.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

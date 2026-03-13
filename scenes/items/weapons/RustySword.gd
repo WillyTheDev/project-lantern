@@ -4,14 +4,18 @@ extends Node3D
 @export var range: float = 2.0
 
 func use() -> void:
-	print("[Sword] use() called.")
-	# Get the player controller
-	var player = get_parent().get_parent().get_parent() # HandPoint -> MeshInstance3D -> Player
+	# Robust way to find the player root (which is in the "players" group)
+	var player = owner
+	if not player or not player.is_in_group("players"):
+		# Fallback: search up the tree
+		player = self
+		while player != null and not player.is_in_group("players"):
+			player = player.get_parent()
+	
 	if player:
-		print("[Sword] Found player: ", player.name)
 		if player.has_method("request_attack"):
 			player.request_attack(damage, range)
 		else:
-			print("[Sword] ERROR: Player has no request_attack method.")
+			print("[Sword] ERROR: Player node found but has no request_attack method.")
 	else:
-		print("[Sword] ERROR: Could not find player node from hierarchy.")
+		print("[Sword] ERROR: Could not find player root node.")
