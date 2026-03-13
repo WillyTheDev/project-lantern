@@ -35,6 +35,7 @@ func reset() -> void:
 
 func load_inventory(db_id: String, initial_data: Dictionary) -> void:
 	player_db_id = db_id
+	player_stats.reset() # Reset health and base stats before applying inventory
 	data.load_from_dict(initial_data)
 	recalculate_stats()
 	active_slot_changed.emit(data.active_hotbar_index)

@@ -26,9 +26,12 @@ var animations: PlayerAnimationManager
 		current_health = value
 		if is_multiplayer_authority():
 			InventoryManager.player_stats.current_health = value
-		_update_health_ui()
-		if multiplayer.is_server() and current_health <= 0:
-			_on_death()
+		
+		if is_inside_tree():
+			_update_health_ui()
+			# Only the server should trigger the death sequence
+			if multiplayer.is_server() and current_health <= 0 and not is_dead:
+				_on_death()
 
 @export var shared_velocity: Vector3 = Vector3.ZERO
 var interact_ray: RayCast3D
