@@ -8,7 +8,7 @@ extends CanvasLayer
 func _ready() -> void:
 	# 1. Populate Microphone List and Slider
 	_refresh_mic_list()
-	sensitivity_slider.value = VoiceManager.voice_threshold
+	sensitivity_slider.value = VoiceService.voice_threshold
 	
 	# 2. Connect Signals
 	mic_option.item_selected.connect(_on_mic_selected)
@@ -39,23 +39,21 @@ func _on_mic_selected(index: int) -> void:
 	print("[Settings] Microphone set to: ", device_name)
 
 func _on_sensitivity_changed(value: float) -> void:
-	VoiceManager.voice_threshold = value
+	VoiceService.voice_threshold = value
 
 func _on_disconnect_pressed() -> void:
 	print("[Settings] Disconnecting from server...")
 	if multiplayer.multiplayer_peer:
 		multiplayer.multiplayer_peer.close()
 	
-	# Reset local data
-	InventoryManager.reset()
-	PersistenceManager.reset_session()
-	SceneManager.reset_credentials()
+	# Centralized reset via SessionService
+	SessionService.logout()
 	
 	# Ensure mouse is visible for main menu
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	
 	# Transition back to main menu
-	SceneManager._load_scene(SceneManager.MENU_SCENE)
+	SceneService._load_scene(SceneService.MENU_SCENE)
 	queue_free()
 
 func _on_resume_pressed() -> void:

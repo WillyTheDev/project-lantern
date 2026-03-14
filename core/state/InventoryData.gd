@@ -8,9 +8,9 @@ const HOTBAR_SIZE = 10
 const BAG_SIZE = 30
 const ARMOR_SIZE = 4
 
-@export var hotbar: Array[ItemStack] = []
-@export var bag: Array[ItemStack] = []
-@export var armor: Array[ItemStack] = []
+@export var hotbar: Array[ItemStackData] = []
+@export var bag: Array[ItemStackData] = []
+@export var armor: Array[ItemStackData] = []
 @export var active_hotbar_index: int = 0
 
 func _init() -> void:
@@ -32,21 +32,22 @@ func load_from_dict(data: Dictionary) -> void:
 	if data.has("armor"): _load_array(armor, data["armor"], ARMOR_SIZE)
 	inventory_updated.emit()
 
-func _load_array(target: Array[ItemStack], source: Array, size: int) -> void:
+func _load_array(target: Array[ItemStackData], source: Array, size: int) -> void:
 	target.clear()
 	target.resize(size)
 	for i in range(min(source.size(), size)):
-		if source[i] != null:
-			target[i] = ItemStack.from_dict(source[i])
+		if source[i] != null and source[i] is Dictionary:
+			target[i] = ItemStackData.from_dict(source[i])
 
 func to_dict() -> Dictionary:
 	return {
-		"hotbar": hotbar.map(func(item): return item.to_dict() if item else null),
-		"bag": bag.map(func(item): return item.to_dict() if item else null),
-		"armor": armor.map(func(item): return item.to_dict() if item else null)
+		"hotbar": hotbar.map(func(i): return i.to_dict() if i else null),
+		"bag": bag.map(func(i): return i.to_dict() if i else null),
+		"armor": armor.map(func(i): return i.to_dict() if i else null)
 	}
 
-func get_active_item() -> ItemStack:
+func get_active_item() -> ItemStackData:
+
 	if active_hotbar_index >= 0 and active_hotbar_index < hotbar.size():
 		return hotbar[active_hotbar_index]
 	return null

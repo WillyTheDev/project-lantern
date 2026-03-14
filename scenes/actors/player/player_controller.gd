@@ -18,7 +18,7 @@ var animations: PlayerAnimationManager
 @export var player_name: String = ""
 
 # --- DATA OWNERSHIP ---
-@export var stats: PlayerStats = PlayerStats.new()
+@export var stats: PlayerStatsData = PlayerStatsData.new()
 @export var inventory: InventoryData = InventoryData.new()
 @export var stash: InventoryData = InventoryData.new()
 # Server-only storage for remote player inventories to allow item spawning
@@ -91,10 +91,10 @@ func _ready() -> void:
 func _setup_local_player() -> void:
 	var camera = $CameraPivot/SpringArm3D/Camera3D
 	camera.make_current()
-	SceneManager.show_loading_screen(false)
+	SceneService.show_loading_screen(false)
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	
-	display_name = PersistenceManager.current_player_name
+	display_name = PocketBaseRESTManager.current_player_name
 	
 	var inv_ui = get_node_or_null("GUILayer/InventoryUI")
 	if inv_ui:
@@ -140,7 +140,7 @@ func refresh_held_item(_index: int = -1) -> void:
 	
 	if not item: return
 	
-	var data = ItemDB.get_item(item.id)
+	var data = ItemService.get_item(item.id)
 	if data and data.item_scene:
 		var instance = data.item_scene.instantiate()
 		# Use a constant name for the held item to ensure deterministic paths for RPCs
@@ -175,7 +175,7 @@ func _use_held_item() -> void:
 	var item_stack = inventory.get_active_item()
 	if not item_stack: return
 	
-	var data = ItemDB.get_item(item_stack.id)
+	var data = ItemService.get_item(item_stack.id)
 	if data:
 		var anim_name = data.use_animation
 		if not anim_name.contains("/"): anim_name = "general/" + anim_name
@@ -301,11 +301,11 @@ func _on_death() -> void:
 	
 	print("[Player] Player died: ", player_name)
 	# InventoryService now handles the logic for a specific player's data
-	InventoryManager.handle_death_for_player(self)
+	InventoryService.handle_death_for_player(self)
 	
 	play_general_animation.rpc("general/Death_A")
 	await get_tree().create_timer(1.5).timeout
-	if NetworkManager.current_role == NetworkManager.Role.DUNGEON_SERVER:
+	if NetworkService.current_role == NetworkService.Role.DUNGEON_SERVER:
 		_trigger_extraction_fail()
 	else:
 		sync_respawn.rpc()
@@ -321,3 +321,4 @@ func _update_health_ui() -> void:
 	if health_bar:
 		health_bar.max_value = max_health
 		health_bar.value = current_health
+

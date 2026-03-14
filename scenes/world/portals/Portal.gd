@@ -29,24 +29,25 @@ func _on_body_entered(body: Node) -> void:
 		
 		if portal_type == PortalType.EXTRACTION:
 			print("[Portal] ", portal_name, ": Player ", peer_id, " EXTRACTION SUCCESS.")
-			# Future: Call InventoryManager to "secure" loot found in dungeon
+			# Future: Call InventoryService to "secure" loot found in dungeon
 			
 		print("[Portal] ", portal_name, ": Handoff peer ", peer_id, " to port ", target_port)
-		_request_client_switch.rpc_id(peer_id, NetworkManager.server_address, target_port, target_scene)
+		_request_client_switch.rpc_id(peer_id, NetworkService.server_address, target_port, target_scene)
 
 @rpc("authority", "call_local", "reliable")
 func _request_client_switch(address: String, port: int, scene_path: String) -> void:
-	print("[Client] Shard Handoff Trace: User=", SceneManager.cached_username, " Path=", scene_path, " Port=", port)
+	print("[Client] Shard Handoff Trace: User=", SceneService.cached_username, " Path=", scene_path, " Port=", port)
 	
-	SceneManager.is_switching_shard = true # Mark the transition
+	SceneService.is_switching_shard = true # Mark the transition
 	
 	# 1. Start loading screen
-	SceneManager.show_loading_screen(true)
+	SceneService.show_loading_screen(true)
 	
-	# 2. Tell SceneManager to load scene. 
-	# Note: We don't pass credentials here anymore as NetworkManager 
+	# 2. Tell SceneService to load scene. 
+	# Note: We don't pass credentials here anymore as NetworkService 
 	# handles the auto-login via cached token once reconnected.
-	SceneManager._load_scene(scene_path)
+	SceneService._load_scene(scene_path)
 	
 	# 3. Reconnect
-	NetworkManager.switch_server(address, port)
+	NetworkService.switch_server(address, port)
+

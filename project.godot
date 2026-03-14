@@ -22,14 +22,15 @@ driver/mix_rate=48000
 
 [autoload]
 
-InventoryManager="*res://core/autoloads/InventoryManager.gd"
-ItemDB="*res://core/inventory/ItemDatabase.gd"
-NetworkManager="*res://core/network/NetworkManager.gd"
-PersistenceManager="*res://core/network/PersistenceManager.gd"
-SceneManager="*res://core/scene_manager/SceneManager.gd"
-TLSHelper="*res://core/network/TLSHelper.gd"
-VoiceManager="*res://core/network/VoiceManager.gd"
-PBHelper="*res://core/network/PocketBaseHelper.gd"
+PocketBaseRESTManager="*res://core/managers/PocketBaseRESTManager.gd"
+PocketBaseRPCManager="*res://core/managers/PocketBaseRPCManager.gd"
+SessionService="*res://core/services/SessionService.gd"
+InventoryService="*res://core/services/InventoryService.gd"
+ItemService="*res://core/services/ItemService.gd"
+NetworkService="*res://core/services/NetworkService.gd"
+SceneService="*res://core/services/SceneService.gd"
+TLSHelper="*res://core/helpers/TLSHelper.gd"
+VoiceService="*res://core/services/VoiceService.gd"
 
 [editor]
 

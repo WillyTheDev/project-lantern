@@ -1,6 +1,6 @@
 extends Node
 
-## ItemDatabase
+## ItemService
 ## Central registry for all items in the game.
 
 var items: Dictionary = {}

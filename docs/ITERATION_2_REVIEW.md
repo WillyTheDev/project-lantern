@@ -5,8 +5,8 @@ This document reviews the implementation of the persistence and inventory system
 ## 🏗️ Architectural Patterns
 
 ### 1. Singleton (Autoload) Pattern
-- **PersistenceManager:** Centralized authority for PocketBase REST API calls. It handles the "dirty work" of HTTP requests, headers, and JSON parsing.
-- **InventoryManager:** Manages the local player's state. It acts as a middleman between game logic (taking an item) and persistence (saving to DB).
+- **PocketBaseRESTManager:** Centralized authority for PocketBase REST API calls. It handles the "dirty work" of HTTP requests, headers, and JSON parsing.
+- **InventoryService:** Manages the local player's state. It acts as a middleman between game logic (taking an item) and persistence (saving to DB).
 - **Benefit:** Provides a global, easy-to-access API for any scene or script to interact with player data.
 
 ### 2. "Interface" via Duck Typing (Interaction System)
@@ -14,8 +14,8 @@ This document reviews the implementation of the persistence and inventory system
 - **Benefit:** Extremely decoupled. You can create a chest, a door, a NPC, or a lever; as long as they have an `interact()` function, the player can use them without the player script needing to know what they are.
 
 ### 3. Observer Pattern (Signals)
-- `PersistenceManager` emits `request_completed`.
-- `InventoryManager` emits `inventory_updated`.
+- `PocketBaseRESTManager` emits `request_completed`.
+- `InventoryService` emits `inventory_updated`.
 - **Benefit:** UI elements or other systems can "listen" for data changes without being tightly coupled to the managers.
 
 ---
@@ -23,11 +23,11 @@ This document reviews the implementation of the persistence and inventory system
 ## ✅ Good Practices Followed
 
 - **Separation of Concerns:** 
-    - Networking logic remains in `NetworkManager`.
-    - Data logic is in `PersistenceManager`.
-    - Inventory logic is in `InventoryManager`.
+    - Networking logic remains in `NetworkService`.
+    - Data logic is in `PocketBaseRESTManager`.
+    - Inventory logic is in `InventoryService`.
 - **Asynchronous Design:** Used `await` and signals for HTTP requests to ensure the game doesn't freeze while waiting for the database.
-- **Environment Awareness:** `PersistenceManager` checks for `POCKETBASE_URL` environment variables, making it "K8s-ready" out of the box.
+- **Environment Awareness:** `PocketBaseRESTManager` checks for `POCKETBASE_URL` environment variables, making it "K8s-ready" out of the box.
 - **Minimal Impact:** Integrated the interaction system into the existing `player_controller.gd` without breaking movement or VOIP logic.
 
 ---

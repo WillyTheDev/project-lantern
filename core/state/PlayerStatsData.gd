@@ -1,5 +1,5 @@
 extends Resource
-class_name PlayerStats
+class_name PlayerStatsData
 
 signal stats_changed
 signal leveled_up(new_level: int)
@@ -51,7 +51,7 @@ func level_up() -> void:
 	stamina += 2
 	current_health = max_health
 	leveled_up.emit(level)
-	print("[PlayerStats] Level Up! Now level ", level)
+	print("[PlayerStatsData] Level Up! Now level ", level)
 
 func to_dict() -> Dictionary:
 	return {

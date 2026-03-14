@@ -22,9 +22,8 @@ var player_ref: Node3D = null
 func _ready() -> void:
 	_setup_slots()
 	# Global service signals
-	InventoryManager.active_slot_changed.connect(_on_active_slot_changed)
-	InventoryManager.external_inventory_updated.connect(_on_external_inventory_updated)
-	InventoryManager.total_stats_updated.connect(_on_total_stats_updated)
+	InventoryService.external_inventory_updated.connect(_on_external_inventory_updated)
+	InventoryService.total_stats_updated.connect(_on_total_stats_updated)
 	
 	inventory_overlay.visible = false
 	external_section.visible = false
@@ -34,16 +33,18 @@ func _ready() -> void:
 func initialize_for_player(player: Node3D) -> void:
 	if player_ref:
 		player_ref.inventory.inventory_updated.disconnect(refresh)
+		player_ref.inventory.active_slot_changed.disconnect(_on_active_slot_changed)
 		player_ref.stats.stats_changed.disconnect(_on_base_stats_updated)
-		
+
 	player_ref = player
 	player_ref.inventory.inventory_updated.connect(refresh)
+	player_ref.inventory.active_slot_changed.connect(_on_active_slot_changed)
 	player_ref.stats.stats_changed.connect(_on_base_stats_updated)
-	
+
 	refresh()
 	_on_base_stats_updated(player_ref.stats)
-
-func _on_base_stats_updated(_stats: PlayerStats) -> void:
+	_on_active_slot_changed(player_ref.inventory.active_hotbar_index)
+func _on_base_stats_updated(_stats: PlayerStatsData) -> void:
 	# Refresh UI when base stats (Level/XP) change
 	_update_stats_label()
 
@@ -53,17 +54,17 @@ func _on_total_stats_updated(_total_stats: Dictionary) -> void:
 func _update_stats_label() -> void:
 	if not player_ref: return
 	var stats = player_ref.stats
-	var total_agi = InventoryManager.get_total_agility()
-	var total_str = InventoryManager.get_total_strength()
-	var total_int = InventoryManager.get_total_intellect()
-	var total_sta = InventoryManager.get_total_stamina()
+	var total_agi = InventoryService.get_total_agility()
+	var total_str = InventoryService.get_total_strength()
+	var total_int = InventoryService.get_total_intellect()
+	var total_sta = InventoryService.get_total_stamina()
 	
 	stats_label.text = "LVL: %d (XP: %d)\nSTR: %d\nAGI: %d\nINT: %d\nSTA: %d" % [
 		stats.level, stats.experience, total_str, total_agi, total_int, total_sta
 	]
 
 func _on_external_inventory_updated() -> void:
-	var new_count = InventoryManager.external_inventory.size()
+	var new_count = InventoryService.external_inventory.size()
 	if new_count > 0:
 		if new_count != external_slot_count:
 			_setup_external_slots(new_count)
@@ -75,7 +76,7 @@ func _on_external_inventory_updated() -> void:
 		# Update title if it's a stash
 		var title = external_section.get_node_or_null("Title")
 		if title:
-			title.text = "STASH" if InventoryManager.current_external_type == "stash" else "LOOT"
+			title.text = "STASH" if InventoryService.current_external_type == "stash" else "LOOT"
 	else:
 		external_section.visible = false
 		external_slot_count = 0
@@ -88,14 +89,15 @@ func _setup_external_slots(count: int) -> void:
 	for i in range(count):
 		var slot = SLOT_SCENE.instantiate()
 		slot.slot_index = i
-		slot.inventory_type = InventoryManager.current_external_type
+		slot.inventory_type = InventoryService.current_external_type
 		slot.mouse_entered.connect(_on_slot_mouse_entered.bind(slot))
 		slot.mouse_exited.connect(_on_slot_mouse_exited)
 		external_grid.add_child(slot)
 
 func refresh() -> void:
 	if not is_inside_tree(): return
-	var data = InventoryManager.data
+	var data = InventoryService.data
+	if not data: return
 	
 	for i in range(InventoryData.BAG_SIZE):
 		var slot = bag_grid.get_child(i)
@@ -112,7 +114,7 @@ func refresh() -> void:
 		slot.set_item_stack(data.armor[i])
 		
 	if external_section.visible:
-		var ext_data = InventoryManager.external_inventory
+		var ext_data = InventoryService.external_inventory
 		for i in range(external_grid.get_child_count()):
 			var slot = external_grid.get_child(i)
 			if i < ext_data.size():
@@ -188,4 +190,4 @@ func _input(event: InputEvent) -> void:
 			refresh()
 		else:
 			Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-			if external_section.visible: InventoryManager.close_external_inventory()
+			if external_section.visible: InventoryService.close_external_inventory()

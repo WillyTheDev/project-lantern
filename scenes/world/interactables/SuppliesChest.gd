@@ -27,7 +27,7 @@ func interact(player: Node3D) -> void:
 
 @rpc("authority", "call_local", "reliable")
 func _open_loot_ui(loot_items: Array, path: NodePath) -> void:
-	InventoryManager.open_external_inventory(loot_items, path)
+	InventoryService.open_external_inventory(loot_items, path)
 
 @rpc("any_peer", "call_remote", "reliable")
 func request_remove_item(slot_index: int) -> void:
@@ -43,3 +43,4 @@ func _is_empty() -> bool:
 	for item in items:
 		if item != null: return false
 	return true
+

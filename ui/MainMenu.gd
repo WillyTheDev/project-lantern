@@ -26,15 +26,15 @@ func _ready() -> void:
 	
 	# Initial UI state
 	email_input.visible = false
-	SceneManager.show_loading_screen(false)
+	SceneService.show_loading_screen(false)
 	
 	# Listen for connection success
-	NetworkManager.multiplayer.connected_to_server.connect(_on_connected)
-	NetworkManager.multiplayer.connection_failed.connect(_on_failed)
+	NetworkService.multiplayer.connected_to_server.connect(_on_connected)
+	NetworkService.multiplayer.connection_failed.connect(_on_failed)
 	
-	# Listen for Auth results
-	PBHelper.player_data_loaded.connect(_on_auth_success)
-	PBHelper.player_data_sync_failed.connect(_on_auth_failed)
+	# Listen for Auth results via SessionService
+	SessionService.session_started.connect(_on_auth_success)
+	SessionService.auth_failed.connect(_on_auth_failed)
 
 func _on_join_pressed() -> void:
 	var username = username_input.text.strip_edges()
@@ -53,7 +53,7 @@ func _on_join_pressed() -> void:
 	pending_password = password
 	pending_email = email
 	
-	SceneManager.cached_username = username
+	SceneService.cached_username = username
 	
 	status_label.text = "Connecting to Hub..."
 	join_button.disabled = true
@@ -61,12 +61,12 @@ func _on_join_pressed() -> void:
 	password_input.editable = false
 	email_input.editable = false
 	
-	SceneManager.show_loading_screen(true, "Searching for Game Server...")
+	SceneService.show_loading_screen(true, "Searching for Game Server...")
 	
 	# Start connection timeout
 	connection_timeout_timer.start()
 	
-	NetworkManager.join_server(NetworkManager.server_address, NetworkManager.hub_server_port)
+	NetworkService.join_server(NetworkService.server_address, NetworkService.hub_server_port)
 
 func _on_connected() -> void:
 	connection_timeout_timer.stop()
@@ -76,16 +76,16 @@ func _on_connected() -> void:
 
 	if register_toggle.button_pressed:
 		status_label.text = "Registering..."
-		SceneManager.update_status("Sending Registration Request...")
-		PBHelper.request_register(pending_username, pending_email, pending_password)
+		SceneService.update_status("Sending Registration Request...")
+		SessionService.register(pending_username, pending_email, pending_password)
 	else:
 		status_label.text = "Authenticating..."
-		SceneManager.update_status("Sending Authentication Request...")
-		PBHelper.request_login(pending_username, pending_password)
+		SceneService.update_status("Sending Authentication Request...")
+		SessionService.login(pending_username, pending_password)
 
 func _on_connection_timeout() -> void:
-	if NetworkManager.multiplayer.multiplayer_peer:
-		NetworkManager.multiplayer.multiplayer_peer.close()
+	if NetworkService.multiplayer.multiplayer_peer:
+		NetworkService.multiplayer.multiplayer_peer.close()
 	_on_failed()
 	status_label.text = "Connection Timed Out. Server might be offline."
 
@@ -100,8 +100,8 @@ func _on_auth_success(_data: Dictionary) -> void:
 		return
 		
 	status_label.text = "Success! Entering world..."
-	SceneManager.update_status("Profile Loaded. Entering Hub...")
-	SceneManager.call_deferred("_load_scene", SceneManager.HUB_SCENE)
+	SceneService.update_status("Profile Loaded. Entering Hub...")
+	SceneService.call_deferred("_load_scene", SceneService.HUB_SCENE)
 
 func _on_auth_failed(reason: String) -> void:
 	status_label.text = "Error: " + reason
@@ -111,14 +111,10 @@ func _on_auth_failed(reason: String) -> void:
 	email_input.editable = true
 	
 	# Hide loading screen so user can see the error
-	SceneManager.show_loading_screen(false)
+	SceneService.show_loading_screen(false)
 	
-	# Reset local data
-	InventoryManager.reset()
-	PersistenceManager.reset_session()
-	
-	if NetworkManager.multiplayer.multiplayer_peer:
-		NetworkManager.multiplayer.multiplayer_peer.close()
+	if NetworkService.multiplayer.multiplayer_peer:
+		NetworkService.multiplayer.multiplayer_peer.close()
 
 func _on_failed() -> void:
 	connection_timeout_timer.stop()
@@ -127,4 +123,4 @@ func _on_failed() -> void:
 	username_input.editable = true
 	password_input.editable = true
 	email_input.editable = true
-	SceneManager.show_loading_screen(false)
+	SceneService.show_loading_screen(false)

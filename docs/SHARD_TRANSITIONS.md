@@ -26,7 +26,7 @@ Instead of requiring the player to re-enter their password or sending sensitive 
 
 ### 3. Re-Authentication (Target Server)
 1.  Upon successful connection to the Target Server, `NetworkManager` detects `is_switching_shard`.
-2.  The client sends the `cached_token` to the Target Server via `PBHelper.request_login_with_token`.
+2.  The client sends the `cached_token` to the Target Server via `PocketBaseRPCManager.request_login_with_token`.
 3.  The Target Server uses the token to call PocketBase's `auth-refresh` endpoint.
 4.  PocketBase verifies the token and returns the user's record and a *new* refreshed token.
 5.  The Target Server pulls the player's persistent data (inventory, stats) and spawns the player node.

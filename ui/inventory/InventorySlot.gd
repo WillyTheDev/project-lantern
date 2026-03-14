@@ -7,12 +7,12 @@ var slot_index: int = -1
 var inventory_type: String = "" # "hotbar", "bag", "armor", "external"
 var is_highlighted: bool = false
 
-func set_item_stack(stack: ItemStack) -> void:
+func set_item_stack(stack: ItemStackData) -> void:
 	if stack == null or stack.id == "":
 		clear()
 		return
 		
-	var data = ItemDB.get_item(stack.id)
+	var data = ItemService.get_item(stack.id)
 	if data:
 		icon_rect.texture = data.item_icon_texture
 		quantity_label.text = str(stack.quantity) if stack.quantity > 1 else ""
@@ -39,13 +39,21 @@ func clear() -> void:
 	icon_rect.texture = null
 	quantity_label.text = ""
 
-func get_item_stack() -> ItemStack:
+func get_item_stack() -> ItemStackData:
 	match inventory_type:
-		"hotbar": return InventoryManager.data.hotbar[slot_index]
-		"bag": return InventoryManager.data.bag[slot_index]
-		"armor": return InventoryManager.data.armor[slot_index]
-		"stash": return InventoryManager.stash.bag[slot_index]
-		"external": return InventoryManager.external_inventory[slot_index]
+		"hotbar": 
+			var d = InventoryService.data
+			return d.hotbar[slot_index] if d else null
+		"bag": 
+			var d = InventoryService.data
+			return d.bag[slot_index] if d else null
+		"armor": 
+			var d = InventoryService.data
+			return d.armor[slot_index] if d else null
+		"stash": 
+			var s = InventoryService.stash
+			return s.bag[slot_index] if s else null
+		"external": return InventoryService.external_inventory[slot_index]
 	return null
 
 # --- Drag and Drop ---
@@ -55,7 +63,7 @@ func _get_drag_data(_at_position: Vector2) -> Variant:
 	if not stack: return null
 	
 	var preview = TextureRect.new()
-	var data = ItemDB.get_item(stack.id)
+	var data = ItemService.get_item(stack.id)
 	preview.texture = data.item_icon_texture
 	preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	preview.custom_minimum_size = Vector2(64, 64)
@@ -72,7 +80,7 @@ func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
 	if not data is Dictionary: return false
 	
 	if inventory_type == "armor":
-		var item_data = ItemDB.get_item(data.item_id)
+		var item_data = ItemService.get_item(data.item_id)
 		if not item_data or item_data.type != ItemData.Type.ARMOR: return false
 		
 		var required_slot = ItemData.ArmorSlot.NONE
@@ -86,4 +94,4 @@ func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
 	return true
 
 func _drop_data(_at_position: Vector2, data: Variant) -> void:
-	InventoryManager.move_item(data.origin_type, data.origin_slot, inventory_type, slot_index)
+	InventoryService.move_item(data.origin_type, data.origin_slot, inventory_type, slot_index)

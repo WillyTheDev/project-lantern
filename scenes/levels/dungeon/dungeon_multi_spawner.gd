@@ -13,8 +13,8 @@ func _ready() -> void:
 	
 	# Server-side logic for Dungeon
 	if multiplayer.is_server():
-		NetworkManager.multiplayer.peer_connected.connect(_on_peer_connected)
-		NetworkManager.multiplayer.peer_disconnected.connect(_on_peer_disconnected)
+		NetworkService.multiplayer.peer_connected.connect(_on_peer_connected)
+		NetworkService.multiplayer.peer_disconnected.connect(_on_peer_disconnected)
 		
 		# Spawn initial enemies at designated points
 		call_deferred("_spawn_initial_enemies")
@@ -54,7 +54,7 @@ func _spawn_player(peer_id: int):
 		"display_name": "Player_%d" % peer_id,
 		"name_color": [0.8, 0.2, 0.2],
 		"pos": spawn_pos + Vector3(randf_range(-1, 1), 0, randf_range(-1, 1)),
-		"inventory": InventoryManager.data.to_dict() if peer_id == 1 else {}
+		"inventory": InventoryService.data.to_dict() if peer_id == 1 else {}
 	}
 	spawner.spawn(data)
 
@@ -101,3 +101,4 @@ func custom_spawn(data: Dictionary) -> Node:
 		if "sync_position" in node:
 			node.sync_position = pos
 	return node
+

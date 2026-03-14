@@ -13,7 +13,7 @@ This document tracks known architectural shortcuts, security vulnerabilities, an
 
 ### 2. Client-Authoritative Inventory Additions (Partially Addressed)
 - **Added:** Iteration 2
-- **Current State:** Clients currently tell the server "I added an item to my inventory" via `PBHelper.request_sync_inventory`.
+- **Current State:** Clients currently tell the server "I added an item to my inventory" via `PocketBaseRPCManager.request_sync_inventory`.
 - **Shortcut:** Simplifies the "Gameplay Loop" implementation for testing.
 - **Risk:** **Security Vulnerability.** Clients can "spawn" any item they want by sending a spoofed sync request.
 - **Required Fix:** Move all interaction and loot generation logic to the Server. The Client should only send "Interaction Requests," and the Server should execute the change and update PocketBase directly.

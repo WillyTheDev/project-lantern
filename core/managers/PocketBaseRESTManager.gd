@@ -1,6 +1,6 @@
 extends Node
 
-## PersistenceManager
+## PocketBaseRESTManager
 ## Handles generic REST interactions with PocketBase (Server-Side only).
 ## Refactored to use PBRequest objects for cleaner lifecycle management.
 
@@ -24,7 +24,7 @@ var pending_user_ids: Dictionary = {}
 func _ready() -> void:
 	if OS.has_environment("POCKETBASE_URL"):
 		base_url = OS.get_environment("POCKETBASE_URL")
-	print("[PersistenceManager] Initialized with Base URL: ", base_url)
+	print("[PocketBaseRESTManager] Initialized with Base URL: ", base_url)
 	
 	if multiplayer.is_server():
 		auth_system_server()
@@ -39,8 +39,8 @@ func auth_system_server() -> void:
 		if arg.begins_with("--pb_pass="): password = arg.split("=")[1]
 	
 	if identity == "" or password == "":
-		printerr("[PersistenceManager] PB_SYSTEM_USER/PASSWORD not set.")
-		PBHelper.server_auth_complete.emit(false)
+		printerr("[PocketBaseRESTManager] PB_SYSTEM_USER/PASSWORD not set.")
+		PocketBaseRPCManager.server_auth_complete.emit(false)
 		return
 	
 	var url = base_url + "/api/collections/system_accounts/auth-with-password"
@@ -49,17 +49,17 @@ func auth_system_server() -> void:
 	_send_request(url, HTTPClient.METHOD_POST, body, func(code, res):
 		if code == 200 and res is Dictionary and res.has("token"):
 			auth_token = "Bearer " + res["token"]
-			print("[PersistenceManager] System Authentication SUCCESS.")
+			print("[PocketBaseRESTManager] System Authentication SUCCESS.")
 			auth_retry_count = 0
-			PBHelper.server_auth_complete.emit(true)
+			PocketBaseRPCManager.server_auth_complete.emit(true)
 		else:
-			printerr("[PersistenceManager] System Authentication FAILED (code: ", code, ")")
+			printerr("[PocketBaseRESTManager] System Authentication FAILED (code: ", code, ")")
 			if auth_retry_count < MAX_AUTH_RETRIES:
 				auth_retry_count += 1
 				await get_tree().create_timer(AUTH_RETRY_DELAY).timeout
 				auth_system_server()
 			else:
-				PBHelper.server_auth_complete.emit(false)
+				PocketBaseRPCManager.server_auth_complete.emit(false)
 	)
 
 func _send_request(url: String, method: int, body_dict: Dictionary, callback: Callable, custom_headers: Array = [], requester_id: int = 1) -> void:
@@ -84,19 +84,19 @@ func register(username: String, email: String, password: String, requester_id: i
 		"name": username
 	}
 	
-	print("[PersistenceManager] Registering new user: ", username)
+	print("[PocketBaseRESTManager] Registering new user: ", username)
 	_send_request(url, HTTPClient.METHOD_POST, body, func(code, res):
 		if (code == 200 or code == 204) and res is Dictionary:
 			var user_id = res.get("id", "")
 			if user_id != "":
 				var initial_inv = InventoryData.new().to_dict()
 				initial_inv["stash"] = InventoryData.new().to_dict()
-				initial_inv["stats"] = PlayerStats.new().to_dict()
+				initial_inv["stats"] = PlayerStatsData.new().to_dict()
 				create_record("players", {"name": username, "user": user_id, "inventory": initial_inv}, requester_id)
 				return
 		
 		var msg = res.get("message", "Registration failed.") if res is Dictionary else "Registration failed."
-		PBHelper.relay_login_failure(requester_id, msg)
+		PocketBaseRPCManager.relay_login_failure(requester_id, msg)
 	)
 
 ## Login / Authenticate Player
@@ -105,7 +105,7 @@ func login(identity: String, password: String, requester_id: int = 1) -> void:
 	var url = base_url + "/api/collections/users/auth-with-password"
 	var body = {"identity": identity, "password": password}
 	
-	print("[PersistenceManager] Authenticating user: ", identity, " (peer: ", requester_id, ")")
+	print("[PocketBaseRESTManager] Authenticating user: ", identity, " (peer: ", requester_id, ")")
 	_send_request(url, HTTPClient.METHOD_POST, body, func(code, res):
 		if code == 200 and res is Dictionary and res.has("record"):
 			var user_id = res["record"]["id"]
@@ -114,7 +114,7 @@ func login(identity: String, password: String, requester_id: int = 1) -> void:
 			_get_player_record(user_id, token, requester_id)
 		else:
 			var msg = res.get("message", "Invalid username or password.") if res is Dictionary else "Invalid credentials."
-			PBHelper.relay_login_failure(requester_id, msg)
+			PocketBaseRPCManager.relay_login_failure(requester_id, msg)
 			_cleanup_pending(requester_id)
 	)
 
@@ -122,7 +122,7 @@ func login_with_token(token: String, requester_id: int = 1) -> void:
 	var url = base_url + "/api/collections/users/auth-refresh"
 	var headers = ["Authorization: Bearer " + token]
 	
-	print("[PersistenceManager] Authenticating with Token (peer: ", requester_id, ")")
+	print("[PocketBaseRESTManager] Authenticating with Token (peer: ", requester_id, ")")
 	_send_request(url, HTTPClient.METHOD_POST, {}, func(code, res):
 		if code == 200 and res is Dictionary and res.has("record"):
 			var user_id = res["record"]["id"]
@@ -132,7 +132,7 @@ func login_with_token(token: String, requester_id: int = 1) -> void:
 			_get_player_record(user_id, new_token, requester_id)
 		else:
 			var msg = res.get("message", "Session expired.") if res is Dictionary else "Invalid token."
-			PBHelper.relay_login_failure(requester_id, msg)
+			PocketBaseRPCManager.relay_login_failure(requester_id, msg)
 			_cleanup_pending(requester_id)
 	, headers)
 
@@ -147,7 +147,7 @@ func _get_player_record(user_id: String, token: String, requester_id: int) -> vo
 			else:
 				_create_new_player(requester_id, token)
 		else:
-			PBHelper.relay_login_failure(requester_id, "Failed to load player record.")
+			PocketBaseRPCManager.relay_login_failure(requester_id, "Failed to load player record.")
 			_cleanup_pending(requester_id)
 	)
 
@@ -169,10 +169,10 @@ func _on_request_completed(collection: String, method: String, response_code: in
 	if collection == "players":
 		if response_code >= 200 and response_code < 300 and result is Dictionary:
 			if method == "POST": _finalize_login(requester_id, result)
-			elif method == "PATCH": PBHelper.relay_update_success(requester_id, result)
+			elif method == "PATCH": PocketBaseRPCManager.relay_update_success(requester_id, result)
 		else:
 			var msg = result.get("message", "Database error.") if result is Dictionary else "DB Error."
-			PBHelper.relay_login_failure(requester_id, msg)
+			PocketBaseRPCManager.relay_login_failure(requester_id, msg)
 			_cleanup_pending(requester_id)
 
 func _create_new_player(requester_id: int, token: String = "") -> void:
@@ -181,7 +181,7 @@ func _create_new_player(requester_id: int, token: String = "") -> void:
 	
 	var initial_inv = InventoryData.new().to_dict()
 	initial_inv["stash"] = InventoryData.new().to_dict()
-	initial_inv["stats"] = PlayerStats.new().to_dict()
+	initial_inv["stats"] = PlayerStatsData.new().to_dict()
 	
 	var initial_data = {"name": username, "user": user_id, "inventory": initial_inv}
 	
@@ -191,20 +191,20 @@ func _create_new_player(requester_id: int, token: String = "") -> void:
 			res["auth_token"] = token
 			_finalize_login(requester_id, res)
 		else:
-			PBHelper.relay_login_failure(requester_id, "Failed to create player record.")
+			PocketBaseRPCManager.relay_login_failure(requester_id, "Failed to create player record.")
 			_cleanup_pending(requester_id)
 	)
 
 func _finalize_login(requester_id: int, data: Dictionary) -> void:
 	_cleanup_pending(requester_id)
-	PBHelper.relay_login_success(requester_id, data)
+	PocketBaseRPCManager.relay_login_success(requester_id, data)
 
 func reset_session() -> void:
 	current_player_id = ""
 	current_player_name = ""
 	pending_logins.clear()
 	pending_user_ids.clear()
-	print("[PersistenceManager] Session reset.")
+	print("[PocketBaseRESTManager] Session reset.")
 
 func _cleanup_pending(requester_id: int) -> void:
 	pending_logins.erase(requester_id)

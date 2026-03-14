@@ -9,10 +9,10 @@ func _ready() -> void:
 	spawner.add_spawnable_scene("res://scenes/actors/player/Player.tscn")
 	
 	# Server-side connection handling
-	if NetworkManager.current_role == NetworkManager.Role.HUB_SERVER:
+	if NetworkService.current_role == NetworkService.Role.HUB_SERVER:
 		# We wait for login success before spawning
-		PBHelper.server_player_login_completed.connect(_on_server_player_login_completed)
-		NetworkManager.multiplayer.peer_disconnected.connect(_on_peer_disconnected)
+		PocketBaseRPCManager.server_player_login_completed.connect(_on_server_player_login_completed)
+		NetworkService.multiplayer.peer_disconnected.connect(_on_peer_disconnected)
 
 # --- CLIENT SIDE CALLBACKS ---
 func _on_connection_success():
@@ -80,3 +80,4 @@ func custom_spawn(data: Dictionary) -> Node3D:
 		
 	p.position = data.pos
 	return p
+

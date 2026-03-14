@@ -23,7 +23,7 @@ func interact(player: Node3D) -> void:
 @rpc("authority", "call_local", "reliable")
 func _open_loot_ui(loot_items: Array, path: NodePath) -> void:
 	print("[Loot] Client received RPC to open loot UI.")
-	InventoryManager.open_external_inventory(loot_items, path)
+	InventoryService.open_external_inventory(loot_items, path)
 
 @rpc("any_peer", "call_remote", "reliable")
 func request_remove_item(slot_index: int) -> void:
@@ -53,3 +53,4 @@ func _process(_delta: float) -> void:
 			
 	if all_empty:
 		_sync_empty.rpc()
+
