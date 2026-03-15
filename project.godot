@@ -31,6 +31,7 @@ NetworkService="*res://core/services/NetworkService.gd"
 SceneService="*res://core/services/SceneService.gd"
 TLSHelper="*res://core/helpers/TLSHelper.gd"
 VoiceService="*res://core/services/VoiceService.gd"
+NotificationService="*res://core/services/NotificationService.gd"
 
 [editor]
 

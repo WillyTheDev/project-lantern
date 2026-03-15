@@ -32,6 +32,13 @@ This document tracks known architectural shortcuts, security vulnerabilities, an
 - **Risk:** **Data Corruption / Race Condition.** If multiple players interact with inventories simultaneously, the server might overwrite one player's data with another's before saving to the database.
 - **Required Fix:** Refactor the server-side `InventoryManager` to store player data in a `Dictionary` keyed by `peer_id` (Player Sessions), ensuring isolated state for every connected client.
 
+### 5. Lack of PocketBase Reconnection Self-Healing
+- **Added:** Iteration 4
+- **Current State:** The server only attempts to authenticate with PocketBase at startup. If the connection is lost or the token expires, there is no automatic recovery mechanism.
+- **Shortcut:** Simple one-time authentication loop.
+- **Risk:** **Server Stalling.** If PocketBase restarts or has a network hiccup, the game server becomes unable to sync player data or process logins, requiring a manual restart of the game server.
+- **Required Fix:** Implement a background monitoring loop in `PocketBaseRESTManager` with exponential backoff for reconnection and request queuing in `PocketBaseRPCManager`.
+
 ---
 
 ## ✅ Resolved Debt

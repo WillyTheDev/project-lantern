@@ -1,6 +1,7 @@
-[gd_scene load_steps=4 format=3 uid="uid://bd01yoma7plap"]
+[gd_scene format=3 uid="uid://bd01yoma7plap"]
 
-[ext_resource type="Script" path="res://ui/MainMenu.gd" id="1_main_menu"]
+[ext_resource type="Script" uid="uid://bvf1wtaw0nxkc" path="res://ui/MainMenu.gd" id="1_main_menu"]
+[ext_resource type="PackedScene" uid="uid://dbeiin1eea3um" path="res://ui/notification/Notification.tscn" id="2_rn8js"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_box"]
 bg_color = Color(0.0901961, 0.0901961, 0.101961, 0.823529)
@@ -22,7 +23,7 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
-[node name="MainMenu" type="Control"]
+[node name="MainMenu" type="Control" unique_id=1341837532]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -31,7 +32,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_main_menu")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="ColorRect" parent="." unique_id=1549794015]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -40,7 +41,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.0509804, 0.0509804, 0.0705882, 1)
 
-[node name="CenterContainer" type="CenterContainer" parent="."]
+[node name="CenterContainer" type="CenterContainer" parent="." unique_id=974040692]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -48,56 +49,56 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="PanelContainer" type="PanelContainer" parent="CenterContainer"]
+[node name="PanelContainer" type="PanelContainer" parent="CenterContainer" unique_id=171868120]
 custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_box")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer" unique_id=1934923905]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Title" type="Label" parent="CenterContainer/PanelContainer/VBoxContainer"]
+[node name="Title" type="Label" parent="CenterContainer/PanelContainer/VBoxContainer" unique_id=2075520901]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.921569, 0.631373, 0.258824, 1)
 theme_override_font_sizes/font_size = 42
 text = "PROJECT LANTERN"
 horizontal_alignment = 1
 
-[node name="HSeparator" type="HSeparator" parent="CenterContainer/PanelContainer/VBoxContainer"]
+[node name="HSeparator" type="HSeparator" parent="CenterContainer/PanelContainer/VBoxContainer" unique_id=1228577707]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="RegisterToggle" type="CheckButton" parent="CenterContainer/PanelContainer/VBoxContainer"]
+[node name="RegisterToggle" type="CheckButton" parent="CenterContainer/PanelContainer/VBoxContainer" unique_id=742414475]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
 theme_override_colors/font_pressed_color = Color(0.921569, 0.631373, 0.258824, 1)
 text = "New Player? (Register)"
 
-[node name="UsernameLabel" type="Label" parent="CenterContainer/PanelContainer/VBoxContainer"]
+[node name="UsernameLabel" type="Label" parent="CenterContainer/PanelContainer/VBoxContainer" unique_id=507393892]
 layout_mode = 2
 text = "Username"
 
-[node name="UsernameInput" type="LineEdit" parent="CenterContainer/PanelContainer/VBoxContainer"]
+[node name="UsernameInput" type="LineEdit" parent="CenterContainer/PanelContainer/VBoxContainer" unique_id=44891963]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 placeholder_text = "e.g. wanderer"
 alignment = 1
 
-[node name="EmailInput" type="LineEdit" parent="CenterContainer/PanelContainer/VBoxContainer"]
+[node name="EmailInput" type="LineEdit" parent="CenterContainer/PanelContainer/VBoxContainer" unique_id=1939956734]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 placeholder_text = "e.g. wanderer@lantern.com"
 alignment = 1
 
-[node name="PasswordLabel" type="Label" parent="CenterContainer/PanelContainer/VBoxContainer"]
+[node name="PasswordLabel" type="Label" parent="CenterContainer/PanelContainer/VBoxContainer" unique_id=936966223]
 layout_mode = 2
 text = "Password"
 
-[node name="PasswordInput" type="LineEdit" parent="CenterContainer/PanelContainer/VBoxContainer"]
+[node name="PasswordInput" type="LineEdit" parent="CenterContainer/PanelContainer/VBoxContainer" unique_id=546809347]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
@@ -105,11 +106,11 @@ placeholder_text = "••••••••"
 alignment = 1
 secret = true
 
-[node name="Control" type="Control" parent="CenterContainer/PanelContainer/VBoxContainer"]
+[node name="Control" type="Control" parent="CenterContainer/PanelContainer/VBoxContainer" unique_id=2137734862]
 custom_minimum_size = Vector2(0, 5)
 layout_mode = 2
 
-[node name="JoinButton" type="Button" parent="CenterContainer/PanelContainer/VBoxContainer"]
+[node name="JoinButton" type="Button" parent="CenterContainer/PanelContainer/VBoxContainer" unique_id=730480894]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 50)
 layout_mode = 2
@@ -118,10 +119,13 @@ theme_override_font_sizes/font_size = 20
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn")
 text = "ENTER THE WORLD"
 
-[node name="StatusLabel" type="Label" parent="CenterContainer/PanelContainer/VBoxContainer"]
+[node name="StatusLabel" type="Label" parent="CenterContainer/PanelContainer/VBoxContainer" unique_id=976732176]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
 theme_override_font_sizes/font_size = 14
 text = "Ready to connect..."
 horizontal_alignment = 1
+
+[node name="Notification" parent="." unique_id=1494450602 instance=ExtResource("2_rn8js")]
+layout_mode = 1

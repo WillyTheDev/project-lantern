@@ -44,8 +44,8 @@ func initialize_for_player(player: Node3D) -> void:
 	refresh()
 	_on_base_stats_updated(player_ref.stats)
 	_on_active_slot_changed(player_ref.inventory.active_hotbar_index)
+
 func _on_base_stats_updated(_stats: PlayerStatsData) -> void:
-	# Refresh UI when base stats (Level/XP) change
 	_update_stats_label()
 
 func _on_total_stats_updated(_total_stats: Dictionary) -> void:
@@ -181,13 +181,25 @@ func _update_tooltip_pos() -> void:
 
 func _input(event: InputEvent) -> void:
 	if not is_local_authority: return
-	if event.is_action_pressed("inventory"):
+	
+	# Allow 'I' to toggle, and 'E' or 'ESC' to close if already open
+	var is_inventory_toggle = event.is_action_pressed("inventory")
+	var is_interact_close = inventory_overlay.visible and event.is_action_pressed("interact")
+	var is_esc_close = inventory_overlay.visible and event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE
+	
+	if is_inventory_toggle or is_interact_close or is_esc_close:
+		# Consume the event so it doesn't trigger interactions or open settings menu
+		get_viewport().set_input_as_handled()
+		
 		inventory_overlay.visible = !inventory_overlay.visible
 		hotbar_hud.visible = !inventory_overlay.visible
+		
 		if current_tooltip: _on_slot_mouse_exited()
+		
 		if inventory_overlay.visible:
 			Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 			refresh()
 		else:
 			Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-			if external_section.visible: InventoryService.close_external_inventory()
+			if external_section.visible: 
+				InventoryService.close_external_inventory()

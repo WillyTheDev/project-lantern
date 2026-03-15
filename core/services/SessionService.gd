@@ -39,10 +39,12 @@ func _on_auth_success(data: Dictionary) -> void:
 	session.is_authenticated = true
 	
 	print("[SessionService] Session started for: ", session.username)
+	NotificationService.send_success("Welcome back, " + session.username + "!")
 	session_started.emit(data)
 
 func _on_auth_failed(reason: String) -> void:
 	print("[SessionService] Auth failed: ", reason)
+	NotificationService.send_error("Authentication Failed: " + reason)
 	_clear_all_systems()
 	auth_failed.emit(reason)
 
@@ -58,5 +60,8 @@ func _clear_all_systems() -> void:
 	
 	if SceneService.has_method("reset_credentials"):
 		SceneService.reset_credentials()
+	
+	if NotificationService.has_method("reset"):
+		NotificationService.reset()
 	
 	print("[SessionService] Global state cleared.")
