@@ -10,6 +10,7 @@ var animations: PlayerAnimationManager
 @export var interpolation_speed = 15.0
 @export var sync_position: Vector3
 @export var sync_rotation: float
+@export var sync_camera_rotation_y: float
 @export var sync_pivot_rotation: float 
 
 @onready var anim_player: AnimationPlayer = $Model/MainAnimationPlayer
@@ -193,7 +194,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			active_slot_index = 9
 
 	if event is InputEventMouseMotion and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
-		rotate_y(-event.relative.x * MOUSE_SENSIBILITY)
+		$CameraPivot.rotate_y(-event.relative.x * MOUSE_SENSIBILITY)
+		$CameraPivot.rotation.x = clamp($CameraPivot.rotation.x - event.relative.y * MOUSE_SENSIBILITY, -1.2, 1.2)
 
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
 		_toggle_settings_menu()
@@ -271,11 +273,15 @@ func _physics_process(delta: float) -> void:
 			
 		shared_velocity = velocity
 		sync_position = global_position
-		sync_rotation = rotation.y
+		# Sync the visual model's rotation instead of the root
+		sync_rotation = $Model.rotation.y
+		# Camera rotation (Y for horizontal, X for pivot/pitch)
+		sync_camera_rotation_y = $CameraPivot.rotation.y
 		sync_pivot_rotation = $CameraPivot.rotation.x
 	else:
 		# Non-authority (Server or other clients) just interpolate/follow
-		rotation.y = sync_rotation
+		$Model.rotation.y = lerp_angle($Model.rotation.y, sync_rotation, 10 * delta)
+		$CameraPivot.rotation.y = sync_camera_rotation_y
 		$CameraPivot.rotation.x = sync_pivot_rotation
 		
 		if global_position.distance_to(sync_position) > 2.0:

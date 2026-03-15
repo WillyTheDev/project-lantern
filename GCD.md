@@ -52,6 +52,12 @@ Système de voix de proximité 3D (Spatial Audio) utilisant le codec Opus pour l
 Indicateur visuel au-dessus du joueur lors de la parole.
 Réduction du bruit (RNNoise) et détection d'activité (VAD) avec Hang-Time pour une communication fluide.
 
+Le "Juice" de Combat & Interactions
+- **Squash & Stretch (Squeeze) :** Animation procédurale lors de la prise de dégâts (0.2s cooldown) appliquée uniquement sur les nodes visuels pour préserver l'intégrité de la physique Jolt.
+- **Système de Knockback :** Système synchronisé serveur-client permettant de repousser les joueurs et les ennemis lors des attaques ou via les dangers environnementaux.
+- **Secousses de Caméra (Screen Shake) :** Feedback visuel subtil lors de la réception de dégâts pour renforcer l'impact sans nuire à la lisibilité du combat.
+- **Optimisation des Dangers :** Les zones de dégâts (HazardAreas) appliquent des dégâts et du knockback à intervalle fixe (0.5s) pour une meilleure performance réseau.
+
 4. DIRECTION TECHNIQUE & ARTISTIQUE
 Moteur : 3D (pour l'immersion, la verticalité et la gestion des ombres portées).
 

@@ -30,6 +30,9 @@ properties/5/replication_mode = 1
 properties/6/path = NodePath(".:active_slot_index")
 properties/6/spawn = true
 properties/6/replication_mode = 1
+properties/7/path = NodePath(".:sync_camera_rotation_y")
+properties/7/spawn = true
+properties/7/replication_mode = 1
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dsx4b"]
 bg_color = Color(0.88100183, 0.1337547, 0.28620315, 1)
@@ -81,7 +84,7 @@ show_percentage = false
 
 [node name="Model" parent="." unique_id=2112750636 instance=ExtResource("4_imb2f")]
 
-[node name="RayCast3D" type="RayCast3D" parent="." unique_id=1540116977]
+[node name="RayCast3D" type="RayCast3D" parent="Model" unique_id=1540116977]
 unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0.8934789, 0.35326314)
 target_position = Vector3(0, -2, 0)
