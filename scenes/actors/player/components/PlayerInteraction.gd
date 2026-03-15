@@ -40,3 +40,12 @@ func _request_interact_rpc(object_path: NodePath) -> void:
 				target.interact(player)
 			elif target.get_parent() and target.get_parent().has_method("interact"):
 				target.get_parent().interact(player)
+
+@rpc("any_peer", "call_remote", "reliable")
+func request_move_item(from_type: String, from_idx: int, to_type: String, to_idx: int) -> void:
+	if not multiplayer.is_server(): return
+	var sender_id = multiplayer.get_remote_sender_id()
+	if sender_id != player.player_id: return
+	
+	print("[PlayerInteraction] Server executing move for peer: ", sender_id)
+	InventoryService.move_item(player, from_type, from_idx, to_type, to_idx)

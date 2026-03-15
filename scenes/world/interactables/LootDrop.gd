@@ -17,6 +17,9 @@ func interact(player: Node3D) -> void:
 	var peer_id = player.player_id if "player_id" in player else 1
 	print("[Loot] Server processing interaction for Peer: ", peer_id)
 	
+	# Register this interaction on the server's InventoryService
+	InventoryService.register_external_interaction(peer_id, get_path())
+	
 	# Always use RPC to ensure it triggers correctly on the targeted client
 	_open_loot_ui.rpc_id(peer_id, items, get_path())
 

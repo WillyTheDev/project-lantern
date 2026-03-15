@@ -45,7 +45,7 @@ func initialize_for_player(player: Node3D) -> void:
 	_on_base_stats_updated(player_ref.stats)
 	_on_active_slot_changed(player_ref.inventory.active_hotbar_index)
 
-func _on_base_stats_updated(_stats: PlayerStatsData) -> void:
+func _on_base_stats_updated(_stats: PlayerStatsData = null) -> void:
 	_update_stats_label()
 
 func _on_total_stats_updated(_total_stats: Dictionary) -> void:
@@ -114,7 +114,12 @@ func refresh() -> void:
 		slot.set_item_stack(data.armor[i])
 		
 	if external_section.visible:
-		var ext_data = InventoryService.external_inventory
+		var ext_data = []
+		if InventoryService.current_external_type == "stash":
+			ext_data = InventoryService.stash.items
+		else:
+			ext_data = InventoryService.external_inventory
+			
 		for i in range(external_grid.get_child_count()):
 			var slot = external_grid.get_child(i)
 			if i < ext_data.size():

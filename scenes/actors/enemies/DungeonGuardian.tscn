@@ -27,6 +27,7 @@ properties/1/spawn = true
 properties/1/replication_mode = 1
 
 [node name="DungeonGuardian" type="CharacterBody3D" unique_id=1259664814]
+collision_layer = 2
 script = ExtResource("1_fuuur")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1360569166]

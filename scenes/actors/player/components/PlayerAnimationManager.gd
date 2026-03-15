@@ -21,6 +21,7 @@ func update_animations(shared_velocity: Vector3) -> void:
 		"melee/Attack_1", 
 		"melee/Attack_2", 
 		"melee/Attack_3", 
+		"combat/Melee_1H_Attack_Slice_Horizontal",
 		"general/Death_A", 
 		"general/Spawn_Air"
 	]
@@ -48,13 +49,8 @@ func play_general(anim_name: String, blend: float = 0.1):
 		if not "Idle_A" in anim_name:
 			anim_player.queue("general/Idle_A")
 
-func play_attack():
+func play_melee_one_hand_attack():
 	if anim_player:
-		var atk_name = "melee/Attack_1"
-		if not anim_player.has_animation(atk_name):
-			for anim in anim_player.get_animation_list():
-				if "Attack" in anim:
-					atk_name = anim
-					break
+		var atk_name = "combat/Melee_1H_Attack_Slice_Horizontal"
 		if anim_player.has_animation(atk_name):
 			anim_player.play(atk_name, 0.1)

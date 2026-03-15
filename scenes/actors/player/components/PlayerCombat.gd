@@ -1,6 +1,8 @@
 extends Node
 class_name PlayerCombat
 
+var animations: PlayerAnimationManager
+
 var player: CharacterBody3D
 
 func _init(_player: CharacterBody3D) -> void:
@@ -18,16 +20,41 @@ func _perform_attack_rpc(damage: float, range: float) -> void:
 	var sender_id = multiplayer.get_remote_sender_id()
 	if sender_id != player.player_id: return
 	
-	if player.interact_ray:
-		player.interact_ray.force_raycast_update()
-		if player.interact_ray.is_colliding():
-			var collider = player.interact_ray.get_collider()
-			if collider:
-				var target = collider
-				if not target.has_method("take_damage") and target.get_parent() and target.get_parent().has_method("take_damage"):
-					target = target.get_parent()
-				
-				if target.has_method("take_damage"):
-					var dist = player.global_position.distance_to(collider.global_position)
-					if dist <= range + 3.0:
-						target.take_damage(damage)
+	# Cleave System: Use a sphere check in front of the player
+	var space_state = player.get_world_3d().direct_space_state
+	var forward = -player.global_transform.basis.z
+	var attack_pos = player.global_position + (forward * (range / 2.0))
+	
+	var query = PhysicsShapeQueryParameters3D.new()
+	var sphere = SphereShape3D.new()
+	sphere.radius = range # Large enough to catch multiple enemies in front
+	query.shape = sphere
+	query.transform = Transform3D(Basis(), attack_pos)
+	query.collision_mask = 2 # Assuming enemies are on layer 2 (adjust if needed)
+	# If we don't know the layer, we can filter by group later
+	
+	var results = space_state.intersect_shape(query)
+	var hit_something = false
+	
+	for result in results:
+		var collider = result.collider
+		if collider == player: continue
+		
+		var target = collider
+		if not target.has_method("take_damage") and target.get_parent() and target.get_parent().has_method("take_damage"):
+			target = target.get_parent()
+			
+		if target.has_method("take_damage") and target != player:
+			target.take_damage(damage)
+			hit_something = true
+	
+	# Feedback for the attacker
+	if hit_something:
+		_notify_hit_success.rpc_id(sender_id)
+
+@rpc("authority", "call_remote", "reliable")
+func _notify_hit_success() -> void:
+	if player.is_multiplayer_authority():
+		var cam = player.get_node_or_null("CameraPivot/SpringArm3D/Camera3D")
+		if cam and cam.has_method("shake"):
+			cam.shake(0.1, 0.1) # Small shake for satisfaction

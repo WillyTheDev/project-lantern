@@ -21,10 +21,13 @@ func _refill_chest() -> void:
 
 func interact(player: Node3D) -> void:
 	if not multiplayer.is_server(): return
-	
-	var peer_id = player.player_id if "player_id" in player else 1
-	_open_loot_ui.rpc_id(peer_id, items, get_path())
 
+	var peer_id = player.player_id if "player_id" in player else 1
+
+	# Register this interaction on the server's InventoryService
+	InventoryService.register_external_interaction(peer_id, get_path())
+
+	_open_loot_ui.rpc_id(peer_id, items, get_path())
 @rpc("authority", "call_local", "reliable")
 func _open_loot_ui(loot_items: Array, path: NodePath) -> void:
 	InventoryService.open_external_inventory(loot_items, path)

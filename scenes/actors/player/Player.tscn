@@ -27,6 +27,9 @@ properties/4/replication_mode = 1
 properties/5/path = NodePath(".:sync_pivot_rotation")
 properties/5/spawn = true
 properties/5/replication_mode = 1
+properties/6/path = NodePath(".:active_slot_index")
+properties/6/spawn = true
+properties/6/replication_mode = 1
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dsx4b"]
 bg_color = Color(0.88100183, 0.1337547, 0.28620315, 1)

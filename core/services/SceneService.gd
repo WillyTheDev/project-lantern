@@ -52,12 +52,7 @@ func _load_scene(path: String, username: String = "", password: String = "") -> 
 	if tree.current_scene and tree.current_scene.scene_file_path == path:
 		print("[SceneService] Scene already loaded: ", path)
 		if is_switching_shard:
-			print("[SceneService] Re-triggering shard login for existing scene type.")
-			show_loading_screen(true, "Synchronizing with Server...")
-			if cached_token != "":
-				SessionService.login_with_token(cached_token)
-			elif cached_username != "" and cached_password != "":
-				SessionService.login(cached_username, cached_password)
+			_wait_and_reauth()
 			is_switching_shard = false
 		return
 
@@ -84,12 +79,7 @@ func _load_scene(path: String, username: String = "", password: String = "") -> 
 			
 			# NEW: Trigger Session Login if we are a client entering a game scene
 			if path != MENU_SCENE and NetworkService.current_role == NetworkService.Role.CLIENT:
-				print("[SceneService] Post-transition: Triggering session synchronization.")
-				update_status("Synchronizing Session...")
-				if cached_token != "":
-					SessionService.login_with_token(cached_token)
-				elif cached_username != "" and cached_password != "":
-					SessionService.login(cached_username, cached_password)
+				_wait_and_reauth()
 			
 			break
 		elif status == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
@@ -107,6 +97,24 @@ func _load_scene(path: String, username: String = "", password: String = "") -> 
 			return
 
 		await tree.process_frame
+
+func _wait_and_reauth() -> void:
+	print("[SceneService] Post-transition: Waiting for connection before session synchronization.")
+	update_status("Connecting to Server...")
+	
+	var mp = NetworkService.multiplayer
+	
+	# If not connected yet, wait for the signal
+	if mp.multiplayer_peer == null or mp.multiplayer_peer.get_connection_status() != MultiplayerPeer.CONNECTION_CONNECTED:
+		await mp.connected_to_server
+		
+	print("[SceneService] Connection established. Triggering re-auth.")
+	update_status("Synchronizing Session...")
+	
+	if cached_token != "":
+		SessionService.login_with_token(cached_token)
+	elif cached_username != "" and cached_password != "":
+		SessionService.login(cached_username, cached_password)
 
 func reset_credentials() -> void:
 	cached_username = ""
@@ -138,4 +146,3 @@ func show_loading_screen(show: bool, initial_status: String = "Loading...") -> v
 func update_status(text: String) -> void:
 	if loading_screen_instance and loading_screen_instance.has_method("set_status"):
 		loading_screen_instance.set_status(text)
-

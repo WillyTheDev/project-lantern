@@ -51,6 +51,7 @@ func _spawn_player(peer_id: int, pb_data: Dictionary):
 
 	var data = {
 		"player_name": "Player_%d" % peer_id,
+		"db_id": pb_data.get("id", ""),
 		"peer_id": peer_id,
 		"display_name": pb_data.get("name", "Player_%d" % peer_id),
 		"name_color": [0.8, 0.8, 0.8],
@@ -64,20 +65,23 @@ func custom_spawn(data: Dictionary) -> Node3D:
 	var p = preload("res://scenes/actors/player/Player.tscn").instantiate()
 	p.name = data.player_name
 	
-	# Safety check: Ensure the script is actually loaded before assigning
-	if p.get_script() == null:
-		print("[Spawner] ERROR: Player script not loaded on node!")
-	
 	p.player_id = data.peer_id
 	p.display_name = data.get("display_name", "Player_%d" % data.peer_id)
+	
+	if multiplayer.is_server():
+		# IMPORTANT: Set the PocketBase record ID for server-side syncing
+		p.player_name = data.get("db_id", "")
+		
+		if data.has("inventory"):
+			# Deferred Loading: Wait until node is in tree/ready
+			var load_data = data.inventory
+			p.ready.connect(func():
+				InventoryService.load_inventory_for_player(p, p.player_name, load_data)
+			, CONNECT_ONE_SHOT)
+	
 	if "name_color" in data:
 		var color_array = data.name_color
 		p.name_color = Color(color_array[0], color_array[1], color_array[2], 1.0)
-	
-	if multiplayer.is_server() and data.has("inventory"):
-		p.server_inventory = InventoryData.new()
-		p.server_inventory.load_from_dict(data.inventory)
 		
 	p.position = data.pos
 	return p
-

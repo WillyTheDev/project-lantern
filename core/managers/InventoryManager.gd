@@ -45,9 +45,27 @@ static func _add_to_array(arr: Array[ItemStackData], item_id: String, quantity: 
 			return true
 	return false
 
-static func move_item(from_arr: Array[ItemStackData], from_idx: int, to_arr: Array[ItemStackData], to_idx: int) -> void:
+static func move_item(from_arr: Array, from_idx: int, to_arr: Array, to_idx: int) -> void:
 	var item_to_move = from_arr[from_idx]
 	var item_at_dest = to_arr[to_idx]
 	
-	to_arr[to_idx] = item_to_move
-	from_arr[from_idx] = item_at_dest
+	# Convert item_to_move to the format expected by to_arr
+	var processed_to_move = item_to_move
+	if to_arr is Array[ItemStackData]:
+		if item_to_move is Dictionary:
+			processed_to_move = ItemStackData.from_dict(item_to_move)
+	else: # Mixed array or Dictionary array (external)
+		if item_to_move is ItemStackData:
+			processed_to_move = item_to_move.to_dict()
+
+	# Convert item_at_dest to the format expected by from_arr
+	var processed_at_dest = item_at_dest
+	if from_arr is Array[ItemStackData]:
+		if item_at_dest is Dictionary:
+			processed_at_dest = ItemStackData.from_dict(item_at_dest)
+	else: # Mixed array or Dictionary array (external)
+		if item_at_dest is ItemStackData:
+			processed_at_dest = item_at_dest.to_dict()
+
+	to_arr[to_idx] = processed_to_move
+	from_arr[from_idx] = processed_at_dest

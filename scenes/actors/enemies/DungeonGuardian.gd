@@ -4,7 +4,8 @@ extends CharacterBody3D
 @export var damage_amount: float = 15.0
 @export var attack_cooldown: float = 1.5
 @export var detection_range: float = 15.0
-@export var attack_range: float = 0.5
+@export var attack_range: float = 1.5
+@export var attack_windup: float = 0.4
 
 # Health
 @export var max_health: float = 50.0
@@ -80,9 +81,41 @@ func _find_closest_player() -> void:
 func _try_attack() -> void:
 	var current_time = Time.get_ticks_msec() / 1000.0
 	if current_time - last_attack_time >= attack_cooldown:
-		if target_player and target_player.has_method("take_damage"):
-			target_player.take_damage(damage_amount)
-			last_attack_time = current_time
+		last_attack_time = current_time
+		# Trigger the sequence for everyone
+		_play_attack_fx.rpc()
+		_perform_attack_logic()
+
+@rpc("any_peer", "call_local", "reliable")
+func _play_attack_fx() -> void:
+	# Telegraph/Wind-up (Visual cue for all clients)
+	var original_scale = Vector3(1, 1, 1) # Reset to base scale
+	var tween = create_tween()
+	tween.tween_property(self, "scale", Vector3(original_scale.x * 0.9, original_scale.y * 1.2, original_scale.z * 0.9), attack_windup)
+	tween.chain().tween_property(self, "scale", original_scale, 0.1)
+
+func _perform_attack_logic() -> void:
+	await get_tree().create_timer(attack_windup).timeout
+	
+	# Damage Application (Cleave) - Server Only
+	if not multiplayer.is_server() or not is_inside_tree(): return
+	
+	var space_state = get_world_3d().direct_space_state
+	var forward = -global_transform.basis.z
+	var attack_pos = global_position + (forward * (attack_range / 2.0))
+	
+	var query = PhysicsShapeQueryParameters3D.new()
+	var sphere = SphereShape3D.new()
+	sphere.radius = attack_range
+	query.shape = sphere
+	query.transform = Transform3D(Basis(), attack_pos)
+	query.collision_mask = 1 # Players are usually on layer 1
+	
+	var results = space_state.intersect_shape(query)
+	for result in results:
+		var collider = result.collider
+		if collider.has_method("take_damage") and collider.is_in_group("players"):
+			collider.take_damage(damage_amount)
 
 func take_damage(amount: float) -> void:
 	if not multiplayer.is_server(): return
@@ -107,13 +140,19 @@ func _play_damage_fx(amount: float) -> void:
 	if text_instance.has_method("setup"):
 		text_instance.setup(amount)
 		
-	# 2. Hit Flash
+	# 2. Hit Flash & Squash/Stretch
 	var mesh = $MeshInstance3D
+	var original_scale = scale
+	var tween = create_tween().set_parallel(true)
+	
 	if mesh:
 		var mat = mesh.get_surface_override_material(0) as ShaderMaterial
 		if mat:
-			var tween = create_tween()
 			tween.tween_method(func(v): mat.set_shader_parameter("hit_intensity", v), 1.0, 0.0, 0.2)
+	
+	# Squash and Stretch (Juice)
+	tween.tween_property(self, "scale", Vector3(original_scale.x * 1.1, original_scale.y * 0.9, original_scale.z * 1.1), 0.05)
+	tween.chain().tween_property(self, "scale", original_scale, 0.1)
 
 func _die() -> void:
 	# 1. Spawn loot on the server

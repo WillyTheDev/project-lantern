@@ -47,8 +47,10 @@ func request_login(username: String, password: String) -> void:
 		
 	if multiplayer.is_server():
 		PocketBaseRESTManager.login(username, password)
-	else:
+	elif multiplayer.has_multiplayer_peer():
 		rpc_id(1, "server_request_login", username, password)
+	else:
+		printerr("[PocketBaseRPCManager] ABORT: Cannot request login, no multiplayer peer assigned.")
 
 func request_login_with_token(token: String) -> void:
 	if token == "":
@@ -58,16 +60,27 @@ func request_login_with_token(token: String) -> void:
 	print("[PocketBaseRPCManager] Client requesting login with token.")
 	if multiplayer.is_server():
 		PocketBaseRESTManager.login_with_token(token)
-	else:
+	elif multiplayer.has_multiplayer_peer():
 		rpc_id(1, "server_request_login_with_token", token)
+	else:
+		printerr("[PocketBaseRPCManager] ABORT: Cannot request token login, no multiplayer peer assigned.")
 
-func request_sync_inventory(player_db_id: String, inventory: Dictionary) -> void:
-	if player_db_id == "": return
+func request_sync_inventory(player_db_id: String, inventory: Dictionary, requester_id: int = 1) -> void:
+	if player_db_id == "": 
+		printerr("[PocketBaseRPCManager] FAILED: Attempted to sync inventory with empty player_db_id (peer: ", requester_id, ")")
+		return
 	
 	if multiplayer.is_server():
-		PocketBaseRESTManager.update_record(COL_PLAYERS, player_db_id, {"inventory": inventory})
-	else:
+		print("[PocketBaseRPCManager] Syncing inventory for player: ", player_db_id, " (peer: ", requester_id, ")")
+		if not is_server_authenticated:
+			print("[PocketBaseRPCManager] Queuing sync request for ", player_db_id, " (peer: ", requester_id, ")")
+			pending_requests.append({"type": "sync", "db_id": player_db_id, "inventory": inventory, "sender_id": requester_id})
+			return
+		PocketBaseRESTManager.update_record(COL_PLAYERS, player_db_id, {"inventory": inventory}, requester_id)
+	elif multiplayer.has_multiplayer_peer():
 		rpc_id(1, "server_request_sync_inventory", player_db_id, inventory)
+	else:
+		printerr("[PocketBaseRPCManager] ABORT: Cannot request sync, no multiplayer peer assigned.")
 
 func request_register(username: String, email: String, password: String) -> void:
 	if username == "" or email == "" or password == "":
@@ -76,8 +89,10 @@ func request_register(username: String, email: String, password: String) -> void
 		
 	if multiplayer.is_server():
 		PocketBaseRESTManager.register(username, email, password)
-	else:
+	elif multiplayer.has_multiplayer_peer():
 		rpc_id(1, "server_request_register", username, email, password)
+	else:
+		printerr("[PocketBaseRPCManager] ABORT: Cannot request registration, no multiplayer peer assigned.")
 
 # --- RPC Methods ---
 
@@ -116,10 +131,7 @@ func notify_client_status(message: String) -> void:
 @rpc("any_peer", "call_remote", "reliable")
 func server_request_sync_inventory(player_db_id: String, inventory: Dictionary, force_sender_id: int = -1) -> void:
 	var sender_id = force_sender_id if force_sender_id != -1 else multiplayer.get_remote_sender_id()
-	if not is_server_authenticated:
-		pending_requests.append({"type": "sync", "db_id": player_db_id, "inventory": inventory, "sender_id": sender_id})
-		return
-	PocketBaseRESTManager.update_record(COL_PLAYERS, player_db_id, {"inventory": inventory}, sender_id)
+	request_sync_inventory(player_db_id, inventory, sender_id)
 
 ## CLIENT SIDE: Deliver full profile (triggers spawning logic)
 @rpc("authority", "call_remote", "reliable")
@@ -183,4 +195,3 @@ func relay_login_failure(peer_id: int, reason: String) -> void:
 func _on_server_request_completed(collection: String, method: String, response_code: int, result: Variant) -> void:
 	if response_code >= 400:
 		printerr("[PocketBaseRPCManager] Server-side PB Error: ", response_code, " Result: ", result)
-

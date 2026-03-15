@@ -20,12 +20,7 @@ var animations: PlayerAnimationManager
 # --- DATA OWNERSHIP ---
 @export var stats: PlayerStatsData = PlayerStatsData.new()
 @export var inventory: InventoryData = InventoryData.new()
-@export var stash: InventoryData = InventoryData.new()
-# Server-only storage for remote player inventories to allow item spawning
-var server_inventory: InventoryData = null:
-	set(v):
-		server_inventory = v
-		inventory = v # For simpler access
+@export var stash: StashData = StashData.new()
 
 @export var display_name: String = "": set = _set_display_name
 @export var name_color: Color = Color.WHITE: set = _set_name_color
@@ -56,10 +51,33 @@ const MOUSE_SENSIBILITY = 0.002
 		if is_inside_tree():
 			refresh_held_item()
 
+@rpc("any_peer", "call_remote", "reliable")
+func sync_inventory_to_clients(inventory_data: Dictionary, stash_data: Dictionary) -> void:
+	# Only allow the server to push these updates
+	if multiplayer.get_remote_sender_id() != 1: return
+	
+	# This is called on all clients to synchronize remote player nodes
+	# We don't want to override our own local data if we are the authority
+	if is_multiplayer_authority(): return
+	
+	print("[Player] Remote player sync for: ", player_name)
+	inventory.load_from_dict(inventory_data)
+	stash.load_from_dict(stash_data)
+	refresh_held_item()
+
 func _enter_tree() -> void:
 	set_multiplayer_authority(player_id)
 
+func _exit_tree() -> void:
+	if multiplayer.is_server():
+		print("[Player] Peer ", player_id, " leaving scene. Performing final sync for: ", player_name)
+		InventoryService._sync_and_emit(self)
+
 func _ready() -> void:
+	# Explicitly initialize slots for new objects
+	inventory._initialize_slots()
+	stash._initialize_slots()
+	
 	scale = Vector3(0.3, 0.3, 0.3)
 	add_to_group("players")
 	$CameraPivot/SpringArm3D.add_excluded_object(get_rid())
@@ -111,10 +129,24 @@ func _setup_local_player() -> void:
 	# Initial refresh
 	await get_tree().create_timer(0.2).timeout
 	refresh_held_item()
+	
+	# Handshake: Request inventory from server once we are fully ready
+	if not multiplayer.is_server():
+		print("[Player] Requesting initial inventory sync from server...")
+		server_request_inventory_sync.rpc_id(1)
 
 func _setup_remote_player() -> void:
 	$CameraPivot/SpringArm3D/Camera3D.current = false
 	voip.setup_remote()
+
+@rpc("any_peer", "call_remote", "reliable")
+func server_request_inventory_sync() -> void:
+	if not multiplayer.is_server(): return
+	var sender_id = multiplayer.get_remote_sender_id()
+	if sender_id == player_id:
+		print("[Player] Peer ", sender_id, " requested inventory sync. Sending...")
+		# Use the service to broadcast the current state
+		InventoryService._sync_and_emit(self)
 
 func refresh_held_item(_index: int = -1) -> void:
 	if not is_inside_tree(): return
@@ -192,7 +224,7 @@ func play_general_animation(anim_name: String, blend: float = 0.1):
 
 @rpc("any_peer", "call_local", "reliable")
 func play_attack_animation():
-	animations.play_attack()
+	animations.play_melee_one_hand_attack()
 
 func _toggle_settings_menu() -> void:
 	var settings_scene = preload("res://ui/SettingsMenu.tscn")
@@ -283,6 +315,17 @@ func take_damage(amount: float) -> void:
 func _apply_damage_rpc(amount: float) -> void:
 	if multiplayer.get_remote_sender_id() != 1 and not multiplayer.is_server(): return
 	current_health -= amount
+	
+	# Visual Juice for damage
+	var original_scale = scale
+	var tween = create_tween()
+	tween.tween_property(self, "scale", Vector3(original_scale.x * 1.1, original_scale.y * 0.9, original_scale.z * 1.1), 0.05)
+	tween.tween_property(self, "scale", original_scale, 0.1)
+	
+	if is_multiplayer_authority():
+		var cam = $CameraPivot/SpringArm3D/Camera3D
+		if cam and cam.has_method("shake"):
+			cam.shake(0.2, 0.2)
 
 func _on_stats_updated() -> void:
 	max_health = stats.max_health
@@ -321,4 +364,3 @@ func _update_health_ui() -> void:
 	if health_bar:
 		health_bar.max_value = max_health
 		health_bar.value = current_health
-

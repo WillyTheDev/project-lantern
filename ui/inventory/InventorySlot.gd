@@ -52,7 +52,7 @@ func get_item_stack() -> ItemStackData:
 			return d.armor[slot_index] if d else null
 		"stash": 
 			var s = InventoryService.stash
-			return s.bag[slot_index] if s else null
+			return s.items[slot_index] if s else null
 		"external": return InventoryService.external_inventory[slot_index]
 	return null
 
@@ -94,4 +94,12 @@ func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
 	return true
 
 func _drop_data(_at_position: Vector2, data: Variant) -> void:
-	InventoryService.move_item(data.origin_type, data.origin_slot, inventory_type, slot_index)
+	var p = InventoryService.get_local_player()
+	if not p: return
+	
+	# Local Predicted Move for immediate feedback
+	InventoryService.move_item(p, data.origin_type, data.origin_slot, inventory_type, slot_index)
+	
+	# Server Request
+	if p.has_node("Interaction"):
+		p.get_node("Interaction").rpc_id(1, "request_move_item", data.origin_type, data.origin_slot, inventory_type, slot_index)
