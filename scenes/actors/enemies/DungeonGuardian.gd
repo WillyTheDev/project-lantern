@@ -89,10 +89,13 @@ func _try_attack() -> void:
 @rpc("any_peer", "call_local", "reliable")
 func _play_attack_fx() -> void:
 	# Telegraph/Wind-up (Visual cue for all clients)
-	var original_scale = Vector3(1, 1, 1) # Reset to base scale
+	var mesh = $MeshInstance3D
+	if not mesh: return
+	
+	var base_scale = mesh.scale
 	var tween = create_tween()
-	tween.tween_property(self, "scale", Vector3(original_scale.x * 0.9, original_scale.y * 1.2, original_scale.z * 0.9), attack_windup)
-	tween.chain().tween_property(self, "scale", original_scale, 0.1)
+	tween.tween_property(mesh, "scale", Vector3(base_scale.x * 0.9, base_scale.y * 1.2, base_scale.z * 0.9), attack_windup)
+	tween.chain().tween_property(mesh, "scale", base_scale, 0.1)
 
 func _perform_attack_logic() -> void:
 	await get_tree().create_timer(attack_windup).timeout
@@ -128,8 +131,16 @@ func take_damage(amount: float) -> void:
 	if current_health <= 0:
 		_die()
 
+var _damage_fx_cooldown: float = 0.0
+
 @rpc("any_peer", "call_local", "reliable")
 func _play_damage_fx(amount: float) -> void:
+	# Cooldown to avoid breaking animations from rapid damage (e.g. Hazards)
+	var now = Time.get_ticks_msec() / 1000.0
+	if now < _damage_fx_cooldown:
+		return
+	_damage_fx_cooldown = now + 0.2
+	
 	# 1. Floating Text
 	var text_scene = preload("res://scenes/effects/DamageText.tscn")
 	var text_instance = text_scene.instantiate()
@@ -142,17 +153,18 @@ func _play_damage_fx(amount: float) -> void:
 		
 	# 2. Hit Flash & Squash/Stretch
 	var mesh = $MeshInstance3D
-	var original_scale = scale
+	if not mesh: return
+	
+	var base_scale = mesh.scale
 	var tween = create_tween().set_parallel(true)
 	
-	if mesh:
-		var mat = mesh.get_surface_override_material(0) as ShaderMaterial
-		if mat:
-			tween.tween_method(func(v): mat.set_shader_parameter("hit_intensity", v), 1.0, 0.0, 0.2)
+	var mat = mesh.get_surface_override_material(0) as ShaderMaterial
+	if mat:
+		tween.tween_method(func(v): mat.set_shader_parameter("hit_intensity", v), 1.0, 0.0, 0.2)
 	
 	# Squash and Stretch (Juice)
-	tween.tween_property(self, "scale", Vector3(original_scale.x * 1.1, original_scale.y * 0.9, original_scale.z * 1.1), 0.05)
-	tween.chain().tween_property(self, "scale", original_scale, 0.1)
+	tween.tween_property(mesh, "scale", Vector3(base_scale.x * 1.1, base_scale.y * 0.9, base_scale.z * 1.1), 0.05)
+	tween.chain().tween_property(mesh, "scale", base_scale, 0.1)
 
 func _die() -> void:
 	# 1. Spawn loot on the server

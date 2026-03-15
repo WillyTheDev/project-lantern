@@ -48,13 +48,6 @@ func _perform_attack_rpc(damage: float, range: float) -> void:
 			target.take_damage(damage)
 			hit_something = true
 	
-	# Feedback for the attacker
+	# Feedback for the attacker (visuals or sounds can be added here)
 	if hit_something:
-		_notify_hit_success.rpc_id(sender_id)
-
-@rpc("authority", "call_remote", "reliable")
-func _notify_hit_success() -> void:
-	if player.is_multiplayer_authority():
-		var cam = player.get_node_or_null("CameraPivot/SpringArm3D/Camera3D")
-		if cam and cam.has_method("shake"):
-			cam.shake(0.1, 0.1) # Small shake for satisfaction
+		pass

@@ -311,21 +311,28 @@ func take_damage(amount: float) -> void:
 	if not multiplayer.is_server(): return
 	_apply_damage_rpc.rpc_id(player_id, amount)
 
+var _damage_fx_cooldown: float = 0.0
+
 @rpc("any_peer", "call_local", "reliable")
 func _apply_damage_rpc(amount: float) -> void:
 	if multiplayer.get_remote_sender_id() != 1 and not multiplayer.is_server(): return
 	current_health -= amount
 	
 	# Visual Juice for damage
-	var original_scale = scale
-	var tween = create_tween()
-	tween.tween_property(self, "scale", Vector3(original_scale.x * 1.1, original_scale.y * 0.9, original_scale.z * 1.1), 0.05)
-	tween.tween_property(self, "scale", original_scale, 0.1)
+	var now = Time.get_ticks_msec() / 1000.0
+	if now > _damage_fx_cooldown:
+		_damage_fx_cooldown = now + 0.2 # 200ms cooldown
+		var model = $Model
+		if model:
+			var base_scale = model.scale
+			var tween = create_tween()
+			tween.tween_property(model, "scale", Vector3(base_scale.x * 1.1, base_scale.y * 0.9, base_scale.z * 1.1), 0.05)
+			tween.tween_property(model, "scale", base_scale, 0.1)
 	
 	if is_multiplayer_authority():
 		var cam = $CameraPivot/SpringArm3D/Camera3D
 		if cam and cam.has_method("shake"):
-			cam.shake(0.2, 0.2)
+			cam.shake(0.05, 0.1) # Reduced intensity from 0.1 to 0.05
 
 func _on_stats_updated() -> void:
 	max_health = stats.max_health
