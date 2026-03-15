@@ -32,4 +32,4 @@ func _physics_process(delta: float) -> void:
 				if is_instance_valid(player):
 					player.take_damage(damage)
 					if player.has_method("apply_knockback"):
-						player.apply_knockback(global_position, 10.0) # Increased to 10.0
+						player.apply_knockback(global_position, 3.0)

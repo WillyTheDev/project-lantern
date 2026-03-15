@@ -20,13 +20,20 @@ func handle_movement(delta: float, input_dir: Vector2) -> Vector3:
 	var model = player.get_node_or_null("Model")
 	
 	if input_dir.length() > 0.1:
-		# Calculate direction relative to CameraPivot
-		var basis = camera_pivot.global_transform.basis if camera_pivot else player.global_transform.basis
-		
-		# Standard mapping for Action RPG:
-		var direction = (basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
-		direction.y = 0
-		
+		# Calculate direction relative to CameraPivot's horizontal rotation only
+		var cam_basis = camera_pivot.global_transform.basis if camera_pivot else player.global_transform.basis
+
+		# Project the forward and right vectors onto the horizontal plane
+		var forward = -cam_basis.z
+		forward.y = 0
+		forward = forward.normalized()
+
+		var right = cam_basis.x
+		right.y = 0
+		right = right.normalized()
+
+		# Calculate movement direction
+		var direction = (forward * -input_dir.y + right * input_dir.x).normalized()
 		# Smoothly rotate model to face movement direction
 		if model and direction != Vector3.ZERO:
 			# Adding PI (180 degrees) to fix the model facing the wrong way

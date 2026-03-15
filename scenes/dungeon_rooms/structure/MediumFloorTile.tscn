@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://bp75fxoitj503"]
+
+[ext_resource type="PackedScene" uid="uid://bawl6m31ueiwt" path="res://scenes/dungeon_rooms/structure/SmallFloorTile.tscn" id="1_kl2ea"]
+
+[node name="MediumFloorTile" type="Node3D" unique_id=1988844402]
+
+[node name="SmallFloorTile2" parent="." unique_id=1652912660 instance=ExtResource("1_kl2ea")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -4)
+
+[node name="SmallFloorTile" parent="." unique_id=771945939 instance=ExtResource("1_kl2ea")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, -4)
+
+[node name="SmallFloorTile3" parent="." unique_id=1528981243 instance=ExtResource("1_kl2ea")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, 4)
+
+[node name="SmallFloorTile4" parent="." unique_id=125818802 instance=ExtResource("1_kl2ea")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 4)

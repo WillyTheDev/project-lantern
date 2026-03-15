@@ -73,3 +73,12 @@ Réaliser une "Vertical Slice" comprenant :
 - Un hub miniature avec un **Coffre de Provisions** interactif pour tester l'acquisition et la sauvegarde d'objets.
 
 - Une transition fonctionnelle vers une instance de 3 salles (1 Agilité, 1 Rencontre PvPvE, 1 Sortie).
+
+6. FEUILLE DE ROUTE (Prochaines Étapes)
+La phase de Proof of Concept étant stabilisée, les prochaines itérations se concentreront sur la profondeur de gameplay et la robustesse technique :
+
+- **Génération Procédurale des Donjons :** Passage d'une structure statique à un générateur de salles basé sur des tuiles (tileset), géré intégralement par le serveur pour garantir l'équité.
+- **Systèmes Sociaux Avancés :** Mise en place d'un système de groupes (Party), du commerce entre joueurs sécurisé dans le Hub, et d'emotes pour enrichir l'interaction vocale.
+- **Affinement de la Boucle d'Extraction :** Introduction de chronomètres d'instance (effondrement du donjon), de raretés d'objets avec statistiques aléatoires, et de consommables utilitaires (soins, buffs).
+- **IA de Combat Évoluée :** Diversification du bestiaire (attaques à distance, supports) et mécaniques de boss à plusieurs phases.
+- **Sécurité et Polissage Technique :** Migration de la santé des joueurs vers un modèle 100% serveur (Server-Authoritative), persistance totale des niveaux/XP sur PocketBase, et ajout de VFX/SFX immersifs.

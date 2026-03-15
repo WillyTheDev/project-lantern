@@ -1,0 +1,22 @@
+[gd_scene format=3 uid="uid://bawl6m31ueiwt"]
+
+[ext_resource type="ArrayMesh" uid="uid://7lcaeo6b8vjr" path="res://assets/kay_dungeon/obj/floor_tile_large.obj" id="1_ofnkn"]
+
+[node name="SmallFloorTile" type="Node3D" unique_id=1988844402]
+transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, 0, 0, 0)
+
+[node name="FloorTileLarge" type="MeshInstance3D" parent="." unique_id=1944026054]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -2)
+mesh = ExtResource("1_ofnkn")
+
+[node name="FloorTileLarge2" type="MeshInstance3D" parent="." unique_id=189817869]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, -2)
+mesh = ExtResource("1_ofnkn")
+
+[node name="FloorTileLarge3" type="MeshInstance3D" parent="." unique_id=1825058680]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 2)
+mesh = ExtResource("1_ofnkn")
+
+[node name="FloorTileLarge4" type="MeshInstance3D" parent="." unique_id=1205693873]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, 2)
+mesh = ExtResource("1_ofnkn")

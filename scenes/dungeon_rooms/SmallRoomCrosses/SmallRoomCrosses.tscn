@@ -1,0 +1,51 @@
+[gd_scene format=3 uid="uid://u5jmnww245cu"]
+
+[ext_resource type="Script" uid="uid://6pfrkefi01s4" path="res://scenes/dungeon_rooms/DungeonRoom.gd" id="1_epbsx"]
+[ext_resource type="ArrayMesh" uid="uid://qia2ci35wbky" path="res://assets/kay_dungeon/obj/wall_doorway.obj" id="2_7aanp"]
+[ext_resource type="PackedScene" uid="uid://bawl6m31ueiwt" path="res://scenes/dungeon_rooms/structure/SmallFloorTile.tscn" id="3_cu8xb"]
+[ext_resource type="ArrayMesh" uid="uid://cshul55hcfttl" path="res://assets/kay_dungeon/obj/wall_corner.obj" id="4_4mk1j"]
+
+[node name="SmallRoomDungeon" type="Node3D" unique_id=776629996]
+transform = Transform3D(1.1924881e-08, 0, -1, 0, 1, 0, 1, 0, 1.1924881e-08, 0, 0, 0)
+script = ExtResource("1_epbsx")
+has_north = true
+has_south = true
+has_east = true
+has_west = true
+
+[node name="WallDoorway3" type="MeshInstance3D" parent="." unique_id=330821743]
+transform = Transform3D(1, 0, 1.7484555e-07, 0, 1, 0, -1.7484555e-07, 0, 1, 0, 0, 4)
+mesh = ExtResource("2_7aanp")
+
+[node name="WallDoorway2" type="MeshInstance3D" parent="." unique_id=10484981]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0.006634712, 0, -4)
+mesh = ExtResource("2_7aanp")
+
+[node name="MediumFloorTile2" parent="." unique_id=1988844402 instance=ExtResource("3_cu8xb")]
+transform = Transform3D(1, 0, 0, 0, -1, 8.742278e-08, 0, -8.742278e-08, -1, 0.011, 4, 0.008)
+
+[node name="MediumFloorTile" parent="." unique_id=1637153430 instance=ExtResource("3_cu8xb")]
+
+[node name="MediumCorner" type="MeshInstance3D" parent="." unique_id=614010745]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, -4)
+mesh = ExtResource("4_4mk1j")
+
+[node name="WallCorner" type="MeshInstance3D" parent="MediumCorner" unique_id=1370538497]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -8, 0, 0)
+mesh = ExtResource("4_4mk1j")
+
+[node name="WallCorner2" type="MeshInstance3D" parent="MediumCorner" unique_id=2120427312]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -8, 0, 8)
+mesh = ExtResource("4_4mk1j")
+
+[node name="WallCorner" type="MeshInstance3D" parent="MediumCorner/WallCorner2" unique_id=203214307]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -8, 0, 0)
+mesh = ExtResource("4_4mk1j")
+
+[node name="WallDoorway4" type="MeshInstance3D" parent="." unique_id=1166595231]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 4, 0, 0)
+mesh = ExtResource("2_7aanp")
+
+[node name="WallDoorway" type="MeshInstance3D" parent="." unique_id=772886900]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -4, 0, 0)
+mesh = ExtResource("2_7aanp")

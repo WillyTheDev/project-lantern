@@ -160,6 +160,10 @@ func _setup_local_player() -> void:
 func _setup_remote_player() -> void:
 	$CameraPivot/SpringArm3D/Camera3D.current = false
 	voip.setup_remote()
+	
+	# Hide UI for remote players
+	var gui = get_node_or_null("GUILayer")
+	if gui: gui.visible = false
 
 @rpc("any_peer", "call_remote", "reliable")
 func server_request_inventory_sync() -> void:
@@ -289,6 +293,10 @@ func _physics_process(delta: float) -> void:
 	$VoiceIndicator.visible = voip.process_voip(delta)
 
 	if is_multiplayer_authority():
+		# Stabilize root rotation (Keep player upright and facing North)
+		# We rotate the Model and CameraPivot instead of the root node.
+		rotation = Vector3.ZERO
+		
 		var input_dir = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 		shared_velocity = movement.handle_movement(delta, input_dir)
 		velocity = shared_velocity + knockback_velocity

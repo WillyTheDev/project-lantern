@@ -137,7 +137,7 @@ func _perform_attack_logic() -> void:
 		if collider.has_method("take_damage") and collider.is_in_group("players"):
 			collider.take_damage(damage_amount)
 			if collider.has_method("apply_knockback"):
-				collider.apply_knockback(global_position, 2.0) # Increased to 12.0
+				collider.apply_knockback(global_position, 12.0)
 
 func take_damage(amount: float) -> void:
 	if not multiplayer.is_server(): return

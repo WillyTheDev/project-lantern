@@ -69,5 +69,6 @@ godot
 ## 📖 Documentation
 - **[Shard Transitions & Token Handoff](docs/SHARD_TRANSITIONS.md)**: Detailed explanation of multi-server authentication.
 - **[Technical Debt Tracking](docs/TECH_DEBT.md)**: Known shortcuts and security vulnerabilities to address.
+- **[Project Roadmap](docs/ROADMAP.md)**: Detailed plan for future features and iterations.
 - **[GCD (Game Design Document)](GCD.md)**: Original design and game pillars.
 - **[Iteration 2 Review](docs/ITERATION_2_REVIEW.md)**: Summary of the Hub & Social Loop implementation.
