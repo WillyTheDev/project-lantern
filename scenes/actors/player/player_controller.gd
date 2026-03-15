@@ -42,6 +42,7 @@ var animations: PlayerAnimationManager
 @export var shared_velocity: Vector3 = Vector3.ZERO
 var interact_ray: RayCast3D
 var is_dead: bool = false
+var knockback_velocity: Vector3 = Vector3.ZERO
 
 const MOUSE_SENSIBILITY = 0.002
 
@@ -242,6 +243,12 @@ func _toggle_settings_menu() -> void:
 var last_synced_slot: int = -1
 
 func _physics_process(delta: float) -> void:
+	# Decay knockback
+	if knockback_velocity.length() > 0.1:
+		knockback_velocity = knockback_velocity.lerp(Vector3.ZERO, 5 * delta) # Slower decay
+	else:
+		knockback_velocity = Vector3.ZERO
+
 	# Server-side detection of slot changes (since setters aren't triggered by Synchronizer)
 	if multiplayer.is_server() and active_slot_index != last_synced_slot:
 		last_synced_slot = active_slot_index
@@ -257,7 +264,7 @@ func _physics_process(delta: float) -> void:
 	if is_multiplayer_authority():
 		var input_dir = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 		shared_velocity = movement.handle_movement(delta, input_dir)
-		velocity = shared_velocity
+		velocity = shared_velocity + knockback_velocity
 		move_and_slide()
 		
 		if position.y < -20: sync_respawn.rpc()
@@ -267,8 +274,7 @@ func _physics_process(delta: float) -> void:
 		sync_rotation = rotation.y
 		sync_pivot_rotation = $CameraPivot.rotation.x
 	else:
-		velocity = shared_velocity
-		move_and_slide()
+		# Non-authority (Server or other clients) just interpolate/follow
 		rotation.y = sync_rotation
 		$CameraPivot.rotation.x = sync_pivot_rotation
 		
@@ -310,6 +316,20 @@ func request_attack(damage: float, range: float) -> void:
 func take_damage(amount: float) -> void:
 	if not multiplayer.is_server(): return
 	_apply_damage_rpc.rpc_id(player_id, amount)
+
+func apply_knockback(source_position: Vector3, force: float) -> void:
+	if not multiplayer.is_server(): return
+	# Broadcast to the authority (client) of this player
+	_apply_knockback_rpc.rpc(source_position, force)
+
+@rpc("any_peer", "call_local", "reliable")
+func _apply_knockback_rpc(source_position: Vector3, force: float) -> void:
+	# Security: Only the server (peer 1) should be able to trigger knockback
+	if multiplayer.get_remote_sender_id() != 1 and not multiplayer.is_server(): return
+	
+	var dir = (global_position - source_position).normalized()
+	dir.y = 0
+	knockback_velocity += dir * force
 
 var _damage_fx_cooldown: float = 0.0
 

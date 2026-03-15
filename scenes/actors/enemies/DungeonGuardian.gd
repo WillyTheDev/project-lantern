@@ -16,6 +16,7 @@ extends CharacterBody3D
 
 var target_player: Node3D = null
 var last_attack_time: float = 0.0
+var knockback_velocity: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -28,6 +29,12 @@ func _ready() -> void:
 	print("[Guardian] Initialized on Server: ", name)
 
 func _physics_process(delta: float) -> void:
+	# Decay knockback
+	if knockback_velocity.length() > 0.1:
+		knockback_velocity = knockback_velocity.lerp(Vector3.ZERO, 5 * delta) # Slower decay
+	else:
+		knockback_velocity = Vector3.ZERO
+
 	if not target_player:
 		_find_closest_player()
 	
@@ -58,11 +65,21 @@ func _physics_process(delta: float) -> void:
 		else:
 			velocity.y = 0
 			
+		velocity += knockback_velocity
 		move_and_slide()
 		sync_position = global_position
 	else:
 		# Idle/Patrol logic could go here
-		pass
+		if not is_on_floor():
+			velocity.y -= 9.8 * delta
+		else:
+			velocity.y = 0
+		
+		velocity.x = 0
+		velocity.z = 0
+		velocity += knockback_velocity
+		move_and_slide()
+		sync_position = global_position
 
 func _find_closest_player() -> void:
 	var players = get_tree().get_nodes_in_group("players")
@@ -119,6 +136,8 @@ func _perform_attack_logic() -> void:
 		var collider = result.collider
 		if collider.has_method("take_damage") and collider.is_in_group("players"):
 			collider.take_damage(damage_amount)
+			if collider.has_method("apply_knockback"):
+				collider.apply_knockback(global_position, 12.0) # Increased to 12.0
 
 func take_damage(amount: float) -> void:
 	if not multiplayer.is_server(): return
@@ -130,6 +149,12 @@ func take_damage(amount: float) -> void:
 	
 	if current_health <= 0:
 		_die()
+
+func apply_knockback(source_position: Vector3, force: float) -> void:
+	if not multiplayer.is_server(): return
+	var knockback_dir = (global_position - source_position).normalized()
+	knockback_dir.y = 0 # Keep it horizontal
+	knockback_velocity += knockback_dir * force
 
 var _damage_fx_cooldown: float = 0.0
 

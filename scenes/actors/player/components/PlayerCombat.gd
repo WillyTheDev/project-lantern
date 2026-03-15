@@ -27,11 +27,10 @@ func _perform_attack_rpc(damage: float, range: float) -> void:
 	
 	var query = PhysicsShapeQueryParameters3D.new()
 	var sphere = SphereShape3D.new()
-	sphere.radius = range # Large enough to catch multiple enemies in front
+	sphere.radius = range # Large enough to catch multiple targets in front
 	query.shape = sphere
 	query.transform = Transform3D(Basis(), attack_pos)
-	query.collision_mask = 2 # Assuming enemies are on layer 2 (adjust if needed)
-	# If we don't know the layer, we can filter by group later
+	query.collision_mask = 3 # Layers 1 (Players) and 2 (Enemies)
 	
 	var results = space_state.intersect_shape(query)
 	var hit_something = false
@@ -47,6 +46,10 @@ func _perform_attack_rpc(damage: float, range: float) -> void:
 		if target.has_method("take_damage") and target != player:
 			target.take_damage(damage)
 			hit_something = true
+			
+			# Apply knockback
+			if target.has_method("apply_knockback"):
+				target.apply_knockback(player.global_position, 10.0) # Reduced to 10.0 from 15.0
 	
 	# Feedback for the attacker (visuals or sounds can be added here)
 	if hit_something:
