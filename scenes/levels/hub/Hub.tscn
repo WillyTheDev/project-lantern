@@ -34,11 +34,6 @@ ambient_light_source = 3
 ambient_light_color = Color(0.93611366, 0.79331195, 0.93645346, 1)
 
 [node name="Hub" type="Node3D" unique_id=1139020406]
-
-[node name="MultiplayerPlayerSpawner" type="MultiplayerSpawner" parent="." unique_id=2055912031]
-unique_name_in_owner = true
-spawn_path = NodePath("..")
-spawn_limit = 200
 script = ExtResource("1_unjod")
 
 [node name="SpawnPoint" type="Node3D" parent="." unique_id=1346235447]

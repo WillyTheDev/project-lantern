@@ -64,4 +64,7 @@ func _clear_all_systems() -> void:
 	if NotificationService.has_method("reset"):
 		NotificationService.reset()
 	
+	if NetworkService.has_method("reset"):
+		NetworkService.reset()
+	
 	print("[SessionService] Global state cleared.")

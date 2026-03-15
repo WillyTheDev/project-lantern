@@ -9,8 +9,26 @@ var dungeon_server_port: int = 9798
 var server_address: String = "127.0.0.1"
 var is_switching_server: bool = false
 
+var player_spawner: MultiplayerSpawner
+var players_root: Node
+
 func _ready() -> void:
 	_parse_arguments()
+	
+	# 1. Create a persistent root for players under this service
+	# Moving it here ensures it's always in the tree when the spawner needs it
+	players_root = Node.new()
+	players_root.name = "Players"
+	add_child(players_root)
+	
+	# 2. Create a persistent spawner as a sibling to the players root
+	player_spawner = MultiplayerSpawner.new()
+	player_spawner.name = "PlayerSpawner"
+	add_child(player_spawner)
+	
+	# 3. Setup spawner deferred to ensure the tree is ready
+	# This fixes absolute path resolution and late-joining sync issues
+	_setup_spawner_deferred.call_deferred()
 	
 	# Ensure DTLS certificates are ready
 	TLSHelper.ensure_certs()
@@ -21,6 +39,59 @@ func _ready() -> void:
 		# Clients listen for connection to hide loading screen
 		multiplayer.connected_to_server.connect(_on_connected_ok)
 		multiplayer.connection_failed.connect(_on_connected_fail)
+
+func _setup_spawner_deferred() -> void:
+	# Use the absolute path to ensure deterministic resolution across all peers
+	player_spawner.spawn_path = players_root.get_path()
+	player_spawner.spawn_function = _global_custom_spawn
+	
+	# Register common spawnable scenes early
+	player_spawner.add_spawnable_scene("res://scenes/actors/player/Player.tscn")
+	player_spawner.add_spawnable_scene("res://scenes/world/interactables/LootDrop.tscn")
+	player_spawner.add_spawnable_scene("res://scenes/actors/enemies/DungeonGuardian.tscn")
+	
+	print("[NetworkService] Global Spawner initialized at: ", player_spawner.spawn_path)
+
+func _global_custom_spawn(data: Dictionary) -> Node:
+	# This is a fallback/global spawn function. 
+	var type = data.get("type", "player")
+	var node: Node3D
+	
+	match type:
+		"player":
+			node = preload("res://scenes/actors/player/Player.tscn").instantiate()
+			node.name = data.player_name
+			node.player_id = data.peer_id
+			node.display_name = data.get("display_name", "Player_%d" % data.peer_id)
+			
+			if multiplayer.is_server():
+				node.player_name = data.get("db_id", "")
+				if data.has("inventory"):
+					var load_data = data.inventory
+					node.ready.connect(func():
+						InventoryService.load_inventory_for_player(node, node.player_name, load_data)
+					, CONNECT_ONE_SHOT)
+
+			if "name_color" in data:
+				var color_array = data.name_color
+				node.name_color = Color(color_array[0], color_array[1], color_array[2], 1.0)
+		
+		"enemy":
+			var enemy_scene = preload("res://scenes/actors/enemies/DungeonGuardian.tscn")
+			node = enemy_scene.instantiate()
+			node.name = "Enemy_" + str(node.get_instance_id())
+			
+		"loot":
+			node = preload("res://scenes/world/interactables/LootDrop.tscn").instantiate()
+			if data.has("items"):
+				node.items = data.items
+	
+	if node:
+		var pos = data.get("pos", Vector3.ZERO)
+		node.position = pos
+		if "sync_position" in node:
+			node.sync_position = pos
+	return node
 
 func _on_connected_ok():
 	print("[NetworkService] Connected to server successfully (DTLS).")
@@ -46,7 +117,6 @@ func _on_connected_fail():
 	if is_switching_server:
 		print("[NetworkService] Handoff failed during server switch.")
 		is_switching_server = false
-		# You might want to show an error message or try reconnecting to Hub
 		return
 		
 	# Standard connection fail: return to main menu
@@ -116,3 +186,17 @@ func switch_server(address: String, port: int) -> void:
 	await get_tree().create_timer(0.2).timeout
 	join_server(address, port)
 
+func reset() -> void:
+	print("[NetworkService] Resetting network state.")
+	
+	# Disconnect peer
+	if multiplayer.multiplayer_peer:
+		multiplayer.multiplayer_peer.close()
+		multiplayer.multiplayer_peer = null
+	
+	# Clear all players/entities from the root
+	if players_root:
+		for child in players_root.get_children():
+			child.queue_free()
+	
+	is_switching_server = false

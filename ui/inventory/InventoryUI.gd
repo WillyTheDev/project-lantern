@@ -28,7 +28,7 @@ func _ready() -> void:
 	inventory_overlay.visible = false
 	external_section.visible = false
 	hotbar_hud.visible = true
-	visible = true
+	visible = false
 
 func initialize_for_player(player: Node3D) -> void:
 	if player_ref:
@@ -49,6 +49,7 @@ func _on_base_stats_updated(_stats: PlayerStatsData = null) -> void:
 	_update_stats_label()
 
 func _on_total_stats_updated(_total_stats: Dictionary) -> void:
+	if not is_local_authority: return
 	_update_stats_label()
 
 func _update_stats_label() -> void:
@@ -64,6 +65,8 @@ func _update_stats_label() -> void:
 	]
 
 func _on_external_inventory_updated() -> void:
+	if not is_local_authority: return
+	
 	var new_count = InventoryService.external_inventory.size()
 	if new_count > 0:
 		if new_count != external_slot_count:
@@ -95,8 +98,8 @@ func _setup_external_slots(count: int) -> void:
 		external_grid.add_child(slot)
 
 func refresh() -> void:
-	if not is_inside_tree(): return
-	var data = InventoryService.data
+	if not is_inside_tree() or not player_ref: return
+	var data = player_ref.inventory
 	if not data: return
 	
 	for i in range(InventoryData.BAG_SIZE):
@@ -116,7 +119,7 @@ func refresh() -> void:
 	if external_section.visible:
 		var ext_data = []
 		if InventoryService.current_external_type == "stash":
-			ext_data = InventoryService.stash.items
+			ext_data = player_ref.stash.items
 		else:
 			ext_data = InventoryService.external_inventory
 			

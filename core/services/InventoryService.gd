@@ -172,6 +172,7 @@ func _sync_and_emit(player: Node3D) -> void:
 
 ## Server-Authoritative: Validates and executes item movement
 func _get_array_by_type(player: Node3D, type: String) -> Variant:
+	if not is_instance_valid(player): return null
 	var p_id = player.player_id if "player_id" in player else 1
 	
 	match type:

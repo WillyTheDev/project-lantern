@@ -33,8 +33,17 @@ properties/6/replication_mode = 1
 properties/7/path = NodePath(".:sync_camera_rotation_y")
 properties/7/spawn = true
 properties/7/replication_mode = 1
+properties/8/path = NodePath(".:sync_is_on_floor")
+properties/8/spawn = true
+properties/8/replication_mode = 1
+properties/9/path = NodePath(".:display_name")
+properties/9/spawn = true
+properties/9/replication_mode = 1
+properties/10/path = NodePath(".:name_color")
+properties/10/spawn = true
+properties/10/replication_mode = 1
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dsx4b"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_imb2f"]
 bg_color = Color(0.88100183, 0.1337547, 0.28620315, 1)
 
 [node name="Player" type="CharacterBody3D" unique_id=166909891]
@@ -45,9 +54,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0469314, 0)
 shape = SubResource("CapsuleShape3D_u84y5")
 
 [node name="NameTag" type="Label3D" parent="." unique_id=1377280571]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3438885, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.7952554, 0)
 billboard = 1
 text = "Player"
+font_size = 64
 
 [node name="VoiceIndicator" type="Label3D" parent="." unique_id=200000000]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6214, 0)
@@ -58,7 +68,7 @@ text = "🔊"
 font_size = 48
 
 [node name="CameraPivot" type="Node3D" parent="." unique_id=88516118]
-transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0, 0)
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 1.7510707, 0)
 
 [node name="SpringArm3D" type="SpringArm3D" parent="CameraPivot" unique_id=1244885865]
 
@@ -71,16 +81,16 @@ replication_config = SubResource("SceneReplicationConfig_7otbr")
 
 [node name="GUILayer" type="CanvasLayer" parent="." unique_id=341093036]
 
-[node name="HealthBar" type="ProgressBar" parent="GUILayer" unique_id=686711719]
+[node name="InventoryUI" parent="GUILayer" unique_id=147839645 instance=ExtResource("4_inv_ui")]
+
+[node name="HealthBar" type="ProgressBar" parent="GUILayer" unique_id=1203089499]
 unique_name_in_owner = true
 offset_right = 300.0
 offset_bottom = 20.0
 size_flags_vertical = 4
-theme_override_styles/fill = SubResource("StyleBoxFlat_dsx4b")
+theme_override_styles/fill = SubResource("StyleBoxFlat_imb2f")
 value = 100.0
 show_percentage = false
-
-[node name="InventoryUI" parent="GUILayer" unique_id=147839645 instance=ExtResource("4_inv_ui")]
 
 [node name="Model" parent="." unique_id=2112750636 instance=ExtResource("4_imb2f")]
 

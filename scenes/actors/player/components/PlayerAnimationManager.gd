@@ -29,7 +29,11 @@ func update_animations(shared_velocity: Vector3) -> void:
 	if current in one_shots and anim_player.is_playing():
 		return
 	
-	if not player.is_on_floor():
+	var is_on_floor = player.is_on_floor()
+	if "sync_is_on_floor" in player:
+		is_on_floor = player.sync_is_on_floor
+		
+	if not is_on_floor:
 		if anim_player.has_animation("movement/Jump_Full_Long") and current != "movement/Jump_Full_Long":
 			anim_player.play("movement/Jump_Full_Long", 0.1)
 	elif speed_sq > 0.1:

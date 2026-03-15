@@ -12,6 +12,7 @@ var animations: PlayerAnimationManager
 @export var sync_rotation: float
 @export var sync_camera_rotation_y: float
 @export var sync_pivot_rotation: float 
+@export var sync_is_on_floor: bool = true
 
 @onready var anim_player: AnimationPlayer = $Model/MainAnimationPlayer
 
@@ -23,8 +24,14 @@ var animations: PlayerAnimationManager
 @export var inventory: InventoryData = InventoryData.new()
 @export var stash: StashData = StashData.new()
 
-@export var display_name: String = "": set = _set_display_name
-@export var name_color: Color = Color.WHITE: set = _set_name_color
+@export var display_name: String = "": 
+	set(v): 
+		display_name = v
+		_update_nametag()
+@export var name_color: Color = Color.WHITE: 
+	set(v): 
+		name_color = v
+		_update_nametag()
 
 # Vitality (REQUIRED by MultiplayerSynchronizer)
 @export var max_health: float = 100.0
@@ -91,15 +98,24 @@ func _ready() -> void:
 
 	# Initialize Components
 	movement = PlayerMovement.new(self)
+	movement.name = "Movement"
+	add_child(movement)
+	
 	combat = PlayerCombat.new(self)
 	combat.name = "Combat"
+	add_child(combat)
+	
 	interaction = PlayerInteraction.new(self, interact_ray)
 	interaction.name = "Interaction"
-	voip = PlayerVOIP.new(self)
-	animations = PlayerAnimationManager.new(self, anim_player)
+	add_child(interaction)
 	
-	add_child(combat) # For RPCs
-	add_child(interaction) # For RPCs
+	voip = PlayerVOIP.new(self)
+	voip.name = "VOIP"
+	add_child(voip)
+	
+	animations = PlayerAnimationManager.new(self, anim_player)
+	animations.name = "Animations"
+	add_child(animations)
 
 	if is_multiplayer_authority():
 		_setup_local_player()
@@ -107,6 +123,10 @@ func _ready() -> void:
 		_setup_remote_player()
 	
 	_update_nametag()
+	
+	# Small delay to ensure networked data has arrived for remote players
+	if not is_multiplayer_authority():
+		get_tree().create_timer(0.5).timeout.connect(_update_nametag)
 
 func _setup_local_player() -> void:
 	var camera = $CameraPivot/SpringArm3D/Camera3D
@@ -246,8 +266,13 @@ var last_synced_slot: int = -1
 
 func _physics_process(delta: float) -> void:
 	# Decay knockback
-	if knockback_velocity.length() > 0.1:
-		knockback_velocity = knockback_velocity.lerp(Vector3.ZERO, 5 * delta) # Slower decay
+	if knockback_velocity.length() > 0.05:
+		# Faster decay for better combat feel (changed from 5 to 12)
+		knockback_velocity = knockback_velocity.lerp(Vector3.ZERO, 12 * delta)
+		
+		# Reset if hitting a wall or very small
+		if is_on_wall():
+			knockback_velocity = Vector3.ZERO
 	else:
 		knockback_velocity = Vector3.ZERO
 
@@ -273,6 +298,7 @@ func _physics_process(delta: float) -> void:
 			
 		shared_velocity = velocity
 		sync_position = global_position
+		sync_is_on_floor = is_on_floor()
 		# Sync the visual model's rotation instead of the root
 		sync_rotation = $Model.rotation.y
 		# Camera rotation (Y for horizontal, X for pivot/pitch)
@@ -296,9 +322,18 @@ func sync_respawn():
 	is_dead = false
 	last_synced_slot = -1
 	play_general_animation("general/Spawn_Air")
-	var spawn_node = get_parent().find_child("SpawnPoint")
+	
+	# Look for the SpawnPoint in the current level scene
+	var spawn_node = get_tree().current_scene.find_child("SpawnPoint", true, false)
+	
 	if spawn_node:
 		global_position = spawn_node.global_position
+		velocity = Vector3.ZERO
+		shared_velocity = Vector3.ZERO
+		force_update_transform()
+	else:
+		# Fallback to zero if no spawn point found
+		global_position = Vector3.ZERO
 		velocity = Vector3.ZERO
 		shared_velocity = Vector3.ZERO
 		force_update_transform()
@@ -310,9 +345,6 @@ func _update_nametag() -> void:
 		nametag.text = display_name if display_name != "" else "Player"
 		nametag.modulate = name_color
 		nametag.visible = not is_multiplayer_authority()
-
-func _set_display_name(v): display_name = v; _update_nametag()
-func _set_name_color(v): name_color = v; _update_nametag()
 
 # --- COMBAT ---
 
@@ -334,8 +366,16 @@ func _apply_knockback_rpc(source_position: Vector3, force: float) -> void:
 	if multiplayer.get_remote_sender_id() != 1 and not multiplayer.is_server(): return
 	
 	var dir = (global_position - source_position).normalized()
-	dir.y = 0
+	if dir == Vector3.ZERO: dir = Vector3.UP # Safety fallback
+	dir.y = 0 # Keep it horizontal
+	
 	knockback_velocity += dir * force
+	
+	# Apply initial kick immediately to avoid frame-delay feeling "floaty"
+	if is_multiplayer_authority():
+		var collision = move_and_collide(dir * 0.1)
+		if collision:
+			knockback_velocity = Vector3.ZERO
 
 var _damage_fx_cooldown: float = 0.0
 
@@ -393,6 +433,9 @@ func _trigger_extraction_fail() -> void:
 		portal._on_body_entered(self)
 
 func _update_health_ui() -> void:
+	# Only show the HUD health bar for the local player
+	if not is_multiplayer_authority(): return
+	
 	var health_bar = %HealthBar if has_node("%HealthBar") else null
 	if health_bar:
 		health_bar.max_value = max_health

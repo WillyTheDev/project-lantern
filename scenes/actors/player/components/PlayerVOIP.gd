@@ -28,6 +28,8 @@ func setup_remote() -> void:
 	VoiceService.voice_packet_received.connect(_on_voice_packet_received)
 
 func _on_voice_packet_received(peer_id: int, packet: PackedByteArray) -> void:
+	if not is_instance_valid(player): return
+	
 	if peer_id == player.player_id and voice_playback:
 		voice_timer = 0.2
 		if voice_playback.chunk_space_available():
@@ -41,4 +43,3 @@ func process_voip(delta: float) -> bool:
 		voice_timer -= delta
 		return true
 	return false
-

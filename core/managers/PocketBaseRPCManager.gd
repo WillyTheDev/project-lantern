@@ -170,7 +170,7 @@ func relay_login_success(peer_id: int, data: Dictionary) -> void:
 	
 	# Update the server-side player node's inventory directly
 	if multiplayer.is_server():
-		var players = get_tree().get_nodes_in_group("players").filter(func(p): return p.player_id == peer_id)
+		var players = get_tree().get_nodes_in_group("players").filter(func(p): return is_instance_valid(p) and p.player_id == peer_id)
 		if players.size() > 0:
 			InventoryService.load_inventory_for_player(players[0], data["id"], data.get("inventory", {}))
 	
@@ -180,7 +180,7 @@ func relay_login_success(peer_id: int, data: Dictionary) -> void:
 func relay_update_success(peer_id: int, data: Dictionary) -> void:
 	# Update the server-side player node's inventory
 	if multiplayer.is_server():
-		var players = get_tree().get_nodes_in_group("players").filter(func(p): return p.player_id == peer_id)
+		var players = get_tree().get_nodes_in_group("players").filter(func(p): return is_instance_valid(p) and p.player_id == peer_id)
 		if players.size() > 0:
 			InventoryService.load_inventory_for_player(players[0], data["id"], data.get("inventory", {}))
 			players[0].refresh_held_item() # Trigger refresh on server

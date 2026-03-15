@@ -32,12 +32,10 @@ sky = SubResource("Sky_n5qrj")
 ambient_light_source = 3
 ambient_light_color = Color(0.93611366, 0.79331195, 0.93645346, 1)
 
-[node name="Dungeon" type="Node3D" unique_id=14728333]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_aaol2"]
+bg_color = Color(0.88100183, 0.1337547, 0.28620315, 1)
 
-[node name="MultiplayerPlayerSpawner" type="MultiplayerSpawner" parent="." unique_id=583756910]
-unique_name_in_owner = true
-spawn_path = NodePath("..")
-spawn_limit = 200
+[node name="Dungeon" type="Node3D" unique_id=14728333]
 script = ExtResource("1_1xixt")
 
 [node name="SpawnPoint" type="Node3D" parent="." unique_id=390733703]
@@ -76,3 +74,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 10)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.052461624, 0, 16.070576)
 
 [node name="Notification" parent="." unique_id=1494450602 instance=ExtResource("4_aaol2")]
+
+[node name="HealthBar" type="ProgressBar" parent="." unique_id=1970647136]
+unique_name_in_owner = true
+offset_right = 300.0
+offset_bottom = 20.0
+size_flags_vertical = 4
+theme_override_styles/fill = SubResource("StyleBoxFlat_aaol2")
+value = 100.0
+show_percentage = false

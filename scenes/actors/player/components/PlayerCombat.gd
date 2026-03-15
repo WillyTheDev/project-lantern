@@ -16,7 +16,7 @@ func request_attack(damage: float, range: float) -> void:
 
 @rpc("any_peer", "call_remote", "reliable")
 func _perform_attack_rpc(damage: float, range: float) -> void:
-	if not multiplayer.is_server(): return
+	if not multiplayer.is_server() or not is_instance_valid(player): return
 	var sender_id = multiplayer.get_remote_sender_id()
 	if sender_id != player.player_id: return
 	
@@ -49,7 +49,7 @@ func _perform_attack_rpc(damage: float, range: float) -> void:
 			
 			# Apply knockback
 			if target.has_method("apply_knockback"):
-				target.apply_knockback(player.global_position, 10.0) # Reduced to 10.0 from 15.0
+				target.apply_knockback(player.global_position, 4.0)
 	
 	# Feedback for the attacker (visuals or sounds can be added here)
 	if hit_something:

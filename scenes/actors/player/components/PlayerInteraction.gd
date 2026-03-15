@@ -28,7 +28,7 @@ func try_interact() -> void:
 
 @rpc("any_peer", "call_remote", "reliable")
 func _request_interact_rpc(object_path: NodePath) -> void:
-	if not multiplayer.is_server(): return
+	if not multiplayer.is_server() or not is_instance_valid(player): return
 	var sender_id = multiplayer.get_remote_sender_id()
 	if sender_id != player.player_id: return
 	
@@ -43,7 +43,7 @@ func _request_interact_rpc(object_path: NodePath) -> void:
 
 @rpc("any_peer", "call_remote", "reliable")
 func request_move_item(from_type: String, from_idx: int, to_type: String, to_idx: int) -> void:
-	if not multiplayer.is_server(): return
+	if not multiplayer.is_server() or not is_instance_valid(player): return
 	var sender_id = multiplayer.get_remote_sender_id()
 	if sender_id != player.player_id: return
 	

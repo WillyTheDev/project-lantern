@@ -4,13 +4,6 @@ extends Node
 ## Handles server-authoritative spawning of players, enemies, and loot.
 
 func _ready() -> void:
-	# Setup Spawner
-	var spawner = %MultiplayerPlayerSpawner
-	spawner.spawn_function = custom_spawn
-	spawner.add_spawnable_scene("res://scenes/actors/player/Player.tscn")
-	spawner.add_spawnable_scene("res://scenes/world/interactables/LootDrop.tscn")
-	spawner.add_spawnable_scene("res://scenes/actors/enemies/DungeonGuardian.tscn")
-	
 	# Server-side logic for Dungeon
 	if multiplayer.is_server():
 		# Wait for login success before spawning players
@@ -41,7 +34,7 @@ func _on_server_player_login_completed(peer_id: int, pb_data: Dictionary):
 		
 	# Safety: Don't spawn if node already exists
 	var player_name = "Player_%d" % peer_id
-	if get_node(%MultiplayerPlayerSpawner.spawn_path).has_node(player_name):
+	if NetworkService.players_root.has_node(player_name):
 		return
 
 	print("[Dungeon] Spawning player for: ", peer_id)
@@ -49,15 +42,12 @@ func _on_server_player_login_completed(peer_id: int, pb_data: Dictionary):
 
 func _on_peer_disconnected(peer_id: int):
 	var player_name = "Player_%d" % peer_id
-	var spawner = %MultiplayerPlayerSpawner
-	var spawn_path = spawner.spawn_path
-	var spawn_node = get_node(spawn_path)
-	var player_node = spawn_node.get_node_or_null(player_name)
+	var player_node = NetworkService.players_root.get_node_or_null(player_name)
 	if player_node:
 		player_node.queue_free()
 
 func _spawn_player(peer_id: int, pb_data: Dictionary):
-	var spawner = %MultiplayerPlayerSpawner
+	var spawner = NetworkService.player_spawner
 	var spawn_pos = %SpawnPoint.global_position if has_node("%SpawnPoint") else Vector3.ZERO
 
 	var data = {
@@ -73,54 +63,10 @@ func _spawn_player(peer_id: int, pb_data: Dictionary):
 	spawner.spawn(data)
 
 func _spawn_enemy(enemy_type: String, pos: Vector3):
-	var spawner = %MultiplayerPlayerSpawner
+	var spawner = NetworkService.player_spawner
 	var data = {
 		"type": "enemy",
 		"enemy_type": enemy_type,
 		"pos": pos
 	}
 	spawner.spawn(data)
-
-# --- SPANW FUNCTION ---
-
-func custom_spawn(data: Dictionary) -> Node:
-	var type = data.get("type", "player")
-	var node: Node3D
-	
-	match type:
-		"loot":
-			node = preload("res://scenes/world/interactables/LootDrop.tscn").instantiate()
-			if data.has("items"):
-				node.items = data.items
-		"enemy":
-			var enemy_scene = preload("res://scenes/actors/enemies/DungeonGuardian.tscn")
-			node = enemy_scene.instantiate()
-			node.name = "Enemy_" + str(node.get_instance_id())
-		"player":
-			node = preload("res://scenes/actors/player/Player.tscn").instantiate()
-			node.name = data.player_name
-			node.player_id = data.peer_id
-			node.display_name = data.get("display_name", "Player_%d" % data.peer_id)
-			
-			if multiplayer.is_server():
-				# IMPORTANT: Set the PocketBase record ID for server-side syncing
-				node.player_name = data.get("db_id", "")
-				
-				if data.has("inventory"):
-					# Deferred Loading: Wait until node is in tree/ready
-					var load_data = data.inventory
-					node.ready.connect(func():
-						InventoryService.load_inventory_for_player(node, node.player_name, load_data)
-					, CONNECT_ONE_SHOT)
-
-			if "name_color" in data:
-				var color_array = data.name_color
-				node.name_color = Color(color_array[0], color_array[1], color_array[2], 1.0)
-	
-	if node:
-		var pos = data.get("pos", Vector3.ZERO)
-		node.position = pos
-		if "sync_position" in node:
-			node.sync_position = pos
-	return node
-
