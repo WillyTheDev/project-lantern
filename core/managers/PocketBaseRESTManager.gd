@@ -26,7 +26,7 @@ func _ready() -> void:
 		base_url = OS.get_environment("POCKETBASE_URL")
 	print("[PocketBaseRESTManager] Initialized with Base URL: ", base_url)
 	
-	if multiplayer.is_server():
+	if NetworkService.is_server():
 		auth_system_server()
 
 ## Authenticate the Server as a System User

@@ -17,7 +17,7 @@ var is_server_authenticated: bool = false
 var pending_requests: Array = [] 
 
 func _ready() -> void:
-	if multiplayer.is_server():
+	if NetworkService.is_server():
 		PocketBaseRESTManager.request_completed.connect(_on_server_request_completed)
 		server_auth_complete.connect(_on_server_auth_complete)
 
@@ -45,7 +45,7 @@ func request_login(username: String, password: String) -> void:
 		print("[PocketBaseRPCManager] ABORT: Attempted login with empty credentials.")
 		return
 		
-	if multiplayer.is_server():
+	if NetworkService.is_server():
 		PocketBaseRESTManager.login(username, password)
 	elif multiplayer.has_multiplayer_peer():
 		rpc_id(1, "server_request_login", username, password)
@@ -58,7 +58,7 @@ func request_login_with_token(token: String) -> void:
 		return
 		
 	print("[PocketBaseRPCManager] Client requesting login with token.")
-	if multiplayer.is_server():
+	if NetworkService.is_server():
 		PocketBaseRESTManager.login_with_token(token)
 	elif multiplayer.has_multiplayer_peer():
 		rpc_id(1, "server_request_login_with_token", token)
@@ -70,7 +70,7 @@ func request_sync_inventory(player_db_id: String, inventory: Dictionary, request
 		printerr("[PocketBaseRPCManager] FAILED: Attempted to sync inventory with empty player_db_id (peer: ", requester_id, ")")
 		return
 	
-	if multiplayer.is_server():
+	if NetworkService.is_server():
 		print("[PocketBaseRPCManager] Syncing inventory for player: ", player_db_id, " (peer: ", requester_id, ")")
 		if not is_server_authenticated:
 			print("[PocketBaseRPCManager] Queuing sync request for ", player_db_id, " (peer: ", requester_id, ")")
@@ -87,7 +87,7 @@ func request_register(username: String, email: String, password: String) -> void
 		print("[PocketBaseRPCManager] ABORT: Attempted registration with empty credentials.")
 		return
 		
-	if multiplayer.is_server():
+	if NetworkService.is_server():
 		PocketBaseRESTManager.register(username, email, password)
 	elif multiplayer.has_multiplayer_peer():
 		rpc_id(1, "server_request_register", username, email, password)
@@ -169,7 +169,7 @@ func relay_login_success(peer_id: int, data: Dictionary) -> void:
 	server_player_login_completed.emit(peer_id, data)
 	
 	# Update the server-side player node's inventory directly
-	if multiplayer.is_server():
+	if NetworkService.is_server():
 		var players = get_tree().get_nodes_in_group("players").filter(func(p): return is_instance_valid(p) and p.player_id == peer_id)
 		if players.size() > 0:
 			InventoryService.load_inventory_for_player(players[0], data["id"], data.get("inventory", {}))
@@ -179,7 +179,7 @@ func relay_login_success(peer_id: int, data: Dictionary) -> void:
 
 func relay_update_success(peer_id: int, data: Dictionary) -> void:
 	# Update the server-side player node's inventory
-	if multiplayer.is_server():
+	if NetworkService.is_server():
 		var players = get_tree().get_nodes_in_group("players").filter(func(p): return is_instance_valid(p) and p.player_id == peer_id)
 		if players.size() > 0:
 			InventoryService.load_inventory_for_player(players[0], data["id"], data.get("inventory", {}))

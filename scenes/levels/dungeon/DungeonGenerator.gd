@@ -4,7 +4,7 @@ extends Node3D
 class_name DungeonGenerator
 
 ## DungeonGenerator
-## Advanced procedural builder with Dynamic Tile Handshaking and Logging.
+## Simplified procedural builder focusing on Rooms and Hallways.
 
 @export_group("Navigation Assets")
 @export var hallways: Array[PackedScene] = []
@@ -12,19 +12,13 @@ class_name DungeonGenerator
 @export var tris: Array[PackedScene] = []
 @export var crosses: Array[PackedScene] = []
 
-@export_group("Structure Assets")
-@export var corner_tiles: Array[PackedScene] = []
-@export var edge_tiles: Array[PackedScene] = []
-@export var open_tiles: Array[PackedScene] = []
-@export var doorway_tiles: Array[PackedScene] = []
-
 @export_group("Functional Assets")
 @export var spawn_room: PackedScene
 @export var stairs_up_room: PackedScene
 @export var stairs_down_room: PackedScene
 @export var portal_room: PackedScene
 
-@export_group("Special Assets")
+@export_group("Room Assets")
 @export var special_rooms: Array[PackedScene] = []
 @export var simple_rooms: Array[PackedScene] = []
 
@@ -77,10 +71,6 @@ func _auto_load_all_templates_recursive() -> void:
 	turns.clear()
 	tris.clear()
 	crosses.clear()
-	corner_tiles.clear()
-	edge_tiles.clear()
-	open_tiles.clear()
-	doorway_tiles.clear()
 	special_rooms.clear()
 	simple_rooms.clear()
 	
@@ -97,14 +87,8 @@ func _auto_load_all_templates_recursive() -> void:
 			turns.append(scene)
 		elif "tri" in f_lower:
 			tris.append(scene)
-		elif "corner" in f_lower:
-			corner_tiles.append(scene)
-		elif "edge" in f_lower:
-			edge_tiles.append(scene)
-		elif "open" in f_lower:
-			open_tiles.append(scene)
-		elif "doorway" in f_lower:
-			doorway_tiles.append(scene)
+		elif "cross" in f_lower:
+			crosses.append(scene)
 		elif "simple" in f_lower:
 			simple_rooms.append(scene)
 		elif "special" in f_lower:
@@ -153,10 +137,6 @@ func _populate_templates() -> void:
 	all.append_array(crosses)
 	all.append_array(special_rooms)
 	all.append_array(simple_rooms)
-	all.append_array(corner_tiles)
-	all.append_array(edge_tiles)
-	all.append_array(open_tiles)
-	all.append_array(doorway_tiles)
 	
 	for res in all:
 		if res and not room_templates.has(res):
@@ -170,28 +150,40 @@ func clear_dungeon() -> void:
 			child.free()
 
 func generate(p_seed: int = -1) -> void:
-	if not Engine.is_editor_hint() and not multiplayer.is_server():
+	if not Engine.is_editor_hint() and not NetworkService.is_server():
 		return
+	
 	_populate_templates()
 	if room_templates.is_empty():
 		return
+
 	if p_seed != -1:
 		dungeon_seed = p_seed
 	elif dungeon_seed == 0:
 		randomize()
 		dungeon_seed = randi()
 	seed(dungeon_seed)
+	
 	print("[DungeonGenerator] Generating Seed: %d" % dungeon_seed)
 	clear_dungeon()
+	
 	_generate_bones()
 	_generate_flesh()
 	_generate_labyrinth_connectors()
 	_instantiate_grid()
+	
 	print("[DungeonGenerator] Complete. Nodes: %d" % _logical_grid.size())
 
 func _generate_bones() -> void:
-	var spawn_pos = Vector3i(floor_width / 2, 0, floor_height / 2)
+	# Randomize Spawn Position
+	var margin = 4
+	var spawn_pos = Vector3i(
+		margin + (randi() % (floor_width - 2 * margin)),
+		0,
+		margin + (randi() % (floor_height - 2 * margin))
+	)
 	_logical_grid[spawn_pos] = {"type": "spawn", "connections": 0}
+	
 	for y in range(floors):
 		if y < floors - 1:
 			var stairs_pos = _get_random_empty_pos(y)
@@ -212,21 +204,12 @@ func _generate_flesh() -> void:
 			var pos = _get_random_empty_pos(y)
 			if pos == Vector3i(-1, -1, -1):
 				break
+				
 			if rng.randf() > 0.8:
 				_logical_grid[pos] = {"type": "special", "connections": 0}
 			else:
-				var size = Vector2i(1, 1)
-				if rng.randf() > 0.5:
-					size = Vector2i(2, 2)
-				if _can_place_room(pos, size):
-					_logical_grid[pos] = {"type": "simple", "size": size, "connections": 0}
-					if size != Vector2i(1, 1):
-						for ox in range(size.x):
-							for oz in range(size.y):
-								if ox == 0 and oz == 0:
-									continue
-								var occupied_pos = pos + Vector3i(ox, 0, oz)
-								_logical_grid[occupied_pos] = {"type": "occupied", "parent": pos, "connections": 0}
+				# Simplified: Always 1x1 rooms for now to focus on stability
+				_logical_grid[pos] = {"type": "simple", "connections": 0}
 
 func _generate_labyrinth_connectors() -> void:
 	for y in range(floors):
@@ -236,14 +219,17 @@ func _generate_labyrinth_connectors() -> void:
 				var cell = _logical_grid[pos]
 				if cell.type in ["spawn", "stairs_up", "stairs_down", "portal", "special", "simple"]:
 					key_rooms.append(pos)
+					
 		if key_rooms.is_empty():
 			continue
+			
 		var connected = [key_rooms.pop_front()]
 		while not key_rooms.is_empty():
 			var b_p1 = Vector3i.ZERO
 			var b_p2 = Vector3i.ZERO
 			var b_dist = 999999
 			var b_idx = -1
+			
 			for i in range(key_rooms.size()):
 				var p2 = key_rooms[i]
 				for p1 in connected:
@@ -253,11 +239,14 @@ func _generate_labyrinth_connectors() -> void:
 						b_p1 = p1
 						b_p2 = p2
 						b_idx = i
+			
 			if b_idx != -1:
 				_pathfind_connect(b_p1, b_p2)
 				connected.append(key_rooms.pop_at(b_idx))
 			else:
 				break
+				
+		# Extra connections for complexity
 		if connected.size() > 2:
 			for i in range(int(connected.size() * corridor_complexity)):
 				var p1 = connected[randi() % connected.size()]
@@ -270,26 +259,33 @@ func _pathfind_connect(p1: Vector3i, p2: Vector3i) -> void:
 	astar.region = Rect2i(0, 0, floor_width, floor_height)
 	astar.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_NEVER
 	astar.update()
+	
 	for x in range(floor_width):
 		for z in range(floor_height):
 			var pos = Vector3i(x, p1.y, z)
 			if pos == p1 or pos == p2:
 				continue
+				
+			var jitter = randf() * 0.2
+			
 			if _logical_grid.has(pos):
 				var type = _logical_grid[pos].type
 				if type == "corridor":
-					astar.set_point_weight_scale(Vector2i(x, z), 0.1)
+					astar.set_point_weight_scale(Vector2i(x, z), 0.1 + jitter)
 				else:
-					astar.set_point_weight_scale(Vector2i(x, z), 50.0)
+					astar.set_point_weight_scale(Vector2i(x, z), 50.0 + jitter)
 			else:
-				astar.set_point_weight_scale(Vector2i(x, z), 1.0)
+				astar.set_point_weight_scale(Vector2i(x, z), 1.0 + jitter)
+				
 	var path = astar.get_id_path(Vector2i(p1.x, p1.z), Vector2i(p2.x, p2.z))
 	if path.is_empty():
 		return
+		
 	for i in range(path.size()):
 		var curr_v3 = Vector3i(path[i].x, p1.y, path[i].y)
 		if not _logical_grid.has(curr_v3):
 			_logical_grid[curr_v3] = {"type": "corridor", "connections": 0}
+			
 		if i > 0:
 			var prev_v3 = Vector3i(path[i-1].x, p1.y, path[i-1].y)
 			var diff = path[i] - path[i-1]
@@ -316,9 +312,7 @@ func _instantiate_grid() -> void:
 		var cell = _logical_grid[pos]
 		if cell.type == "occupied":
 			continue
-		if cell.type == "simple" and cell.has("size") and cell.size != Vector2i(1, 1):
-			_skin_macro_room(pos, cell.size)
-			continue
+			
 		var data = _select_scene_and_rotation(pos)
 		if data.scene:
 			_place_scene(pos, data.scene, data.rotation)
@@ -327,6 +321,7 @@ func _select_scene_and_rotation(pos: Vector3i) -> Dictionary:
 	var cell = _logical_grid[pos]
 	var mask = cell.connections
 	var res = {"scene": null, "rotation": 0}
+	
 	match cell.type:
 		"spawn": res.scene = spawn_room
 		"portal": res.scene = portal_room
@@ -335,6 +330,7 @@ func _select_scene_and_rotation(pos: Vector3i) -> Dictionary:
 		"special": res.scene = _pick_best_template(mask, special_rooms)
 		"simple": res.scene = _pick_best_template(mask, simple_rooms)
 		"corridor": res.scene = _pick_connector_scene(pos)
+		
 	if res.scene:
 		res.rotation = _calculate_handshake_rotation(mask, res.scene)
 	return res
@@ -342,21 +338,30 @@ func _select_scene_and_rotation(pos: Vector3i) -> Dictionary:
 func _pick_best_template(target_mask: int, pool: Array[PackedScene]) -> PackedScene:
 	if pool.is_empty():
 		return null
-	var best_scene = pool[0]
+		
+	var best_candidates = []
 	var best_score = -999999
+	
 	for scene in pool:
 		var inst = scene.instantiate()
 		if not inst is DungeonRoom:
 			inst.free()
 			continue
+			
 		for r in range(4):
 			var m = inst.get_mask_for_rotation(r)
 			var score = _get_handshake_score(target_mask, m)
 			if score > best_score:
 				best_score = score
-				best_scene = scene
+				best_candidates = [scene]
+			elif score == best_score:
+				if not best_candidates.has(scene):
+					best_candidates.append(scene)
 		inst.free()
-	return best_scene
+	
+	if best_candidates.is_empty():
+		return pool[0]
+	return best_candidates[randi() % best_candidates.size()]
 
 func _get_handshake_score(target_mask: int, room_mask: int) -> int:
 	var score = 0
@@ -366,9 +371,9 @@ func _get_handshake_score(target_mask: int, room_mask: int) -> int:
 		if has_target and has_room:
 			score += 100
 		elif has_target and not has_room:
-			score -= 500 # High penalty for missing door
+			score -= 500 # Missing door
 		elif not has_target and has_room:
-			score -= 50  # Low penalty for extra door
+			score -= 50  # Extra door
 	return score
 
 func _pick_connector_scene(pos: Vector3i) -> PackedScene:
@@ -377,7 +382,14 @@ func _pick_connector_scene(pos: Vector3i) -> PackedScene:
 	for i in range(4):
 		if mask & (1 << i):
 			bits += 1
-	if bits <= 2:
+	
+	if bits == 1:
+		# Dead end
+		var room = _pick_best_template(mask, simple_rooms)
+		if room: return room
+		return _get_random(hallways)
+	elif bits == 2:
+		# Straight or Turn
 		if (mask == 5) or (mask == 10):
 			return _get_random(hallways)
 		else:
@@ -387,77 +399,40 @@ func _pick_connector_scene(pos: Vector3i) -> PackedScene:
 	else:
 		if not crosses.is_empty():
 			return _get_random(crosses)
-		else:
-			return _get_random(tris)
+		return _get_random(tris)
 
 func _calculate_handshake_rotation(target_mask: int, scene: PackedScene) -> int:
 	if target_mask == 0:
-		return 0
+		return randi() % 4
+		
 	var inst = scene.instantiate()
 	if not inst is DungeonRoom:
 		inst.free()
 		return 0
-	var best_rot = 0
-	var best_score = -999999
 	
-	var debug_log = "[Handshake] Scene: %s, TargetMask: %d\n" % [inst.name, target_mask]
+	var best_rots = []
+	var best_score = -999999
 	
 	for r in range(4):
 		var room_mask = inst.get_mask_for_rotation(r)
 		var score = _get_handshake_score(target_mask, room_mask)
-		debug_log += "  - Rot %d: ResultMask %d, Score %d\n" % [r, room_mask, score]
 		if score > best_score:
 			best_score = score
-			best_rot = r
-		if room_mask == target_mask:
-			best_rot = r
-			break
+			best_rots = [r]
+		elif score == best_score:
+			best_rots.append(r)
 	
-	if "Corner" in inst.name or "Hallway" in inst.name:
-		print(debug_log + "  => Chose Rot %d with score %d" % [best_rot, best_score])
-		
 	inst.free()
-	return best_rot
-
-func _skin_macro_room(pos: Vector3i, size: Vector2i) -> void:
-	for ox in range(size.x):
-		for oz in range(size.y):
-			var t_pos = pos + Vector3i(ox, 0, oz)
-			var scene: PackedScene = null
-			var rot = 0
-			var t_mask = 0 # Calculate Internal + External Target Mask
-			if oz > 0: t_mask |= 1 # N
-			if ox < size.x - 1: t_mask |= 2 # E
-			if oz < size.y - 1: t_mask |= 4 # S
-			if ox > 0: t_mask |= 8 # W
-			t_mask |= _logical_grid[t_pos].connections # Add corridor connection
-			
-			var is_min_x = (ox == 0)
-			var is_max_x = (ox == size.x - 1)
-			var is_min_z = (oz == 0)
-			var is_max_z = (oz == size.y - 1)
-			
-			if _logical_grid[t_pos].connections > 0:
-				scene = _get_random(doorway_tiles)
-			elif (is_min_x or is_max_x) and (is_min_z or is_max_z):
-				scene = _get_random(corner_tiles)
-			elif is_min_x or is_max_x or is_min_z or is_max_z:
-				scene = _get_random(edge_tiles)
-			else:
-				scene = _get_random(open_tiles)
-			
-			if scene:
-				rot = _calculate_handshake_rotation(t_mask, scene)
-				var inst = _place_scene(t_pos, scene, rot)
-				# Log the logic for troubleshooting
-				if "Corner" in inst.name:
-					print("[Macro] Corner Tile at %s: Target=%d, Result=%d, ChoseRot=%d" % [t_pos, t_mask, (inst.get_mask_for_rotation(rot) if inst.has_method("get_mask_for_rotation") else 0), rot])
+	if best_rots.is_empty():
+		return 0
+	return best_rots[randi() % best_rots.size()]
 
 func _place_scene(pos: Vector3i, scene: PackedScene, rot: int) -> Node3D:
 	var inst = scene.instantiate()
 	inst.name = "Room_%d_%d_%d_%d" % [pos.x, pos.y, pos.z, rot]
 	add_child(inst, true)
 	inst.position = Vector3(pos.x * grid_size, pos.y * vertical_grid_size, pos.z * grid_size)
+	
 	var offset = 0
 	if inst is DungeonRoom:
 		offset = inst.mesh_rotation_offset
@@ -465,10 +440,7 @@ func _place_scene(pos: Vector3i, scene: PackedScene, rot: int) -> Node3D:
 	
 	if Engine.is_editor_hint():
 		var root = get_tree().edited_scene_root
-		if root:
-			inst.owner = root
-		else:
-			inst.owner = self
+		inst.owner = root if root else self
 	else:
 		inst.owner = self
 	return inst
@@ -479,14 +451,6 @@ func _get_random_empty_pos(y: int) -> Vector3i:
 		if not _logical_grid.has(p):
 			return p
 	return Vector3i(-1, -1, -1)
-
-func _can_place_room(pos: Vector3i, size: Vector2i) -> bool:
-	for ox in range(size.x):
-		for oz in range(size.y):
-			var p = pos + Vector3i(ox, 0, oz)
-			if p.x >= floor_width or p.z >= floor_height or _logical_grid.has(p):
-				return false
-	return true
 
 func _get_random(arr: Array[PackedScene]) -> PackedScene:
 	if arr.is_empty():

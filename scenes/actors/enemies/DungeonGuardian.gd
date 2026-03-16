@@ -22,7 +22,7 @@ func _ready() -> void:
 	add_to_group("enemies")
 	
 	# Only the server runs the AI logic
-	if not multiplayer.is_server():
+	if not NetworkService.is_server():
 		set_physics_process(false)
 		return
 	
@@ -118,7 +118,7 @@ func _perform_attack_logic() -> void:
 	await get_tree().create_timer(attack_windup).timeout
 	
 	# Damage Application (Cleave) - Server Only
-	if not multiplayer.is_server() or not is_inside_tree(): return
+	if not NetworkService.is_server() or not is_inside_tree(): return
 	
 	var space_state = get_world_3d().direct_space_state
 	var forward = -global_transform.basis.z
@@ -140,7 +140,7 @@ func _perform_attack_logic() -> void:
 				collider.apply_knockback(global_position, 12.0)
 
 func take_damage(amount: float) -> void:
-	if not multiplayer.is_server(): return
+	if not NetworkService.is_server(): return
 	
 	current_health -= amount
 	
@@ -151,7 +151,7 @@ func take_damage(amount: float) -> void:
 		_die()
 
 func apply_knockback(source_position: Vector3, force: float) -> void:
-	if not multiplayer.is_server(): return
+	if not NetworkService.is_server(): return
 	var knockback_dir = (global_position - source_position).normalized()
 	knockback_dir.y = 0 # Keep it horizontal
 	knockback_velocity += knockback_dir * force
@@ -198,7 +198,7 @@ func _die() -> void:
 	queue_free()
 
 func _spawn_loot() -> void:
-	if not multiplayer.is_server(): return
+	if not NetworkService.is_server(): return
 
 	var spawner = NetworkService.player_spawner
 	if not spawner: return
@@ -212,7 +212,7 @@ func _spawn_loot() -> void:
 	spawner.spawn(loot_data)
 
 func _process(delta: float) -> void:
-	if not multiplayer.has_multiplayer_peer() or multiplayer.is_server(): return
+	if not multiplayer.has_multiplayer_peer() or NetworkService.is_server(): return
 	
 	# Clients interpolate (with snapping for large distances/spawn)
 	if global_position.distance_to(sync_position) > 2.0:

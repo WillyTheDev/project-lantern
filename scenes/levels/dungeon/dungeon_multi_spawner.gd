@@ -8,7 +8,7 @@ func _ready() -> void:
 	_setup_generator()
 	
 	# Server-side logic for Dungeon
-	if multiplayer.is_server():
+	if NetworkService.is_server():
 		# 1. Generate the Dungeon FIRST
 		%DungeonGenerator.generate()
 		
@@ -37,7 +37,7 @@ func _setup_generator() -> void:
 # --- SERVER SIDE CALLBACKS ---
 
 func _spawn_initial_enemies():
-	if not multiplayer.is_server(): return
+	if not NetworkService.is_server(): return
 	
 	# Search for enemy spawn points in the GENERATED rooms
 	var enemy_points = get_tree().get_nodes_in_group("enemy_spawners")
@@ -47,6 +47,11 @@ func _spawn_initial_enemies():
 		_spawn_enemy("guardian", point.global_position)
 
 func _on_server_player_login_completed(peer_id: int, pb_data: Dictionary):
+	# The server doesn't need a player body for itself
+	if peer_id == 1:
+		print("[Dungeon] Login complete for Server (peer 1). No body spawned.")
+		return
+
 	# Wait a bit to ensure the client has finished loading the Dungeon scene
 	# and received the room spawn packets
 	await get_tree().create_timer(1.0).timeout

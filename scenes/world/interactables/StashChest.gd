@@ -4,7 +4,7 @@ extends StaticBody3D
 ## An interactable chest that opens the player's persistent personal stash.
 
 func interact(player: Node3D) -> void:
-	if not multiplayer.is_server(): return
+	if not NetworkService.is_server(): return
 
 	var peer_id = player.player_id if "player_id" in player else 1
 

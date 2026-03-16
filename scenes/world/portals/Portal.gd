@@ -8,20 +8,22 @@ enum PortalType { STANDARD, EXTRACTION }
 @export var portal_type: PortalType = PortalType.STANDARD
 
 func _ready() -> void:
-	if multiplayer.has_multiplayer_peer():
-		print("[Portal] ", portal_name, " initialized. Role: ", "Server" if multiplayer.is_server() else "Client")
+	if NetworkService.is_server():
+		print("[Portal] ", portal_name, " initialized. Role: Server")
 		print("[Portal] Monitoring: ", monitoring, " Monitorable: ", monitorable)
 		print("[Portal] Layer: ", collision_layer, " Mask: ", collision_mask)
 	else:
-		print("[Portal] ", portal_name, " initialized (offline/loading).")
+		print("[Portal] ", portal_name, " initialized (Client/Offline).")
 	
 	body_entered.connect(_on_body_entered)
 
 func _on_body_entered(body: Node) -> void:
 	# Debug print for both server and client to confirm signal firing
-	print("[Portal] ", portal_name, " - Body entered: ", body.name, " (Is Server: ", multiplayer.is_server(), ")")
+	if not NetworkService.is_server(): 
+		print("[Portal] ", portal_name, " - Body entered: ", body.name, " (Client side, ignoring)")
+		return
 	
-	if not multiplayer.is_server(): return
+	print("[Portal] ", portal_name, " - Body entered: ", body.name, " (Server side, processing handoff)")
 	if body.has_method("get_multiplayer_authority") or "player_id" in body:
 		var peer_id = body.get_multiplayer_authority() if body.has_method("get_multiplayer_authority") else body.player_id
 		

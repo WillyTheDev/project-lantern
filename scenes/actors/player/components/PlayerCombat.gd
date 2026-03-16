@@ -16,7 +16,7 @@ func request_attack(damage: float, range: float) -> void:
 
 @rpc("any_peer", "call_remote", "reliable")
 func _perform_attack_rpc(damage: float, range: float) -> void:
-	if not multiplayer.is_server() or not is_instance_valid(player): return
+	if not NetworkService.is_server() or not is_instance_valid(player): return
 	var sender_id = multiplayer.get_remote_sender_id()
 	if sender_id != player.player_id: return
 	

@@ -21,7 +21,7 @@ func _on_body_exited(body: Node) -> void:
 	print("[Hazard] ", hazard_name, ": Player exited: ", body.name)
 
 func _physics_process(delta: float) -> void:
-	if not multiplayer.has_multiplayer_peer() or not multiplayer.is_server(): return
+	if not multiplayer.has_multiplayer_peer() or not NetworkService.is_server(): return
 	
 	if overlapping_players.size() > 0:
 		_damage_timer += delta

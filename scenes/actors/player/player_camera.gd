@@ -46,8 +46,5 @@ func _input(event: InputEvent) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not is_multiplayer_authority(): return
-	if event is InputEventMouseMotion:
-		var pivot = get_parent().get_parent()
-		pivot.rotate_x(event.relative.y * MOUSE_SENSIBILITY)
-		pivot.rotation.x = clamp(pivot.rotation.x, deg_to_rad(-80), deg_to_rad(80))
+	# Horizontal/Vertical camera rotation is now handled in player_controller.gd
+	pass

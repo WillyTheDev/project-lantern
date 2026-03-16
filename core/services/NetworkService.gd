@@ -167,6 +167,9 @@ func join_server(address: String, port: int) -> void:
 	
 	multiplayer.multiplayer_peer = peer
 
+func is_server() -> bool:
+	return multiplayer.has_multiplayer_peer() and multiplayer.is_server()
+
 func _on_peer_connected(id: int) -> void:
 	print("[NetworkService] Peer connected: ", id)
 
@@ -175,12 +178,12 @@ func _on_peer_disconnected(id: int) -> void:
 
 func switch_server(address: String, port: int) -> void:
 	print("[NetworkService] Switching to server: ", address, ":", port)
-	is_switching_server = true
 	
-	# Disconnect current peer
-	if multiplayer.multiplayer_peer:
-		multiplayer.multiplayer_peer.close()
-		multiplayer.multiplayer_peer = null
+	# Clear previous state including players
+	reset()
+	
+	# Mark as switching AFTER reset so it doesn't get cleared
+	is_switching_server = true
 	
 	# Wait a bit longer to ensure signals are processed and state is clean
 	await get_tree().create_timer(0.2).timeout
@@ -197,6 +200,7 @@ func reset() -> void:
 	# Clear all players/entities from the root
 	if players_root:
 		for child in players_root.get_children():
+			print("[NetworkService] Reset clearing player/node: ", child.name)
 			child.queue_free()
 	
 	is_switching_server = false

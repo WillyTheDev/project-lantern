@@ -44,7 +44,7 @@ var animations: PlayerAnimationManager
 		if is_inside_tree():
 			_update_health_ui()
 			# Only the server should trigger the death sequence
-			if multiplayer.is_server() and current_health <= 0 and not is_dead:
+			if NetworkService.is_server() and current_health <= 0 and not is_dead:
 				_on_death()
 
 @export var shared_velocity: Vector3 = Vector3.ZERO
@@ -78,7 +78,7 @@ func _enter_tree() -> void:
 	set_multiplayer_authority(player_id)
 
 func _exit_tree() -> void:
-	if multiplayer.is_server():
+	if NetworkService.is_server():
 		print("[Player] Peer ", player_id, " leaving scene. Performing final sync for: ", player_name)
 		InventoryService._sync_and_emit(self)
 
@@ -153,7 +153,7 @@ func _setup_local_player() -> void:
 	refresh_held_item()
 	
 	# Handshake: Request inventory from server once we are fully ready
-	if not multiplayer.is_server():
+	if not NetworkService.is_server():
 		print("[Player] Requesting initial inventory sync from server...")
 		server_request_inventory_sync.rpc_id(1)
 
@@ -167,7 +167,7 @@ func _setup_remote_player() -> void:
 
 @rpc("any_peer", "call_remote", "reliable")
 func server_request_inventory_sync() -> void:
-	if not multiplayer.is_server(): return
+	if not NetworkService.is_server(): return
 	var sender_id = multiplayer.get_remote_sender_id()
 	if sender_id == player_id:
 		print("[Player] Peer ", sender_id, " requested inventory sync. Sending...")
@@ -192,7 +192,7 @@ func refresh_held_item(_index: int = -1) -> void:
 	var item = null
 	if is_multiplayer_authority():
 		item = inventory.get_active_item()
-	elif multiplayer.is_server() and inventory:
+	elif NetworkService.is_server() and inventory:
 		inventory.active_hotbar_index = active_slot_index
 		item = inventory.get_active_item()
 	
@@ -218,8 +218,13 @@ func _unhandled_input(event: InputEvent) -> void:
 			active_slot_index = 9
 
 	if event is InputEventMouseMotion and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
+		# Horizontal rotation (Yaw) - Apply to the CameraPivot
 		$CameraPivot.rotate_y(-event.relative.x * MOUSE_SENSIBILITY)
-		$CameraPivot.rotation.x = clamp($CameraPivot.rotation.x - event.relative.y * MOUSE_SENSIBILITY, -1.2, 1.2)
+		
+		# Vertical rotation (Pitch) - Apply to the SpringArm3D to avoid gimbal lock
+		var spring_arm = $CameraPivot/SpringArm3D
+		if spring_arm:
+			spring_arm.rotation.x = clamp(spring_arm.rotation.x - event.relative.y * MOUSE_SENSIBILITY, -1.2, 1.2)
 
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
 		_toggle_settings_menu()
@@ -281,7 +286,7 @@ func _physics_process(delta: float) -> void:
 		knockback_velocity = Vector3.ZERO
 
 	# Server-side detection of slot changes (since setters aren't triggered by Synchronizer)
-	if multiplayer.is_server() and active_slot_index != last_synced_slot:
+	if NetworkService.is_server() and active_slot_index != last_synced_slot:
 		last_synced_slot = active_slot_index
 		refresh_held_item()
 
@@ -311,12 +316,17 @@ func _physics_process(delta: float) -> void:
 		sync_rotation = $Model.rotation.y
 		# Camera rotation (Y for horizontal, X for pivot/pitch)
 		sync_camera_rotation_y = $CameraPivot.rotation.y
-		sync_pivot_rotation = $CameraPivot.rotation.x
+		var spring_arm = $CameraPivot/SpringArm3D
+		if spring_arm:
+			sync_pivot_rotation = spring_arm.rotation.x
 	else:
 		# Non-authority (Server or other clients) just interpolate/follow
+		rotation = Vector3.ZERO # Always stabilize root rotation
 		$Model.rotation.y = lerp_angle($Model.rotation.y, sync_rotation, 10 * delta)
 		$CameraPivot.rotation.y = sync_camera_rotation_y
-		$CameraPivot.rotation.x = sync_pivot_rotation
+		var spring_arm = $CameraPivot/SpringArm3D
+		if spring_arm:
+			spring_arm.rotation.x = sync_pivot_rotation
 		
 		if global_position.distance_to(sync_position) > 2.0:
 			global_position = sync_position
@@ -360,18 +370,18 @@ func request_attack(damage: float, range: float) -> void:
 	combat.request_attack(damage, range)
 
 func take_damage(amount: float) -> void:
-	if not multiplayer.is_server(): return
+	if not NetworkService.is_server(): return
 	_apply_damage_rpc.rpc_id(player_id, amount)
 
 func apply_knockback(source_position: Vector3, force: float) -> void:
-	if not multiplayer.is_server(): return
+	if not NetworkService.is_server(): return
 	# Broadcast to the authority (client) of this player
 	_apply_knockback_rpc.rpc(source_position, force)
 
 @rpc("any_peer", "call_local", "reliable")
 func _apply_knockback_rpc(source_position: Vector3, force: float) -> void:
 	# Security: Only the server (peer 1) should be able to trigger knockback
-	if multiplayer.get_remote_sender_id() != 1 and not multiplayer.is_server(): return
+	if multiplayer.get_remote_sender_id() != 1 and not NetworkService.is_server(): return
 	
 	var dir = (global_position - source_position).normalized()
 	if dir == Vector3.ZERO: dir = Vector3.UP # Safety fallback
@@ -389,7 +399,7 @@ var _damage_fx_cooldown: float = 0.0
 
 @rpc("any_peer", "call_local", "reliable")
 func _apply_damage_rpc(amount: float) -> void:
-	if multiplayer.get_remote_sender_id() != 1 and not multiplayer.is_server(): return
+	if multiplayer.get_remote_sender_id() != 1 and not NetworkService.is_server(): return
 	current_health -= amount
 	
 	# Visual Juice for damage
@@ -415,11 +425,11 @@ func _on_stats_updated() -> void:
 		if current_health != stats.current_health:
 			current_health = stats.current_health
 	
-	if multiplayer.is_server() and current_health <= 0:
+	if NetworkService.is_server() and current_health <= 0:
 		_on_death()
 
 func _on_death() -> void:
-	if not multiplayer.is_server(): return
+	if not NetworkService.is_server(): return
 	if is_dead: return
 	is_dead = true
 	

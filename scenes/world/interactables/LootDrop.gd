@@ -7,7 +7,7 @@ func _ready() -> void:
 	pass
 
 func interact(player: Node3D) -> void:
-	if not multiplayer.is_server(): return
+	if not NetworkService.is_server(): return
 	
 	if items.size() == 0:
 		print("[Loot] Drop is empty, removing.")
@@ -30,7 +30,7 @@ func _open_loot_ui(loot_items: Array, path: NodePath) -> void:
 
 @rpc("any_peer", "call_remote", "reliable")
 func request_remove_item(slot_index: int) -> void:
-	if not multiplayer.is_server(): return
+	if not NetworkService.is_server(): return
 
 	var sender_id = multiplayer.get_remote_sender_id()
 	# (Future: add distance check here)
@@ -45,7 +45,7 @@ func _sync_empty() -> void:
 
 func _process(_delta: float) -> void:
 	if not multiplayer.has_multiplayer_peer(): return
-	if not multiplayer.is_server(): return
+	if not NetworkService.is_server(): return
 	
 	# If items are empty (moved by player), remove the drop
 	var all_empty = true

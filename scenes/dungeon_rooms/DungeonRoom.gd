@@ -16,10 +16,6 @@ class_name DungeonRoom
 @export var size: Vector2i = Vector2i(1, 1)
 @export_enum("corridor", "room", "special", "spawn", "exit") var type: String = "room"
 
-func _ready() -> void:
-	_create_collisions_recursive(self)
-	_reconstruct_transform_from_name()
-
 func _reconstruct_transform_from_name() -> void:
 	var parts = name.split("_")
 	if parts.size() >= 5 and parts[0] == "Room":
@@ -33,9 +29,6 @@ func _reconstruct_transform_from_name() -> void:
 		# Apply CW rotation + mesh offset
 		rotation.y = -(rot_idx + mesh_rotation_offset) * (PI / 2.0)
 
-func _create_collisions_recursive(node: Node) -> void:
-	if node is MeshInstance3D: node.create_trimesh_collision()
-	for child in node.get_children(): _create_collisions_recursive(child)
 
 ## Returns a bitmask (N=1, E=2, S=4, W=8) representing doors after CW rotation
 func get_mask_for_rotation(rot_idx: int) -> int:
@@ -43,7 +36,7 @@ func get_mask_for_rotation(rot_idx: int) -> int:
 	var mask = 0
 	for i in range(4):
 		if bits[i]:
-			# CW rotation: Index 0(N) + 1(rot) = Index 1(E)
-			var new_idx = (i + rot_idx) % 4
+			# CW rotation: base_idx + chosen_rot + mesh_offset
+			var new_idx = (i + rot_idx + mesh_rotation_offset) % 4
 			mask |= (1 << new_idx)
 	return mask

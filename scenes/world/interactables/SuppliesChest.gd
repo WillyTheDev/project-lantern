@@ -20,7 +20,7 @@ func _refill_chest() -> void:
 		items.append({"id": pool[i], "quantity": 1})
 
 func interact(player: Node3D) -> void:
-	if not multiplayer.is_server(): return
+	if not NetworkService.is_server(): return
 
 	var peer_id = player.player_id if "player_id" in player else 1
 
@@ -34,7 +34,7 @@ func _open_loot_ui(loot_items: Array, path: NodePath) -> void:
 
 @rpc("any_peer", "call_remote", "reliable")
 func request_remove_item(slot_index: int) -> void:
-	if not multiplayer.is_server(): return
+	if not NetworkService.is_server(): return
 	if slot_index >= 0 and slot_index < items.size():
 		items[slot_index] = null
 		

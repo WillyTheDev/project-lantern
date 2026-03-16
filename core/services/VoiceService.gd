@@ -78,10 +78,11 @@ func _process(delta: float) -> void:
 
 @rpc("any_peer", "call_remote", "unreliable_ordered")
 func send_voice_packet(packet: PackedByteArray) -> void:
+	if not multiplayer.has_multiplayer_peer(): return
 	var sender_id = multiplayer.get_remote_sender_id()
 	
 	# If we are the server, relay to all other clients
-	if multiplayer.is_server():
+	if NetworkService.is_server():
 		# Relay to all except sender
 		# In a real game, you might check distance here to optimize
 		# For now, simple relay to everyone

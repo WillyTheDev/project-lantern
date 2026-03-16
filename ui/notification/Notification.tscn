@@ -19,16 +19,17 @@ mouse_filter = 2
 script = ExtResource("1_mbdgx")
 
 [node name="TextureRect" type="TextureRect" parent="." unique_id=1928096786]
-custom_minimum_size = Vector2(0, 40)
+custom_minimum_size = Vector2(200, 40)
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -128.0
-offset_right = 128.0
+offset_left = -20.0
+offset_right = 20.0
 offset_bottom = 40.0
 grow_horizontal = 2
 texture = SubResource("GradientTexture1D_jevu6")
+expand_mode = 2
 
 [node name="NotificationLabel" type="Label" parent="TextureRect" unique_id=1809727414]
 unique_name_in_owner = true

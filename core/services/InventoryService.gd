@@ -85,14 +85,14 @@ func set_active_slot(index: int) -> void:
 		
 		# If this is called on a client with authority, the server needs to know
 		# to update its local node and sync to PB
-		if p.is_multiplayer_authority() and not multiplayer.is_server():
+		if p.is_multiplayer_authority() and not NetworkService.is_server():
 			if p.has_node("Interaction"):
 				# Reuse existing RPC mechanism if possible or add new one
 				# For now, we'll assume the client-side change is enough for immediate feedback,
 				# but we need to tell the server to update the active slot index too.
 				p.active_slot_index = index # This might trigger sync if properly setup
 		
-		if multiplayer.is_server():
+		if NetworkService.is_server():
 			_sync_and_emit(p)
 
 func get_active_item() -> ItemStackData:
@@ -118,7 +118,7 @@ func add_experience_to_player(player: Node3D, amount: int) -> void:
 	_sync_and_emit(player)
 
 func handle_death_for_player(player: Node3D) -> void:
-	if not multiplayer.is_server(): return
+	if not NetworkService.is_server(): return
 	
 	print("[InventoryService] Handling permadeath for player.")
 	player.inventory._initialize_slots()
@@ -158,7 +158,7 @@ func _sync_and_emit(player: Node3D) -> void:
 		inventory_updated.emit()
 		
 	# SERVER ONLY: Sync to the persistence layer (PocketBase).
-	if multiplayer.is_server():
+	if NetworkService.is_server():
 		var sync_data = player.inventory.to_dict()
 		sync_data["stash"] = player.stash.to_dict()
 		sync_data["stats"] = player.stats.to_dict()
@@ -201,7 +201,7 @@ func _sync_external_back(player: Node3D, type: String, modified_arr: Variant) ->
 	var p_id = player.player_id if "player_id" in player else 1
 	var path = player_external_paths.get(p_id, NodePath(""))
 	
-	if not multiplayer.is_server() or type != "external" or path.is_empty(): return
+	if not NetworkService.is_server() or type != "external" or path.is_empty(): return
 	
 	var node = get_tree().root.get_node_or_null(path)
 	if node and "items" in node:
@@ -213,7 +213,7 @@ func _sync_external_back(player: Node3D, type: String, modified_arr: Variant) ->
 func move_item(player: Node3D, from_type: String, from_idx: int, to_type: String, to_idx: int) -> void:
 	if not player: return
 	
-	if multiplayer.is_server():
+	if NetworkService.is_server():
 		print("[InventoryService] Server move request: ", from_type, "[", from_idx, "] -> ", to_type, "[", to_idx, "] for player: ", player.player_name)
 
 	var from_arr = _get_array_by_type(player, from_type)
@@ -234,7 +234,7 @@ func move_item(player: Node3D, from_type: String, from_idx: int, to_type: String
 	InventoryManager.move_item(from_arr, from_idx, to_arr, to_idx)
 	
 	# Sync back to external source if needed
-	if multiplayer.is_server():
+	if NetworkService.is_server():
 		if from_type == "external": _sync_external_back(player, from_type, from_arr)
 		if to_type == "external": _sync_external_back(player, to_type, to_arr)
 	
