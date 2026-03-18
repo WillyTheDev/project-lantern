@@ -33,17 +33,18 @@ var animations: PlayerAnimationManager
 		name_color = v
 		_update_nametag()
 
-# Vitality (REQUIRED by MultiplayerSynchronizer)
+# Vitality
 @export var max_health: float = 100.0
 @export var current_health: float = 100.0:
 	set(value):
 		current_health = value
-		if is_multiplayer_authority() and stats:
+		# Sync local stats resource for UI (both on server and client when synced)
+		if stats:
 			stats.current_health = value
 		
 		if is_inside_tree():
 			_update_health_ui()
-			# Only the server should trigger the death sequence
+			# IMPORTANT: Only the server should trigger the death sequence
 			if NetworkService.is_server() and current_health <= 0 and not is_dead:
 				_on_death()
 
@@ -56,9 +57,18 @@ const MOUSE_SENSIBILITY = 0.002
 
 @export var active_slot_index: int = 0:
 	set(v):
-		active_slot_index = v
-		if is_inside_tree():
-			refresh_held_item()
+		if active_slot_index != v:
+			active_slot_index = v
+			if inventory:
+				inventory.set_active_slot(v) # Triggers signals for UI
+			if is_inside_tree():
+				refresh_held_item()
+
+@export var use_item_state: bool = false:
+	set(v):
+		if use_item_state != v:
+			use_item_state = v
+			_sync_held_item_state()
 
 @rpc("any_peer", "call_remote", "reliable")
 func sync_inventory_to_clients(inventory_data: Dictionary, stash_data: Dictionary) -> void:
@@ -76,6 +86,8 @@ func sync_inventory_to_clients(inventory_data: Dictionary, stash_data: Dictionar
 
 func _enter_tree() -> void:
 	set_multiplayer_authority(player_id)
+	if has_node("StateSynchronizer"):
+		$StateSynchronizer.set_multiplayer_authority(1)
 
 func _exit_tree() -> void:
 	if NetworkService.is_server():
@@ -174,6 +186,13 @@ func server_request_inventory_sync() -> void:
 		# Use the service to broadcast the current state
 		InventoryService._sync_and_emit(self)
 
+func _sync_held_item_state() -> void:
+	var hand = get_node_or_null("Model/%HandPoint")
+	if hand and hand.get_child_count() > 0:
+		var held_item = hand.get_child(0)
+		if held_item.has_method("sync_state"):
+			held_item.sync_state(use_item_state)
+
 func refresh_held_item(_index: int = -1) -> void:
 	if not is_inside_tree(): return
 	var hand = get_node_or_null("Model/%HandPoint")
@@ -190,9 +209,8 @@ func refresh_held_item(_index: int = -1) -> void:
 	if not is_inside_tree(): return
 
 	var item = null
-	if is_multiplayer_authority():
-		item = inventory.get_active_item()
-	elif NetworkService.is_server() and inventory:
+	# On both server and client, use the synced active_slot_index
+	if inventory:
 		inventory.active_hotbar_index = active_slot_index
 		item = inventory.get_active_item()
 	
@@ -201,21 +219,20 @@ func refresh_held_item(_index: int = -1) -> void:
 	var data = ItemService.get_item(item.id)
 	if data and data.item_scene:
 		var instance = data.item_scene.instantiate()
-		# Use a constant name for the held item to ensure deterministic paths for RPCs
 		instance.name = "HeldItem"
 		hand.add_child(instance)
+		# Initial state sync
+		_sync_held_item_state()
 
-func _unhandled_input(event: InputEvent) -> void:
+func _input(event: InputEvent) -> void:
 	if not is_multiplayer_authority(): return
 	
-	if event is InputEventKey and event.pressed:
+	if event is InputEventKey and event.pressed and not event.is_echo():
 		if event.keycode >= KEY_1 and event.keycode <= KEY_9:
 			var idx = event.keycode - KEY_1
-			inventory.set_active_slot(idx)
-			active_slot_index = idx # Triggers sync and local refresh
+			request_slot_change(idx)
 		elif event.keycode == KEY_0:
-			inventory.set_active_slot(9)
-			active_slot_index = 9
+			request_slot_change(9)
 
 	if event is InputEventMouseMotion and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
 		# Horizontal rotation (Yaw) - Apply to the CameraPivot
@@ -235,16 +252,46 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("use_item"):
 		_use_held_item()
 
-func _use_held_item() -> void:
-	var item_stack = inventory.get_active_item()
-	if not item_stack: return
-	
-	var data = ItemService.get_item(item_stack.id)
-	if data:
-		var anim_name = data.use_animation
-		if not anim_name.contains("/"): anim_name = "general/" + anim_name
-		play_general_animation.rpc(anim_name)
+func request_slot_change(index: int) -> void:
+	# Client-side request to switch slots
+	if is_multiplayer_authority():
+		server_request_slot_change_rpc.rpc_id(1, index)
 
+@rpc("any_peer", "call_remote", "reliable")
+func server_request_slot_change_rpc(index: int) -> void:
+	if not NetworkService.is_server(): return
+	var sender_id = multiplayer.get_remote_sender_id()
+	if sender_id != player_id: return
+	
+	# Validation
+	if index >= 0 and index < 10:
+		active_slot_index = index
+		# Reset use_item_state when changing slots
+		use_item_state = false
+
+func _use_held_item() -> void:
+	if is_multiplayer_authority():
+		server_request_use_item_rpc.rpc_id(1)
+
+@rpc("any_peer", "call_remote", "reliable")
+func server_request_use_item_rpc() -> void:
+	if not NetworkService.is_server(): return
+	var sender_id = multiplayer.get_remote_sender_id()
+	if sender_id != player_id: return
+	
+	# Toggle state for continuous items (like lantern)
+	use_item_state = !use_item_state
+	
+	# Play animation
+	var item_stack = inventory.get_active_item()
+	if item_stack:
+		var data = ItemService.get_item(item_stack.id)
+		if data:
+			var anim_name = data.use_animation
+			if not anim_name.contains("/"): anim_name = "general/" + anim_name
+			play_general_animation.rpc(anim_name)
+	
+	# Specific item logic
 	var hand = get_node_or_null("Model/%HandPoint")
 	var held_item = hand.get_child(0) if hand and hand.get_child_count() > 0 else null
 	if held_item and held_item.has_method("use"):
@@ -276,16 +323,13 @@ var last_synced_slot: int = -1
 func _physics_process(delta: float) -> void:
 	# Decay knockback
 	if knockback_velocity.length() > 0.05:
-		# Faster decay for better combat feel (changed from 5 to 12)
 		knockback_velocity = knockback_velocity.lerp(Vector3.ZERO, 12 * delta)
-		
-		# Reset if hitting a wall or very small
 		if is_on_wall():
 			knockback_velocity = Vector3.ZERO
 	else:
 		knockback_velocity = Vector3.ZERO
 
-	# Server-side detection of slot changes (since setters aren't triggered by Synchronizer)
+	# State handling
 	if NetworkService.is_server() and active_slot_index != last_synced_slot:
 		last_synced_slot = active_slot_index
 		refresh_held_item()
@@ -298,8 +342,6 @@ func _physics_process(delta: float) -> void:
 	$VoiceIndicator.visible = voip.process_voip(delta)
 
 	if is_multiplayer_authority():
-		# Stabilize root rotation (Keep player upright and facing North)
-		# We rotate the Model and CameraPivot instead of the root node.
 		rotation = Vector3.ZERO
 		
 		var input_dir = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
@@ -312,16 +354,13 @@ func _physics_process(delta: float) -> void:
 		shared_velocity = velocity
 		sync_position = global_position
 		sync_is_on_floor = is_on_floor()
-		# Sync the visual model's rotation instead of the root
 		sync_rotation = $Model.rotation.y
-		# Camera rotation (Y for horizontal, X for pivot/pitch)
 		sync_camera_rotation_y = $CameraPivot.rotation.y
 		var spring_arm = $CameraPivot/SpringArm3D
 		if spring_arm:
 			sync_pivot_rotation = spring_arm.rotation.x
 	else:
-		# Non-authority (Server or other clients) just interpolate/follow
-		rotation = Vector3.ZERO # Always stabilize root rotation
+		rotation = Vector3.ZERO
 		$Model.rotation.y = lerp_angle($Model.rotation.y, sync_rotation, 10 * delta)
 		$CameraPivot.rotation.y = sync_camera_rotation_y
 		var spring_arm = $CameraPivot/SpringArm3D
@@ -341,7 +380,6 @@ func sync_respawn():
 	last_synced_slot = -1
 	play_general_animation("general/Spawn_Air")
 	
-	# Look for the SpawnPoint in the current level scene
 	var spawn_node = get_tree().current_scene.find_child("SpawnPoint", true, false)
 	
 	if spawn_node:
@@ -350,7 +388,6 @@ func sync_respawn():
 		shared_velocity = Vector3.ZERO
 		force_update_transform()
 	else:
-		# Fallback to zero if no spawn point found
 		global_position = Vector3.ZERO
 		velocity = Vector3.ZERO
 		shared_velocity = Vector3.ZERO
@@ -371,25 +408,25 @@ func request_attack(damage: float, range: float) -> void:
 
 func take_damage(amount: float) -> void:
 	if not NetworkService.is_server(): return
-	_apply_damage_rpc.rpc_id(player_id, amount)
+	# DIRECT modification on server.
+	current_health -= amount
+	# Trigger visual effects on all clients
+	_play_damage_fx_rpc.rpc(amount)
 
 func apply_knockback(source_position: Vector3, force: float) -> void:
 	if not NetworkService.is_server(): return
-	# Broadcast to the authority (client) of this player
 	_apply_knockback_rpc.rpc(source_position, force)
 
 @rpc("any_peer", "call_local", "reliable")
 func _apply_knockback_rpc(source_position: Vector3, force: float) -> void:
-	# Security: Only the server (peer 1) should be able to trigger knockback
 	if multiplayer.get_remote_sender_id() != 1 and not NetworkService.is_server(): return
 	
 	var dir = (global_position - source_position).normalized()
-	if dir == Vector3.ZERO: dir = Vector3.UP # Safety fallback
-	dir.y = 0 # Keep it horizontal
+	if dir == Vector3.ZERO: dir = Vector3.UP
+	dir.y = 0
 	
 	knockback_velocity += dir * force
 	
-	# Apply initial kick immediately to avoid frame-delay feeling "floaty"
 	if is_multiplayer_authority():
 		var collision = move_and_collide(dir * 0.1)
 		if collision:
@@ -398,14 +435,13 @@ func _apply_knockback_rpc(source_position: Vector3, force: float) -> void:
 var _damage_fx_cooldown: float = 0.0
 
 @rpc("any_peer", "call_local", "reliable")
-func _apply_damage_rpc(amount: float) -> void:
+func _play_damage_fx_rpc(amount: float) -> void:
+	# This RPC is now purely visual feedback
 	if multiplayer.get_remote_sender_id() != 1 and not NetworkService.is_server(): return
-	current_health -= amount
 	
-	# Visual Juice for damage
 	var now = Time.get_ticks_msec() / 1000.0
 	if now > _damage_fx_cooldown:
-		_damage_fx_cooldown = now + 0.2 # 200ms cooldown
+		_damage_fx_cooldown = now + 0.2
 		var model = $Model
 		if model:
 			var base_scale = model.scale
@@ -416,17 +452,13 @@ func _apply_damage_rpc(amount: float) -> void:
 	if is_multiplayer_authority():
 		var cam = $CameraPivot/SpringArm3D/Camera3D
 		if cam and cam.has_method("shake"):
-			cam.shake(0.05, 0.1) # Reduced intensity from 0.1 to 0.05
+			cam.shake(0.05, 0.1)
 
 func _on_stats_updated() -> void:
 	max_health = stats.max_health
-	if is_multiplayer_authority():
-		# Keep current_health in sync with stats resource for local UI
-		if current_health != stats.current_health:
-			current_health = stats.current_health
-	
-	if NetworkService.is_server() and current_health <= 0:
-		_on_death()
+	# Server should ensure current_health matches stats on first load
+	if NetworkService.is_server() and current_health != stats.current_health:
+		current_health = stats.current_health
 
 func _on_death() -> void:
 	if not NetworkService.is_server(): return

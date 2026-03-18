@@ -47,5 +47,16 @@ func request_move_item(from_type: String, from_idx: int, to_type: String, to_idx
 	var sender_id = multiplayer.get_remote_sender_id()
 	if sender_id != player.player_id: return
 	
+	# DISTANCE VALIDATION for external interactions (Chests, Loot drops, etc.)
+	if from_type == "external" or to_type == "external":
+		var path = InventoryService.player_external_paths.get(sender_id, NodePath(""))
+		if not path.is_empty():
+			var node = get_tree().root.get_node_or_null(path)
+			if node:
+				var dist = player.global_position.distance_to(node.global_position)
+				if dist > 6.0:
+					print("[PlayerInteraction] REJECTED distant move (dist: ", dist, ") for peer: ", sender_id)
+					return
+
 	print("[PlayerInteraction] Server executing move for peer: ", sender_id)
 	InventoryService.move_item(player, from_type, from_idx, to_type, to_idx)

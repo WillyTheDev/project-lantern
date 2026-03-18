@@ -9,7 +9,7 @@ func _init(_player: CharacterBody3D) -> void:
 	player = _player
 
 func request_attack(damage: float, range: float) -> void:
-	if not player.is_multiplayer_authority(): return
+	if not player.is_multiplayer_authority() and not NetworkService.is_server(): return
 	player.play_attack_animation.rpc()
 	# Call the RPC on this node
 	rpc_id(1, "_perform_attack_rpc", damage, range)

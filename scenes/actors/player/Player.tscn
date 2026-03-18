@@ -15,33 +15,38 @@ properties/0/replication_mode = 1
 properties/1/path = NodePath(".:shared_velocity")
 properties/1/spawn = true
 properties/1/replication_mode = 1
-properties/2/path = NodePath(".:current_health")
+properties/2/path = NodePath(".:sync_rotation")
 properties/2/spawn = true
 properties/2/replication_mode = 1
-properties/3/path = NodePath(".:max_health")
+properties/3/path = NodePath(".:sync_pivot_rotation")
 properties/3/spawn = true
 properties/3/replication_mode = 1
-properties/4/path = NodePath(".:sync_rotation")
+properties/4/path = NodePath(".:sync_camera_rotation_y")
 properties/4/spawn = true
 properties/4/replication_mode = 1
-properties/5/path = NodePath(".:sync_pivot_rotation")
+properties/5/path = NodePath(".:sync_is_on_floor")
 properties/5/spawn = true
 properties/5/replication_mode = 1
-properties/6/path = NodePath(".:active_slot_index")
-properties/6/spawn = true
-properties/6/replication_mode = 1
-properties/7/path = NodePath(".:sync_camera_rotation_y")
-properties/7/spawn = true
-properties/7/replication_mode = 1
-properties/8/path = NodePath(".:sync_is_on_floor")
-properties/8/spawn = true
-properties/8/replication_mode = 1
-properties/9/path = NodePath(".:display_name")
-properties/9/spawn = true
-properties/9/replication_mode = 1
-properties/10/path = NodePath(".:name_color")
-properties/10/spawn = true
-properties/10/replication_mode = 1
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_state"]
+properties/0/path = NodePath(".:current_health")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath(".:max_health")
+properties/1/spawn = true
+properties/1/replication_mode = 1
+properties/2/path = NodePath(".:active_slot_index")
+properties/2/spawn = true
+properties/2/replication_mode = 1
+properties/3/path = NodePath(".:display_name")
+properties/3/spawn = true
+properties/3/replication_mode = 1
+properties/4/path = NodePath(".:name_color")
+properties/4/spawn = true
+properties/4/replication_mode = 1
+properties/5/path = NodePath(".:use_item_state")
+properties/5/spawn = true
+properties/5/replication_mode = 1
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_imb2f"]
 bg_color = Color(0.88100183, 0.1337547, 0.28620315, 1)
@@ -76,8 +81,12 @@ transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 1
 transform = Transform3D(1, 0, 0, 0, 0.98284537, 0.18443166, 0, -0.18443166, 0.98284537, 0, 0, 0)
 script = ExtResource("1_iugxn")
 
-[node name="PlayerSynchronizer" type="MultiplayerSynchronizer" parent="." unique_id=599270974]
+[node name="MovementSynchronizer" type="MultiplayerSynchronizer" parent="." unique_id=599270974]
 replication_config = SubResource("SceneReplicationConfig_7otbr")
+
+[node name="StateSynchronizer" type="MultiplayerSynchronizer" parent="." unique_id=599270975]
+replication_config = SubResource("SceneReplicationConfig_state")
+
 
 [node name="GUILayer" type="CanvasLayer" parent="." unique_id=341093036]
 
