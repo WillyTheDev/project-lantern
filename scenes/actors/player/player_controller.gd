@@ -15,6 +15,7 @@ var animations: PlayerAnimationManager
 @export var sync_is_on_floor: bool = true
 
 @onready var anim_player: AnimationPlayer = $Model/MainAnimationPlayer
+@onready var anim_tree: AnimationTree = $Model/AnimationTree
 
 @export var player_id: int = 1
 @export var player_name: String = ""
@@ -125,7 +126,7 @@ func _ready() -> void:
 	voip.name = "VOIP"
 	add_child(voip)
 	
-	animations = PlayerAnimationManager.new(self, anim_player)
+	animations = PlayerAnimationManager.new(self, anim_player, anim_tree)
 	animations.name = "Animations"
 	add_child(animations)
 
@@ -287,11 +288,30 @@ func server_request_use_item_rpc() -> void:
 	if item_stack:
 		var data = ItemService.get_item(item_stack.id)
 		if data:
-			var anim_name = data.use_animation
-			if not anim_name.contains("/"): anim_name = "general/" + anim_name
-			play_general_animation.rpc(anim_name)
+			# If it's a weapon, we let the combat component handle animations
+			if data.type != ItemData.Type.WEAPON:
+				var anim_name = data.use_animation
+				if not anim_name.contains("/"): anim_name = "general/" + anim_name
+				play_general_animation.rpc(anim_name)
 	
 	# Specific item logic
+	if item_stack:
+		var data = ItemService.get_item(item_stack.id)
+		if data and data.type == ItemData.Type.CONSUMABLE:
+			# Healing Potion
+			if data.stats.has("heal_amount"):
+				current_health += data.stats["heal_amount"]
+				current_health = min(current_health, max_health)
+				print("[Player] Healed for: ", data.stats["heal_amount"], " New Health: ", current_health)
+			
+			# Consume item
+			item_stack.quantity -= 1
+			if item_stack.quantity <= 0:
+				inventory.hotbar[active_slot_index] = null
+			
+			# Force inventory sync to PocketBase and Clients
+			InventoryService._sync_and_emit(self)
+
 	var hand = get_node_or_null("Model/%HandPoint")
 	var held_item = hand.get_child(0) if hand and hand.get_child_count() > 0 else null
 	if held_item and held_item.has_method("use"):
@@ -335,8 +355,8 @@ func _physics_process(delta: float) -> void:
 		refresh_held_item()
 
 	if is_dead:
-		if anim_player and anim_player.current_animation != "general/Death_A":
-			anim_player.play("general/Death_A")
+		if anim_player and anim_player.current_animation != "Death01":
+			anim_player.play("Death01")
 		return
 
 	$VoiceIndicator.visible = voip.process_voip(delta)
@@ -469,7 +489,7 @@ func _on_death() -> void:
 	# InventoryService now handles the logic for a specific player's data
 	InventoryService.handle_death_for_player(self)
 	
-	play_general_animation.rpc("general/Death_A")
+	play_general_animation.rpc("Death01")
 	await get_tree().create_timer(1.5).timeout
 	if NetworkService.current_role == NetworkService.Role.DUNGEON_SERVER:
 		_trigger_extraction_fail()

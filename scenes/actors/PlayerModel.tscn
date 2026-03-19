@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://ccpo010vxd7jr"]
+
+[ext_resource type="PackedScene" uid="uid://cic8cx0uismv5" path="res://assets/kay_character/model/heroes/Characters/char.glb" id="1_3jdjx"]
+
+[node name="PlayerModel" type="Node3D" unique_id=120145502]
+
+[node name="char" parent="." unique_id=1265612454 instance=ExtResource("1_3jdjx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.02616787, 0, 0.008022785)

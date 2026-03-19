@@ -10,15 +10,23 @@ func _init(_player: CharacterBody3D) -> void:
 
 func request_attack(damage: float, range: float) -> void:
 	if not player.is_multiplayer_authority() and not NetworkService.is_server(): return
+
 	player.play_attack_animation.rpc()
-	# Call the RPC on this node
-	rpc_id(1, "_perform_attack_rpc", damage, range)
+
+	if NetworkService.is_server():
+		_perform_attack_rpc(damage, range)
+	else:
+		# Call the RPC on this node
+		rpc_id(1, "_perform_attack_rpc", damage, range)
 
 @rpc("any_peer", "call_remote", "reliable")
 func _perform_attack_rpc(damage: float, range: float) -> void:
 	if not NetworkService.is_server() or not is_instance_valid(player): return
+
 	var sender_id = multiplayer.get_remote_sender_id()
-	if sender_id != player.player_id: return
+	# sender_id is 0 for local calls, which is valid on the server
+	if sender_id != 0 and sender_id != player.player_id: return
+
 	
 	# Cleave System: Use a sphere check in front of the player
 	var space_state = player.get_world_3d().direct_space_state

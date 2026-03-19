@@ -19,6 +19,10 @@ func handle_movement(delta: float, input_dir: Vector2) -> Vector3:
 	var camera_pivot = player.get_node_or_null("CameraPivot")
 	var model = player.get_node_or_null("Model")
 	
+	var current_speed = speed
+	if player.animations and player.animations.is_attacking():
+		current_speed *= 0.25 # Reduce speed by 75%
+	
 	if input_dir.length() > 0.1:
 		# Calculate direction relative to CameraPivot's horizontal rotation only
 		var cam_basis = camera_pivot.global_transform.basis if camera_pivot else player.global_transform.basis
@@ -40,12 +44,12 @@ func handle_movement(delta: float, input_dir: Vector2) -> Vector3:
 			var target_angle = atan2(-direction.x, -direction.z) + PI
 			model.rotation.y = lerp_angle(model.rotation.y, target_angle, rotation_speed * delta)
 		
-		velocity.x = direction.x * speed
-		velocity.z = direction.z * speed
+		velocity.x = direction.x * current_speed
+		velocity.z = direction.z * current_speed
 	else:
 		# Friction/Braking
-		velocity.x = move_toward(velocity.x, 0, speed * 10 * delta)
-		velocity.z = move_toward(velocity.z, 0, speed * 10 * delta)
+		velocity.x = move_toward(velocity.x, 0, current_speed * 10 * delta)
+		velocity.z = move_toward(velocity.z, 0, current_speed * 10 * delta)
 
 	# Gravity & Jump
 	if player.is_on_floor():
@@ -58,5 +62,7 @@ func handle_movement(delta: float, input_dir: Vector2) -> Vector3:
 	if coyote_timer > 0.0 and Input.is_action_just_pressed("jump"):
 		velocity.y = jump_velocity
 		coyote_timer = 0.0
+		if player.animations:
+			player.animations.play_jump()
 
 	return velocity

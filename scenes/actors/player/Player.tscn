@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://bwt2p480e8hcy" path="res://scenes/actors/player/player_camera.gd" id="1_iugxn"]
 [ext_resource type="Script" uid="uid://b4tnuu40au7c5" path="res://scenes/actors/player/player_controller.gd" id="3_imb2f"]
-[ext_resource type="PackedScene" uid="uid://xyoy4v01ig8q" path="res://scenes/actors/player/Model.tscn" id="4_imb2f"]
+[ext_resource type="PackedScene" uid="uid://bfqm17s3p1i4t" path="res://scenes/actors/player/Model.tscn" id="4_imb2f"]
 [ext_resource type="PackedScene" path="res://ui/inventory/InventoryUI.tscn" id="4_inv_ui"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_u84y5"]
@@ -53,6 +53,21 @@ bg_color = Color(0.88100183, 0.1337547, 0.28620315, 1)
 
 [node name="Player" type="CharacterBody3D" unique_id=166909891]
 script = ExtResource("3_imb2f")
+interpolation_speed = null
+sync_position = null
+sync_rotation = null
+sync_camera_rotation_y = null
+sync_pivot_rotation = null
+sync_is_on_floor = null
+player_id = null
+player_name = null
+display_name = null
+name_color = null
+max_health = null
+current_health = null
+shared_velocity = null
+active_slot_index = null
+use_item_state = null
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1985360130]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0469314, 0)
@@ -87,7 +102,6 @@ replication_config = SubResource("SceneReplicationConfig_7otbr")
 [node name="StateSynchronizer" type="MultiplayerSynchronizer" parent="." unique_id=599270975]
 replication_config = SubResource("SceneReplicationConfig_state")
 
-
 [node name="GUILayer" type="CanvasLayer" parent="." unique_id=341093036]
 
 [node name="InventoryUI" parent="GUILayer" unique_id=147839645 instance=ExtResource("4_inv_ui")]
@@ -101,11 +115,11 @@ theme_override_styles/fill = SubResource("StyleBoxFlat_imb2f")
 value = 100.0
 show_percentage = false
 
-[node name="Model" parent="." unique_id=2112750636 instance=ExtResource("4_imb2f")]
+[node name="Model" parent="." unique_id=12152839 instance=ExtResource("4_imb2f")]
 
 [node name="RayCast3D" type="RayCast3D" parent="Model" unique_id=1540116977]
 unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0.8934789, 0.35326314)
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0.6298902, 0)
 target_position = Vector3(0, -2, 0)
 debug_shape_custom_color = Color(1, 0.057987146, 0.30235982, 1)
 debug_shape_thickness = 4
