@@ -28,6 +28,8 @@ func _ready() -> void:
 	
 	if NetworkService.is_server():
 		auth_system_server()
+		
+	EventBus.session_ended.connect(reset_session)
 
 ## Authenticate the Server as a System User
 func auth_system_server() -> void:
@@ -62,6 +64,15 @@ func auth_system_server() -> void:
 				PocketBaseRPCManager.server_auth_complete.emit(false)
 	)
 
+## Core wrapper for constructing and queueing asynchronous PBHTTPRequest objects.
+## Automates headers, JSON stringification, and callback hooking.
+##
+## @param url: Total destination URL.
+## @param method: HTTPClient Method constant.
+## @param body_dict: Dictionary to serialize into JSON.
+## @param callback: The Callable to execute on completion.
+## @param custom_headers: (Optional) Array of extra strings.
+## @param requester_id: (Optional) Associated peer ID to track asynchronous origin.
 func _send_request(url: String, method: int, body_dict: Dictionary, callback: Callable, custom_headers: Array = [], requester_id: int = 1) -> void:
 	var headers = ["Content-Type: application/json"]
 	headers.append_array(custom_headers)
@@ -118,6 +129,8 @@ func login(identity: String, password: String, requester_id: int = 1) -> void:
 			_cleanup_pending(requester_id)
 	)
 
+## Token-based authentication endpoint wrapper.
+## Attempts to refresh the provided JWT and fetch player profiles on success.
 func login_with_token(token: String, requester_id: int = 1) -> void:
 	var url = base_url + "/api/collections/users/auth-refresh"
 	var headers = ["Authorization: Bearer " + token]
@@ -151,9 +164,11 @@ func _get_player_record(user_id: String, token: String, requester_id: int) -> vo
 			_cleanup_pending(requester_id)
 	)
 
+## Helper to issue a raw creation POST request to an arbitrary collection.
 func create_record(collection: String, data: Dictionary, requester_id: int = 1) -> void:
 	_make_request(collection, HTTPClient.METHOD_POST, data, "", requester_id)
 
+## Helper to issue a raw modification PATCH request against an arbitrary collection.
 func update_record(collection: String, id: String, data: Dictionary, requester_id: int = 1) -> void:
 	_make_request(collection, HTTPClient.METHOD_PATCH, data, "/" + id, requester_id)
 
@@ -199,6 +214,7 @@ func _finalize_login(requester_id: int, data: Dictionary) -> void:
 	_cleanup_pending(requester_id)
 	PocketBaseRPCManager.relay_login_success(requester_id, data)
 
+## Triggers clearance of sensitive memory properties via EventBus bindings on logout.
 func reset_session() -> void:
 	current_player_id = ""
 	current_player_name = ""

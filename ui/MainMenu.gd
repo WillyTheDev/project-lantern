@@ -32,9 +32,9 @@ func _ready() -> void:
 	NetworkService.multiplayer.connected_to_server.connect(_on_connected)
 	NetworkService.multiplayer.connection_failed.connect(_on_failed)
 	
-	# Listen for Auth results via SessionService
-	SessionService.session_started.connect(_on_auth_success)
-	SessionService.auth_failed.connect(_on_auth_failed)
+	# Listen for Auth results via EventBus
+	EventBus.session_started.connect(_on_auth_success)
+	EventBus.auth_failed.connect(_on_auth_failed)
 
 func _on_join_pressed() -> void:
 	var username = username_input.text.strip_edges()

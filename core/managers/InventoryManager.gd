@@ -4,6 +4,10 @@ extends Object
 ## InventoryManager (Manager)
 ## Stateless implementation of inventory rules and calculations.
 
+## Calculates the player's total cumulative stats by summing base values and equipped armor modifiers.
+##
+## @param player: The player node to analyze.
+## @return: A dictionary containing the final calculated stat values.
 static func recalculate_stats(player: Node3D) -> Dictionary:
 	var total_stats = {
 		"agility": player.stats.agility,
@@ -25,6 +29,14 @@ static func recalculate_stats(player: Node3D) -> Dictionary:
 	total_stats["max_health"] = 100.0 + (total_stats["stamina"] - 10) * 10.0
 	return total_stats
 
+## Attempts to insert a new item or stack into the player's hotbar or bag inventories.
+##
+## @param hotbar: The active hotbar array reference.
+## @param bag: The active bag array reference.
+## @param item_id: The string ID of the item definition.
+## @param quantity: The amount to add.
+## @param stackable: Whether this item is allowed to merge with existing stacks.
+## @return: True if the item was successfully accommodated, False if no space remains.
 static func add_item_to_arrays(hotbar: Array[ItemStackData], bag: Array[ItemStackData], item_id: String, quantity: int, stackable: bool) -> bool:
 	if _add_to_array(hotbar, item_id, quantity, stackable):
 		return true
@@ -32,6 +44,7 @@ static func add_item_to_arrays(hotbar: Array[ItemStackData], bag: Array[ItemStac
 		return true
 	return false
 
+## Internal helper that seeks an empty or stackable slot within a target inventory array.
 static func _add_to_array(arr: Array[ItemStackData], item_id: String, quantity: int, stackable: bool) -> bool:
 	if stackable:
 		for item in arr:
@@ -45,6 +58,13 @@ static func _add_to_array(arr: Array[ItemStackData], item_id: String, quantity: 
 			return true
 	return false
 
+## Swaps or moves an item between two array indices.
+## Handles automatic type conversion between internal `ItemStackData` objects and serialized external `Dictionary` forms.
+##
+## @param from_arr: The source array.
+## @param from_idx: The integer index of the originating slot.
+## @param to_arr: The destination array.
+## @param to_idx: The integer index of the destination slot.
 static func move_item(from_arr: Array, from_idx: int, to_arr: Array, to_idx: int) -> void:
 	var item_to_move = from_arr[from_idx]
 	var item_at_dest = to_arr[to_idx]

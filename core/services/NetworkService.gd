@@ -39,7 +39,11 @@ func _ready() -> void:
 		# Clients listen for connection to hide loading screen
 		multiplayer.connected_to_server.connect(_on_connected_ok)
 		multiplayer.connection_failed.connect(_on_connected_fail)
+		
+	EventBus.session_ended.connect(reset)
 
+## Called securely after the root players node exists to configure the global MultiplayerSpawner.
+## Registers the spawnable player and entity scenes for network replication.
 func _setup_spawner_deferred() -> void:
 	# Use the absolute path to ensure deterministic resolution across all peers
 	player_spawner.spawn_path = players_root.get_path()
@@ -52,6 +56,11 @@ func _setup_spawner_deferred() -> void:
 	
 	print("[NetworkService] Global Spawner initialized at: ", player_spawner.spawn_path)
 
+## Global custom spawn function used by the MultiplayerSpawner.
+## Interprets the incoming spawn data payload to instantiate players or enemies dynamically.
+##
+## @param data: Dictionary containing spawn instruction variables (e.g., type, peer_id, pos).
+## @return: The instantiated Node3D ready to be added to the scene tree.
 func _global_custom_spawn(data: Dictionary) -> Node:
 	# This is a fallback/global spawn function. 
 	var type = data.get("type", "player")
@@ -93,6 +102,8 @@ func _global_custom_spawn(data: Dictionary) -> Node:
 			node.sync_position = pos
 	return node
 
+## Callback fired when the client successfully establishes a low-level DTLS connection to the target server.
+## Transitions internal states and triggers token-based auto-login if a shard switch was pending.
 func _on_connected_ok():
 	print("[NetworkService] Connected to server successfully (DTLS).")
 	is_switching_server = false
@@ -110,6 +121,8 @@ func _on_connected_ok():
 			print("[NetworkService] Shard switch detected, but no credentials available. Aborting auto-login.")
 		SceneService.is_switching_shard = false
 
+## Callback fired when the client fails to establish a connection to the target server.
+## Hides the loading screen and falls back to the Main Menu.
 func _on_connected_fail():
 	print("[NetworkService] Failed to connect to server.")
 	SceneService.show_loading_screen(false)
@@ -122,6 +135,7 @@ func _on_connected_fail():
 	# Standard connection fail: return to main menu
 	SceneService._load_scene(SceneService.MENU_SCENE)
 
+## Reads OS command line arguments (e.g., `--hub`, `--dungeon`) to determine the binary's execution role.
 func _parse_arguments() -> void:
 	var args = OS.get_cmdline_user_args()
 	
@@ -137,6 +151,7 @@ func _parse_arguments() -> void:
 		current_role = Role.CLIENT
 		print("[NetworkService] Role: CLIENT")
 
+## Initializes an ENet server listening on the designated port and sets up DTLS encryption.
 func start_server() -> void:
 	var peer = ENetMultiplayerPeer.new()
 	var err = peer.create_server(server_port, 32)
@@ -154,6 +169,10 @@ func start_server() -> void:
 	multiplayer.peer_connected.connect(_on_peer_connected)
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
 
+## Initiates a client-side connection attempt to a specific server address and port using DTLS.
+##
+## @param address: The target IPv4 or domain address.
+## @param port: The target port.
 func join_server(address: String, port: int) -> void:
 	var peer = ENetMultiplayerPeer.new()
 	var err = peer.create_client(address, port)
@@ -167,6 +186,9 @@ func join_server(address: String, port: int) -> void:
 	
 	multiplayer.multiplayer_peer = peer
 
+## Convenience method to check if the current instance is running as a network authority server.
+##
+## @return: True if this binary is a Hub or Dungeon server handling clients.
 func is_server() -> bool:
 	return multiplayer.has_multiplayer_peer() and multiplayer.is_server()
 
@@ -176,6 +198,10 @@ func _on_peer_connected(id: int) -> void:
 func _on_peer_disconnected(id: int) -> void:
 	print("[NetworkService] Peer disconnected: ", id)
 
+## Clears the current server connection and connects to a new target server (Shard Handoff).
+##
+## @param address: The new server IPv4 or domain address.
+## @param port: The new server port.
 func switch_server(address: String, port: int) -> void:
 	print("[NetworkService] Switching to server: ", address, ":", port)
 	
@@ -189,6 +215,7 @@ func switch_server(address: String, port: int) -> void:
 	await get_tree().create_timer(0.2).timeout
 	join_server(address, port)
 
+## Hard-resets the entire networking state. Disconnects peers, cleans up tracked nodes, and removes player instances.
 func reset() -> void:
 	print("[NetworkService] Resetting network state.")
 	

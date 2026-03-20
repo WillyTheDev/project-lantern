@@ -8,6 +8,11 @@ var player: CharacterBody3D
 func _init(_player: CharacterBody3D) -> void:
 	player = _player
 
+## Client-side request to perform an attack.
+## Validates authority, triggers local animations, and forwards the request to the server via RPC.
+## 
+## @param damage: The base damage value of the current weapon or attack.
+## @param range: The maximum forward distance of the attack's hitbox.
 func request_attack(damage: float, range: float) -> void:
 	if not player.is_multiplayer_authority() and not NetworkService.is_server(): return
 
@@ -28,6 +33,11 @@ func request_attack(damage: float, range: float) -> void:
 		# Call the RPC on this node
 		rpc_id(1, "_perform_attack_rpc", damage, range)
 
+## Server-Authoritative RPC that executes the attack logic, calculates area-of-effect (cleave), 
+## and applies damage/knockback to valid targets using a physics sphere sweep.
+## 
+## @param damage: The calculated damage to apply to hit targets.
+## @param range: The radius of the physics shape cast in front of the player.
 @rpc("any_peer", "call_remote", "reliable")
 func _perform_attack_rpc(damage: float, range: float) -> void:
 	if not NetworkService.is_server() or not is_instance_valid(player): return

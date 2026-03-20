@@ -22,6 +22,7 @@ driver/mix_rate=48000
 
 [autoload]
 
+EventBus="*res://core/helpers/EventBus.gd"
 PocketBaseRESTManager="*res://core/managers/PocketBaseRESTManager.gd"
 PocketBaseRPCManager="*res://core/managers/PocketBaseRPCManager.gd"
 SessionService="*res://core/services/SessionService.gd"

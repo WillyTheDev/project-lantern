@@ -40,6 +40,12 @@ func _on_server_auth_complete(success: bool) -> void:
 
 # --- Client Facing Methods ---
 
+## Client-side request to log into the game.
+## If called on the server, executes the REST call directly.
+## If on a client, forwards the request via RPC to the server.
+##
+## @param username: The identity (email/username) string.
+## @param password: The plain-text password.
 func request_login(username: String, password: String) -> void:
 	if username == "" or password == "":
 		print("[PocketBaseRPCManager] ABORT: Attempted login with empty credentials.")
@@ -52,6 +58,10 @@ func request_login(username: String, password: String) -> void:
 	else:
 		printerr("[PocketBaseRPCManager] ABORT: Cannot request login, no multiplayer peer assigned.")
 
+## Client-side request to log in using a cached JWT token.
+## Bypasses password entry for seamless shard transitions.
+##
+## @param token: The valid JWT string.
 func request_login_with_token(token: String) -> void:
 	if token == "":
 		print("[PocketBaseRPCManager] ABORT: Attempted token login with empty token.")
@@ -65,6 +75,11 @@ func request_login_with_token(token: String) -> void:
 	else:
 		printerr("[PocketBaseRPCManager] ABORT: Cannot request token login, no multiplayer peer assigned.")
 
+## Client-side request to sync the player's local inventory dictionary to PocketBase.
+##
+## @param player_db_id: The unique ID string of the player record.
+## @param inventory: The serialized dictionary of the inventory resource.
+## @param requester_id: Internal network peer ID.
 func request_sync_inventory(player_db_id: String, inventory: Dictionary, requester_id: int = 1) -> void:
 	if player_db_id == "": 
 		printerr("[PocketBaseRPCManager] FAILED: Attempted to sync inventory with empty player_db_id (peer: ", requester_id, ")")
@@ -82,6 +97,11 @@ func request_sync_inventory(player_db_id: String, inventory: Dictionary, request
 	else:
 		printerr("[PocketBaseRPCManager] ABORT: Cannot request sync, no multiplayer peer assigned.")
 
+## Client-side request to register a new user account.
+##
+## @param username: The desired display name.
+## @param email: User email address.
+## @param password: The plain-text password.
 func request_register(username: String, email: String, password: String) -> void:
 	if username == "" or email == "" or password == "":
 		print("[PocketBaseRPCManager] ABORT: Attempted registration with empty credentials.")
@@ -165,6 +185,8 @@ func fulfill_login_failure(reason: String) -> void:
 
 # --- Server Internal ---
 
+## Server-side helper to broadcast a successful login back to the requesting client.
+## Synchronizes the `players` group node on the server if present.
 func relay_login_success(peer_id: int, data: Dictionary) -> void:
 	server_player_login_completed.emit(peer_id, data)
 	
@@ -177,6 +199,8 @@ func relay_login_success(peer_id: int, data: Dictionary) -> void:
 	if peer_id == 1: fulfill_login(data)
 	else: rpc_id(peer_id, "fulfill_login", data)
 
+## Server-side helper to broadcast a successful inventory sync patch back to the requesting client.
+## Triggers held-item visual refreshes on the server representation.
 func relay_update_success(peer_id: int, data: Dictionary) -> void:
 	# Update the server-side player node's inventory
 	if NetworkService.is_server():

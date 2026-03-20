@@ -22,6 +22,7 @@ func _ready() -> void:
 	PocketBaseRPCManager.player_data_sync_failed.connect(_on_critical_failure)
 	NetworkService.multiplayer.connection_failed.connect(func(): _on_critical_failure("Connection failed"))
 	NetworkService.multiplayer.server_disconnected.connect(func(): _on_critical_failure("Server disconnected"))
+	EventBus.session_ended.connect(reset_credentials)
 
 	match NetworkService.current_role:
 		NetworkService.Role.HUB_SERVER:
@@ -31,11 +32,21 @@ func _ready() -> void:
 		NetworkService.Role.CLIENT:
 			_load_scene.call_deferred(MENU_SCENE)
 
+## Internal callback triggered when a critical connection failure occurs (e.g., server disconnect).
+## Dismisses the loading screen if active.
+##
+## @param _reason: The error message or reason for the failure.
 func _on_critical_failure(_reason: String) -> void:
 	if loading_screen_instance:
 		print("[SceneService] Critical failure detected while loading screen active. Hiding.")
 		show_loading_screen(false)
 
+## Asynchronously loads a new scene using ResourceLoader in a background thread.
+## Can also cache user credentials if provided during the initial Hub login.
+##
+## @param path: The absolute `res://` path to the `.tscn` file.
+## @param username: (Optional) The username to cache for handoffs.
+## @param password: (Optional) The password to cache for handoffs.
 func _load_scene(path: String, username: String = "", password: String = "") -> void:
 	if not is_inside_tree(): return
 	var tree = get_tree()
@@ -98,6 +109,8 @@ func _load_scene(path: String, username: String = "", password: String = "") -> 
 
 		await tree.process_frame
 
+## Coroutine that waits for the low-level ENet connection to establish, then requests
+## re-authentication via the SessionService using cached credentials or tokens.
 func _wait_and_reauth() -> void:
 	print("[SceneService] Post-transition: Waiting for connection before session synchronization.")
 	update_status("Connecting to Server...")
@@ -116,6 +129,7 @@ func _wait_and_reauth() -> void:
 	elif cached_username != "" and cached_password != "":
 		SessionService.login(cached_username, cached_password)
 
+## Clears the persistent credential cache used for shard handoffs.
 func reset_credentials() -> void:
 	cached_username = ""
 	cached_password = ""
@@ -123,6 +137,10 @@ func reset_credentials() -> void:
 	is_switching_shard = false
 	print("[SceneService] Credential cache cleared.")
 
+## Instantiates and displays the global Loading Screen UI over the current scene.
+##
+## @param show: Whether to show or hide the loading screen.
+## @param initial_status: The text to display immediately on showing.
 func show_loading_screen(show: bool, initial_status: String = "Loading...") -> void:
 	if show:
 		if not loading_screen_instance:
@@ -143,6 +161,9 @@ func show_loading_screen(show: bool, initial_status: String = "Loading...") -> v
 			loading_screen_instance = null
 			print("[SceneService] Loading screen removal initiated (fade out).")
 
+## Updates the progress text on the active loading screen instance.
+##
+## @param text: The status string to display (e.g., "Downloading Map...").
 func update_status(text: String) -> void:
 	if loading_screen_instance and loading_screen_instance.has_method("set_status"):
 		loading_screen_instance.set_status(text)

@@ -21,15 +21,19 @@ var player_ref: Node3D = null
 
 func _ready() -> void:
 	_setup_slots()
-	# Global service signals
-	InventoryService.external_inventory_updated.connect(_on_external_inventory_updated)
-	InventoryService.total_stats_updated.connect(_on_total_stats_updated)
+	# Global service signals via EventBus
+	EventBus.external_inventory_updated.connect(_on_external_inventory_updated)
+	EventBus.total_stats_updated.connect(_on_total_stats_updated)
 	
 	inventory_overlay.visible = false
 	external_section.visible = false
 	hotbar_hud.visible = true
 	visible = false
 
+## Binds the UI signals to a specific player instance (usually the local authority player).
+## Attaches callbacks for inventory modification and stat changes.
+##
+## @param player: The local Player node instance.
 func initialize_for_player(player: Node3D) -> void:
 	if player_ref:
 		player_ref.inventory.inventory_updated.disconnect(refresh)
@@ -52,6 +56,7 @@ func _on_total_stats_updated(_total_stats: Dictionary) -> void:
 	if not is_local_authority: return
 	_update_stats_label()
 
+## Calculates text formatting and updates the visual UI labels for player stats.
 func _update_stats_label() -> void:
 	if not player_ref: return
 	var stats = player_ref.stats
@@ -86,6 +91,9 @@ func _on_external_inventory_updated() -> void:
 		for child in external_grid.get_children(): child.queue_free()
 	refresh()
 
+## Dynamically instantiates UI slots for external container interfaces based on the container size.
+##
+## @param count: The number of interaction slots available.
 func _setup_external_slots(count: int) -> void:
 	for child in external_grid.get_children(): child.queue_free()
 	external_slot_count = count
@@ -97,6 +105,7 @@ func _setup_external_slots(count: int) -> void:
 		slot.mouse_exited.connect(_on_slot_mouse_exited)
 		external_grid.add_child(slot)
 
+## Forces a full visual synchronization of all visible inventory slots based on the underlying player references.
 func refresh() -> void:
 	if not is_inside_tree() or not player_ref: return
 	var data = player_ref.inventory
@@ -136,6 +145,7 @@ func _on_active_slot_changed(index: int) -> void:
 		if slot.has_method("highlight"):
 			slot.highlight(i == index)
 
+## Instantiates and maps all persistent UI slots (hotbar, bag, armor) to memory and the screen.
 func _setup_slots() -> void:
 	for i in range(InventoryData.BAG_SIZE):
 		var slot = SLOT_SCENE.instantiate()
