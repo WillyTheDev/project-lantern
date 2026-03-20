@@ -1,13 +1,14 @@
 extends CharacterBody3D
+class_name PlayerController
 
 # --- COMPONENTS ---
 var movement: PlayerMovement
 var combat: PlayerCombat
 var interaction: PlayerInteraction
-var voip: PlayerVOIP
 var animations: PlayerAnimationManager
+var voip: PlayerVOIP
 
-@export var interpolation_speed = 15.0
+# --- NETWORK STATE ---
 @export var sync_position: Vector3
 @export var sync_rotation: float
 @export var sync_camera_rotation_y: float
@@ -50,6 +51,7 @@ var animations: PlayerAnimationManager
 				_on_death()
 
 @export var shared_velocity: Vector3 = Vector3.ZERO
+@export var is_rolling: bool = false
 var interact_ray: RayCast3D
 var is_dead: bool = false
 var knockback_velocity: Vector3 = Vector3.ZERO
@@ -134,6 +136,9 @@ func _ready() -> void:
 		_setup_local_player()
 	else:
 		_setup_remote_player()
+	
+	# Initial held item refresh
+	refresh_held_item()
 	
 	_update_nametag()
 	
@@ -251,7 +256,11 @@ func _input(event: InputEvent) -> void:
 		interaction.try_interact()
 		
 	if event.is_action_pressed("use_item"):
+		print("[Controller] 'use_item' Pressed")
 		_use_held_item()
+	elif event.is_action_released("use_item"):
+		print("[Controller] 'use_item' Released")
+		_stop_use_held_item()
 
 func request_slot_change(index: int) -> void:
 	# Client-side request to switch slots
@@ -272,6 +281,7 @@ func server_request_slot_change_rpc(index: int) -> void:
 
 func _use_held_item() -> void:
 	if is_multiplayer_authority():
+		print("[Controller] Requesting server USE")
 		server_request_use_item_rpc.rpc_id(1)
 
 @rpc("any_peer", "call_remote", "reliable")
@@ -288,11 +298,14 @@ func server_request_use_item_rpc() -> void:
 	if item_stack:
 		var data = ItemService.get_item(item_stack.id)
 		if data:
-			# If it's a weapon, we let the combat component handle animations
-			if data.type != ItemData.Type.WEAPON:
+			# If it's a weapon/bow/magic, we let the combat component handle animations
+			if data.type != ItemData.Type.WEAPON and data.type != ItemData.Type.RANGED and data.type != ItemData.Type.MAGIC:
 				var anim_name = data.use_animation
 				if not anim_name.contains("/"): anim_name = "general/" + anim_name
 				play_general_animation.rpc(anim_name)
+			else:
+				# Trigger combat animation
+				play_attack_animation.rpc(data.type)
 	
 	# Specific item logic
 	if item_stack:
@@ -317,13 +330,34 @@ func server_request_use_item_rpc() -> void:
 	if held_item and held_item.has_method("use"):
 		held_item.use()
 
+func _stop_use_held_item() -> void:
+	if is_multiplayer_authority():
+		print("[Controller] Requesting server STOP USE")
+		server_request_stop_use_item_rpc.rpc_id(1)
+
+@rpc("any_peer", "call_remote", "reliable")
+func server_request_stop_use_item_rpc() -> void:
+	if not NetworkService.is_server(): return
+	var sender_id = multiplayer.get_remote_sender_id()
+	if sender_id != player_id: return
+	
+	var item_stack = inventory.get_active_item()
+	if item_stack:
+		var data = ItemService.get_item(item_stack.id)
+		if data:
+			stop_attack_animation.rpc(data.type)
+
 @rpc("any_peer", "call_local", "reliable")
 func play_general_animation(anim_name: String, blend: float = 0.1):
 	animations.play_general(anim_name, blend)
 
 @rpc("any_peer", "call_local", "reliable")
-func play_attack_animation():
-	animations.play_melee_one_hand_attack()
+func play_attack_animation(item_type: int = ItemData.Type.WEAPON):
+	animations.play_attack(item_type)
+
+@rpc("any_peer", "call_local", "reliable")
+func stop_attack_animation(item_type: int):
+	animations.stop_attack(item_type)
 
 func _toggle_settings_menu() -> void:
 	var settings_scene = preload("res://ui/SettingsMenu.tscn")
@@ -428,6 +462,8 @@ func request_attack(damage: float, range: float) -> void:
 
 func take_damage(amount: float) -> void:
 	if not NetworkService.is_server(): return
+	if is_rolling: return # Invulnerable during roll
+	
 	# DIRECT modification on server.
 	current_health -= amount
 	# Trigger visual effects on all clients

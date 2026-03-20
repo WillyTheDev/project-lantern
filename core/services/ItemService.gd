@@ -35,6 +35,26 @@ func _register_items() -> void:
 	sword.stackable = false
 	_add_item(sword)
 
+	var bow = ItemData.new()
+	bow.id = "wooden_bow"
+	bow.name = "Wooden Bow"
+	bow.description = "A simple bow. Hold Left-click to aim, release to shoot."
+	bow.type = ItemData.Type.RANGED
+	bow.item_icon_texture = default_icon
+	bow.item_scene = load("res://scenes/items/weapons/WoodenBow.tscn")
+	bow.stackable = false
+	_add_item(bow)
+
+	var staff = ItemData.new()
+	staff.id = "magic_staff"
+	staff.name = "Magic Staff"
+	staff.description = "A mysterious staff. Hold Left-click to charge a spell."
+	staff.type = ItemData.Type.MAGIC
+	staff.item_icon_texture = default_icon
+	staff.item_scene = load("res://scenes/items/weapons/MagicStaff.tscn")
+	staff.stackable = false
+	_add_item(staff)
+
 	# --- ARMOR ---
 	var helm = ItemData.new()
 	helm.id = "leather_cap"

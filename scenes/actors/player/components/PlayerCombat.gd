@@ -11,7 +11,16 @@ func _init(_player: CharacterBody3D) -> void:
 func request_attack(damage: float, range: float) -> void:
 	if not player.is_multiplayer_authority() and not NetworkService.is_server(): return
 
-	player.play_attack_animation.rpc()
+	# Determine weapon type for animation
+	var item_type = ItemData.Type.WEAPON
+	if player.inventory:
+		var item = player.inventory.get_active_item()
+		if item:
+			var data = ItemService.get_item(item.id)
+			if data:
+				item_type = data.type
+
+	player.play_attack_animation.rpc(item_type)
 
 	if NetworkService.is_server():
 		_perform_attack_rpc(damage, range)

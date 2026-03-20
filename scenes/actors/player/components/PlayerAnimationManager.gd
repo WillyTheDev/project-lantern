@@ -23,17 +23,26 @@ func update_animations(shared_velocity: Vector3) -> void:
 		_fallback_manual_animations(shared_velocity)
 		return
 	
-	# --- REACTIVE COMBO LOGIC ---
-	# This part resets the 'wants_to_attack' flag inside the AnimationTree
 	var current_root = playback.get_current_node()
+	
+	# --- ATTACK STATE RESETS ---
 	if current_root == "SwordAttack":
+		anim_tree.set("parameters/conditions/wants_to_sword", false)
 		var combo_playback = anim_tree.get("parameters/SwordAttack/playback")
 		if combo_playback:
 			var current_swing = combo_playback.get_current_node()
 			if current_swing != last_node:
-				# Reset the condition so the player has to click again for the next part
-				anim_tree.set("parameters/SwordAttack/conditions/wants_to_attack", false)
+				anim_tree.set("parameters/SwordAttack/conditions/wants_to_sword", false)
 				last_node = current_swing
+	elif current_root == "BowAttack":
+		anim_tree.set("parameters/conditions/wants_to_bow", false)
+		last_node = current_root
+	elif current_root == "MagicSpell":
+		anim_tree.set("parameters/conditions/wants_to_magic", false)
+		last_node = current_root
+	elif current_root == "Roll":
+		anim_tree.set("parameters/conditions/roll", false)
+		last_node = current_root
 	else:
 		last_node = current_root
 
@@ -50,14 +59,14 @@ func update_animations(shared_velocity: Vector3) -> void:
 	anim_tree.set("parameters/conditions/is_air", not is_on_floor)
 	anim_tree.set("parameters/conditions/is_on_floor", is_on_floor)
 	
-	# Locomotion machine (inside)
+	# Locomotion machine
 	anim_tree.set("parameters/Locomotion/conditions/is_moving", is_on_floor and is_moving)
 	anim_tree.set("parameters/Locomotion/conditions/is_idle", is_on_floor and not is_moving)
 	
-	# Jump machine (inside)
+	# Jump machine
 	anim_tree.set("parameters/Jump/conditions/is_on_floor", is_on_floor)
 	
-	# AUTOMATIC FALL TRIGGER
+	# AUTOMATIC TRIGGERS
 	if was_on_floor and not is_on_floor:
 		playback.travel("Jump")
 	
@@ -69,17 +78,52 @@ func play_jump():
 
 func play_roll():
 	if playback:
+		anim_tree.set("parameters/conditions/roll", true)
 		playback.travel("Roll")
 
-func play_attack():
+func play_attack(item_type: int):
 	if not anim_tree or not playback: return
 	
-	# Simply set the condition. The AnimationTree transitions will use this!
-	anim_tree.set("parameters/SwordAttack/conditions/wants_to_attack", true)
+	match item_type:
+		ItemData.Type.WEAPON: # Sword
+			anim_tree.set("parameters/conditions/wants_to_sword", true)
+			anim_tree.set("parameters/SwordAttack/conditions/wants_to_sword", true)
+			if playback.get_current_node() == "Locomotion":
+				playback.travel("SwordAttack")
+				
+		ItemData.Type.RANGED: # Bow
+			# Reset release flag so we can Aim
+			anim_tree.set("parameters/BowAttack/conditions/on_release", false)
+			anim_tree.set("parameters/conditions/on_release", false)
+			anim_tree.set("parameters/conditions/wants_to_bow", true)
+			if playback.get_current_node() == "Locomotion":
+				playback.travel("BowAttack")
+			
+		ItemData.Type.MAGIC: # Spell
+			# Reset release flag so we can Charge
+			anim_tree.set("parameters/MagicSpell/conditions/on_release", false)
+			anim_tree.set("parameters/conditions/on_release", false)
+			anim_tree.set("parameters/conditions/wants_to_magic", true)
+			if playback.get_current_node() == "Locomotion":
+				playback.travel("MagicSpell")
+
+func stop_attack(item_type: int):
+	if not anim_tree: return
 	
-	# If we aren't in the attack state machine yet, enter it.
-	if playback.get_current_node() != "SwordAttack":
-		playback.travel("SwordAttack")
+	match item_type:
+		ItemData.Type.RANGED:
+			print("[DEBUG] RELEASE BOW - Setting on_release to true")
+			anim_tree.set("parameters/BowAttack/conditions/on_release", true)
+			anim_tree.set("parameters/conditions/on_release", true)
+			anim_tree["parameters/BowAttack/conditions/on_release"] = true
+			anim_tree.set("parameters/conditions/wants_to_bow", false)
+			
+		ItemData.Type.MAGIC:
+			print("[DEBUG] RELEASE MAGIC - Setting on_release to true")
+			anim_tree.set("parameters/MagicSpell/conditions/on_release", true)
+			anim_tree.set("parameters/conditions/on_release", true)
+			anim_tree["parameters/MagicSpell/conditions/on_release"] = true
+			anim_tree.set("parameters/conditions/wants_to_magic", false)
 
 func play_general(anim_name: String, _blend: float = 0.1):
 	if playback and anim_tree:
@@ -94,12 +138,12 @@ func play_general(anim_name: String, _blend: float = 0.1):
 				anim_player.play(anim_name, _blend)
 
 func play_melee_one_hand_attack():
-	play_attack()
+	play_attack(ItemData.Type.WEAPON)
 
 func is_attacking() -> bool:
 	if playback:
 		var current = playback.get_current_node()
-		return current == "SwordAttack"
+		return current == "SwordAttack" or current == "BowAttack" or current == "MagicSpell" or current.to_lower().contains("attack")
 	return false
 
 func _fallback_manual_animations(shared_velocity: Vector3) -> void:

@@ -1,0 +1,17 @@
+[gd_scene format=3]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_bow"]
+top_radius = 0.02
+bottom_radius = 0.02
+height = 1.2
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wood"]
+albedo_color = Color(0.4, 0.26, 0.13, 1)
+roughness = 0.8
+
+[node name="WoodenBow" type="Node3D"]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CylinderMesh_bow")
+surface_material_override/0 = SubResource("StandardMaterial3D_wood")

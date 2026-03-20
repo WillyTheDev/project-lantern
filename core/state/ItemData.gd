@@ -1,7 +1,7 @@
 extends Resource
 class_name ItemData
 
-enum Type { WEAPON, ARMOR, CONSUMABLE, UTILITY, LOOT }
+enum Type { WEAPON, ARMOR, CONSUMABLE, UTILITY, LOOT, RANGED, MAGIC }
 enum ArmorSlot { NONE, HEAD, CHEST, LEGS, FEET }
 
 @export var id: String = ""

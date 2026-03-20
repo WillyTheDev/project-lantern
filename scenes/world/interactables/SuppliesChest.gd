@@ -15,8 +15,8 @@ func _ready() -> void:
 
 func _refill_chest() -> void:
 	items = []
-	var pool = ["lantern", "rusty_sword", "leather_cap"]
-	for i in range(3):
+	var pool = ["lantern", "rusty_sword", "leather_cap", "wooden_bow", "magic_staff"]
+	for i in range(pool.size()):
 		items.append({"id": pool[i], "quantity": 1})
 
 func interact(player: Node3D) -> void:
