@@ -53,7 +53,6 @@ bg_color = Color(0.88100183, 0.1337547, 0.28620315, 1)
 
 [node name="Player" type="CharacterBody3D" unique_id=166909891]
 script = ExtResource("3_imb2f")
-interpolation_speed = null
 sync_position = null
 sync_rotation = null
 sync_camera_rotation_y = null
@@ -114,6 +113,23 @@ size_flags_vertical = 4
 theme_override_styles/fill = SubResource("StyleBoxFlat_imb2f")
 value = 100.0
 show_percentage = false
+
+[node name="Crosshair" type="ColorRect" parent="GUILayer" unique_id=987654321]
+unique_name_in_owner = true
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -2.0
+offset_top = -2.0
+offset_right = 2.0
+offset_bottom = 2.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 0.8)
 
 [node name="Model" parent="." unique_id=12152839 instance=ExtResource("4_imb2f")]
 

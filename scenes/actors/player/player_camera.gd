@@ -7,6 +7,7 @@ const MOUSE_SENSIBILITY = 0.002
 
 var shake_intensity: float = 0.0
 var shake_duration: float = 0.0
+var target_h_offset: float = 0.0
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -22,12 +23,14 @@ func _process(delta: float) -> void:
 	
 	if shake_duration > 0:
 		shake_duration -= delta
-		h_offset = randf_range(-1, 1) * shake_intensity
+		h_offset = randf_range(-1, 1) * shake_intensity + target_h_offset
 		v_offset = randf_range(-1, 1) * shake_intensity
 		if shake_duration <= 0:
-			h_offset = 0
+			h_offset = target_h_offset
 			v_offset = 0
 			shake_intensity = 0
+	else:
+		h_offset = lerp(h_offset, target_h_offset, 10 * delta)
 
 func shake(intensity: float, duration: float) -> void:
 	shake_intensity = intensity

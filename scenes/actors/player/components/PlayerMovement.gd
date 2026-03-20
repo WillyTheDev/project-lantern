@@ -47,19 +47,32 @@ func handle_movement(delta: float, input_dir: Vector2) -> Vector3:
 
 	var current_speed = speed
 	if player.animations and player.animations.is_attacking():
-		current_speed *= 0.25 # Reduce speed by 75%
+		current_speed *= 0.4 # Reduce speed down when aiming
 	
-	if input_dir.length() > 0.1:
-		var cam_basis = camera_pivot.global_transform.basis if camera_pivot else player.global_transform.basis
-		var forward = -cam_basis.z
-		forward.y = 0
-		forward = forward.normalized()
-		var right = cam_basis.x
-		right.y = 0
-		right = right.normalized()
+	var cam_basis = camera_pivot.global_transform.basis if camera_pivot else player.global_transform.basis
+	var forward = -cam_basis.z
+	forward.y = 0
+	forward = forward.normalized()
+	var right = cam_basis.x
+	right.y = 0
+	right = right.normalized()
 
+	var is_aiming = false
+	if Input.is_action_pressed("use_item"):
+		if player.inventory:
+			var item = player.inventory.get_active_item()
+			if item:
+				var data = ItemService.get_item(item.id)
+				if data and (data.type == ItemData.Type.RANGED or data.type == ItemData.Type.MAGIC):
+					is_aiming = true
+
+	if is_aiming and model:
+		var target_angle = atan2(-forward.x, -forward.z) + PI
+		model.rotation.y = lerp_angle(model.rotation.y, target_angle, rotation_speed * delta)
+
+	if input_dir.length() > 0.1:
 		var direction = (forward * -input_dir.y + right * input_dir.x).normalized()
-		if model and direction != Vector3.ZERO:
+		if model and direction != Vector3.ZERO and not is_aiming:
 			var target_angle = atan2(-direction.x, -direction.z) + PI
 			model.rotation.y = lerp_angle(model.rotation.y, target_angle, rotation_speed * delta)
 		

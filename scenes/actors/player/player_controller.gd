@@ -73,6 +73,8 @@ const MOUSE_SENSIBILITY = 0.002
 			use_item_state = v
 			_sync_held_item_state()
 
+var _current_held_item_node: Node3D = null
+
 @rpc("any_peer", "call_remote", "reliable")
 func sync_inventory_to_clients(inventory_data: Dictionary, stash_data: Dictionary) -> void:
 	# Only allow the server to push these updates
@@ -193,22 +195,21 @@ func server_request_inventory_sync() -> void:
 		InventoryService._sync_and_emit(self)
 
 func _sync_held_item_state() -> void:
-	var hand = get_node_or_null("Model/%HandPoint")
-	if hand and hand.get_child_count() > 0:
-		var held_item = hand.get_child(0)
-		if held_item.has_method("sync_state"):
-			held_item.sync_state(use_item_state)
+	if is_instance_valid(_current_held_item_node):
+		if _current_held_item_node.has_method("sync_state"):
+			_current_held_item_node.sync_state(use_item_state)
 
 func refresh_held_item(_index: int = -1) -> void:
 	if not is_inside_tree(): return
-	var hand = get_node_or_null("Model/%HandPoint")
-	if not hand: return
 		
-	# Immediate removal of old children to prevent name conflicts
-	for child in hand.get_children():
-		child.name = "ToBeRemoved" # Rename to avoid conflict
-		hand.remove_child(child)
-		child.queue_free()
+	# Immediate removal of old equipped item to prevent conflicts
+	if is_instance_valid(_current_held_item_node):
+		_current_held_item_node.name = "ToBeRemoved"
+		var parent = _current_held_item_node.get_parent()
+		if parent:
+			parent.remove_child(_current_held_item_node)
+		_current_held_item_node.queue_free()
+		_current_held_item_node = null
 	
 	# Wait one frame for engine to settle
 	await get_tree().process_frame
@@ -226,9 +227,21 @@ func refresh_held_item(_index: int = -1) -> void:
 	if data and data.item_scene:
 		var instance = data.item_scene.instantiate()
 		instance.name = "HeldItem"
-		hand.add_child(instance)
-		# Initial state sync
-		_sync_held_item_state()
+		
+		var bone_name = data.get("attachment_bone") if "attachment_bone" in data and data.attachment_bone != "" else "SwordBoneAttachment"
+		# To get the bone, search the GeneralSkeleton
+		var skeleton = get_node_or_null("Model/rig_deform/GeneralSkeleton")
+		if skeleton:
+			var target_bone = skeleton.get_node_or_null(bone_name)
+			if target_bone:
+				# Attach slightly differently if the bone has a specific offset marker
+				if target_bone.get_child_count() > 0 and target_bone.get_child(0) is Marker3D:
+					target_bone.get_child(0).add_child(instance)
+				else:
+					target_bone.add_child(instance)
+				_current_held_item_node = instance
+				# Initial state sync
+				_sync_held_item_state()
 
 func _input(event: InputEvent) -> void:
 	if not is_multiplayer_authority(): return
@@ -325,14 +338,17 @@ func server_request_use_item_rpc() -> void:
 			# Force inventory sync to PocketBase and Clients
 			InventoryService._sync_and_emit(self)
 
-	var hand = get_node_or_null("Model/%HandPoint")
-	var held_item = hand.get_child(0) if hand and hand.get_child_count() > 0 else null
-	if held_item and held_item.has_method("use"):
-		held_item.use()
+	if is_instance_valid(_current_held_item_node) and _current_held_item_node.has_method("use"):
+		_current_held_item_node.use()
 
 func _stop_use_held_item() -> void:
 	if is_multiplayer_authority():
-		print("[Controller] Requesting server STOP USE")
+		if inventory:
+			var item_stack = inventory.get_active_item()
+			if item_stack:
+				var data = ItemService.get_item(item_stack.id)
+				if data and (data.type == ItemData.Type.RANGED or data.type == ItemData.Type.MAGIC):
+					combat.request_shoot(item_stack.id)
 		server_request_stop_use_item_rpc.rpc_id(1)
 
 @rpc("any_peer", "call_remote", "reliable")
@@ -397,6 +413,22 @@ func _physics_process(delta: float) -> void:
 
 	if is_multiplayer_authority():
 		rotation = Vector3.ZERO
+		
+		var is_aiming = false
+		if Input.is_action_pressed("use_item") and inventory:
+			var item = inventory.get_active_item()
+			if item:
+				var data = ItemService.get_item(item.id)
+				if data and (data.type == ItemData.Type.RANGED or data.type == ItemData.Type.MAGIC):
+					is_aiming = true
+					
+		var cam = $CameraPivot/SpringArm3D/Camera3D
+		if cam and "target_h_offset" in cam:
+			cam.target_h_offset = 0.6 if is_aiming else 0.0
+			
+		var crosshair = get_node_or_null("%Crosshair")
+		if crosshair:
+			crosshair.visible = is_aiming
 		
 		var input_dir = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 		shared_velocity = movement.handle_movement(delta, input_dir)

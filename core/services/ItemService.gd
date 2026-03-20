@@ -42,6 +42,8 @@ func _register_items() -> void:
 	bow.type = ItemData.Type.RANGED
 	bow.item_icon_texture = default_icon
 	bow.item_scene = load("res://scenes/items/weapons/WoodenBow.tscn")
+	bow.projectile_scene = load("res://scenes/items/weapons/DumbProjectile.tscn")
+	bow.attachment_bone = "RangedBoneAttachment"
 	bow.stackable = false
 	_add_item(bow)
 
@@ -52,6 +54,8 @@ func _register_items() -> void:
 	staff.type = ItemData.Type.MAGIC
 	staff.item_icon_texture = default_icon
 	staff.item_scene = load("res://scenes/items/weapons/MagicStaff.tscn")
+	staff.projectile_scene = load("res://scenes/items/weapons/DumbProjectile.tscn")
+	staff.attachment_bone = "RangedBoneAttachment"
 	staff.stackable = false
 	_add_item(staff)
 
