@@ -5,6 +5,8 @@ var target_position: Vector3
 var speed: float = 25.0
 var active: bool = false
 var lifetime: float = 3.0
+var max_distance: float = 100.0
+var distance_traveled: float = 0.0
 
 func fire(start_pos: Vector3, end_pos: Vector3, proj_speed: float) -> void:
 	global_position = start_pos
@@ -18,6 +20,11 @@ func _process(delta: float) -> void:
 	
 	lifetime -= delta
 	if lifetime <= 0:
+		queue_free()
+		return
+		
+	distance_traveled += speed * delta
+	if distance_traveled >= max_distance:
 		queue_free()
 		return
 		

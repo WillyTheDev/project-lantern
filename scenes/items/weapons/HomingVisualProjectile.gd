@@ -6,6 +6,8 @@ var target_position: Vector3
 var speed: float = 25.0
 var active: bool = false
 var lifetime: float = 5.0
+var max_distance: float = 100.0
+var distance_traveled: float = 0.0
 
 var velocity: Vector3
 var turn_speed: float = 2.0
@@ -49,6 +51,11 @@ func _process(delta: float) -> void:
 	
 	lifetime -= delta
 	if lifetime <= 0:
+		queue_free()
+		return
+		
+	distance_traveled += velocity.length() * delta
+	if distance_traveled >= max_distance:
 		queue_free()
 		return
 		

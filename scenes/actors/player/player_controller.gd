@@ -351,16 +351,22 @@ func _input(event: InputEvent) -> void:
 		interaction.try_interact()
 		
 	if event.is_action_pressed("use_item"):
+		var handled_by_aim = false
 		if inventory:
 			var item = inventory.get_active_item()
 			if item:
 				var data = ItemService.get_item(item.id)
-				if data and (data.type == ItemData.Type.RANGED or data.type == ItemData.Type.MAGIC):
-					if is_aiming and attack_cooldown <= 0:
-						combat.request_shoot(item.id)
-						attack_cooldown = RANGED_ATTACK_COOLDOWN
-					return # Ranged/Magic only shoot dynamically via the override!
-		_use_held_item()
+				if data:
+					# Ranged and Magic trigger shooting logic
+					if data.type == ItemData.Type.RANGED or data.type == ItemData.Type.MAGIC:
+						handled_by_aim = true
+						if is_aiming and attack_cooldown <= 0:
+							combat.request_shoot(item.id)
+							attack_cooldown = RANGED_ATTACK_COOLDOWN
+		
+		# Generic item use (Sword, consumables, lantern, etc.)
+		if not handled_by_aim and is_multiplayer_authority():
+			server_request_use_item_rpc.rpc_id(1)
 
 func request_slot_change(index: int) -> void:
 	# Client-side request to switch slots
@@ -387,17 +393,6 @@ func server_request_slot_change_rpc(index: int) -> void:
 		# Reset use_item_state when changing slots
 		use_item_state = false
 
-func _use_held_item() -> void:
-	if is_multiplayer_authority():
-		if inventory:
-			var item_stack = inventory.get_active_item()
-			if item_stack:
-				var data = ItemService.get_item(item_stack.id)
-				if data and (data.type == ItemData.Type.RANGED or data.type == ItemData.Type.MAGIC):
-					if not is_aiming:
-						return # Strict Aiming: Must hold Right-Click to aim before you can draw!
-		server_request_use_item_rpc.rpc_id(1)
-
 @rpc("any_peer", "call_remote", "reliable")
 func server_request_use_item_rpc() -> void:
 	if not NetworkService.is_server(): return
@@ -412,12 +407,11 @@ func server_request_use_item_rpc() -> void:
 	if item_stack:
 		var data = ItemService.get_item(item_stack.id)
 		if data:
-			if data.type != ItemData.Type.WEAPON and data.type != ItemData.Type.RANGED and data.type != ItemData.Type.MAGIC:
+			if data.type == ItemData.Type.WEAPON:
+				play_attack_animation.rpc(data.type)
+			elif data.type != ItemData.Type.RANGED and data.type != ItemData.Type.MAGIC:
 				var anim_name = data.use_animation
 				play_general_animation.rpc(anim_name)
-			elif data.type == ItemData.Type.WEAPON:
-				play_attack_animation.rpc(data.type)
-			# Note: Ranged/Magic animations are now naturally driven by the is_aiming/is_shooting states
 	
 	# Specific item logic
 	if item_stack:
