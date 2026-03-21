@@ -1,0 +1,28 @@
+[gd_scene format=3]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wood"]
+albedo_color = Color(0.4, 0.25, 0.1, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_shield"]
+material = SubResource("StandardMaterial3D_wood")
+size = Vector3(0.5, 0.7, 0.1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_metal"]
+albedo_color = Color(0.7, 0.7, 0.7, 1)
+metallic = 0.8
+roughness = 0.5
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_boss"]
+material = SubResource("StandardMaterial3D_metal")
+top_radius = 0.1
+bottom_radius = 0.1
+height = 0.15
+
+[node name="Shield" type="Node3D"]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_shield")
+
+[node name="Boss" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0.05)
+mesh = SubResource("CylinderMesh_boss")

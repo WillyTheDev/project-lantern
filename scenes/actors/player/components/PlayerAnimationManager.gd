@@ -6,7 +6,6 @@ var anim_player: AnimationPlayer
 var anim_tree: AnimationTree
 var playback_base: AnimationNodeStateMachinePlayback
 var playback_upper: AnimationNodeStateMachinePlayback
-
 var was_on_floor: bool = true
 var last_node: String = ""
 
@@ -28,6 +27,7 @@ func update_animations(shared_velocity: Vector3) -> void:
 	var current_upper = playback_upper.get_current_node()
 	
 	# --- ATTACK STATE RESETS (UpperBody) ---
+	# Remove manual Bow/Magic reset triggers entirely
 	if current_upper == "SwordAttack":
 		anim_tree.set("parameters/UpperBody/conditions/wants_to_sword", false)
 		var combo_playback = anim_tree.get("parameters/UpperBody/SwordAttack/playback")
@@ -36,12 +36,6 @@ func update_animations(shared_velocity: Vector3) -> void:
 			if current_swing != last_node:
 				anim_tree.set("parameters/UpperBody/SwordAttack/conditions/wants_to_sword", false)
 				last_node = current_swing
-	elif current_upper == "BowAttack":
-		anim_tree.set("parameters/UpperBody/conditions/wants_to_bow", false)
-		last_node = current_upper
-	elif current_upper == "MagicSpell":
-		anim_tree.set("parameters/UpperBody/conditions/wants_to_magic", false)
-		last_node = current_upper
 	elif current_upper == "Roll":
 		anim_tree.set("parameters/BaseMovement/conditions/roll", false)
 		anim_tree.set("parameters/UpperBody/conditions/roll", false)
@@ -61,6 +55,44 @@ func update_animations(shared_velocity: Vector3) -> void:
 	anim_tree.set("parameters/BaseMovement/conditions/is_on_floor", is_on_floor)
 	anim_tree.set("parameters/UpperBody/conditions/is_air", not is_on_floor)
 	anim_tree.set("parameters/UpperBody/conditions/is_on_floor", is_on_floor)
+	
+	var is_blocking = player.get("is_blocking") == true
+	anim_tree.set("parameters/UpperBody/conditions/is_blocking", is_blocking)
+	anim_tree.set("parameters/UpperBody/conditions/not_blocking", not is_blocking)
+	
+	# Explicit boolean mappings for continuous aiming and shooting attacks
+	var is_aiming = player.get("is_aiming") == true
+	var is_shooting = player.get("is_shooting") == true
+	
+	var is_aiming_bow = false
+	var is_aiming_magic = false
+	if is_aiming and player.inventory:
+		var item = player.inventory.get_active_item()
+		if item:
+			var data = ItemService.get_item(item.id)
+			if data:
+				is_aiming_bow = (data.type == ItemData.Type.RANGED)
+				is_aiming_magic = (data.type == ItemData.Type.MAGIC)
+	
+	# Top level UpperBody
+	anim_tree.set("parameters/UpperBody/conditions/is_aiming_bow", is_aiming_bow)
+	anim_tree.set("parameters/UpperBody/conditions/not_is_aiming_bow", not is_aiming_bow)
+	anim_tree.set("parameters/UpperBody/conditions/is_aiming_magic", is_aiming_magic)
+	anim_tree.set("parameters/UpperBody/conditions/not_is_aiming_magic", not is_aiming_magic)
+	anim_tree.set("parameters/UpperBody/conditions/is_shooting", is_shooting)
+	anim_tree.set("parameters/UpperBody/conditions/not_is_shooting", not is_shooting)
+	
+	# Nested BowAttack State Machine
+	anim_tree.set("parameters/UpperBody/BowAttack/conditions/is_aiming_bow", is_aiming_bow)
+	anim_tree.set("parameters/UpperBody/BowAttack/conditions/not_is_aiming_bow", not is_aiming_bow)
+	anim_tree.set("parameters/UpperBody/BowAttack/conditions/is_shooting", is_shooting)
+	anim_tree.set("parameters/UpperBody/BowAttack/conditions/not_is_shooting", not is_shooting)
+	
+	# Nested MagicSpell State Machine
+	anim_tree.set("parameters/UpperBody/MagicSpell/conditions/is_aiming_magic", is_aiming_magic)
+	anim_tree.set("parameters/UpperBody/MagicSpell/conditions/not_is_aiming_magic", not is_aiming_magic)
+	anim_tree.set("parameters/UpperBody/MagicSpell/conditions/is_shooting", is_shooting)
+	anim_tree.set("parameters/UpperBody/MagicSpell/conditions/not_is_shooting", not is_shooting)
 	
 	# Locomotion BlendSpace1D
 	# 0.0 = Idle, 0.4 = Walk, 1.0 = Sprint (based on speed = 4.5 in PlayerMovement)
@@ -110,7 +142,7 @@ func play_attack(item_type: int):
 			anim_tree.set("parameters/UpperBody/SwordAttack/conditions/wants_to_sword", true)
 			if playback_upper.get_current_node() == "Locomotion":
 				playback_upper.travel("SwordAttack")
-				
+			
 		ItemData.Type.RANGED: # Bow
 			# Reset release flag so we can Aim
 			anim_tree.set("parameters/UpperBody/BowAttack/conditions/on_release", false)
@@ -127,19 +159,9 @@ func play_attack(item_type: int):
 			if playback_upper.get_current_node() == "Locomotion":
 				playback_upper.travel("MagicSpell")
 
-func stop_attack(item_type: int):
-	if not anim_tree: return
-	
-	match item_type:
-		ItemData.Type.RANGED:
-			anim_tree.set("parameters/UpperBody/BowAttack/conditions/on_release", true)
-			anim_tree.set("parameters/UpperBody/conditions/on_release", true)
-			anim_tree.set("parameters/UpperBody/conditions/wants_to_bow", false)
-			
-		ItemData.Type.MAGIC:
-			anim_tree.set("parameters/UpperBody/MagicSpell/conditions/on_release", true)
-			anim_tree.set("parameters/UpperBody/conditions/on_release", true)
-			anim_tree.set("parameters/UpperBody/conditions/wants_to_magic", false)
+func stop_attack(_item_type: int):
+	# Removed because Bow/Magic are natively driven by player parameters and don't need manual stops
+	pass
 
 func play_general(anim_name: String, _blend: float = 0.1):
 	if playback_base and playback_upper and anim_tree:
@@ -154,9 +176,11 @@ func play_melee_one_hand_attack():
 	play_attack(ItemData.Type.WEAPON)
 
 func is_attacking() -> bool:
+	if player and (player.get("is_aiming") or player.get("is_shooting")):
+		return true
 	if playback_upper:
 		var current = playback_upper.get_current_node()
-		return current == "SwordAttack" or current == "BowAttack" or current == "MagicSpell" or current.to_lower().contains("attack")
+		return current == "SwordAttack" or current.to_lower().contains("attack")
 	return false
 
 func _fallback_manual_animations(shared_velocity: Vector3) -> void:

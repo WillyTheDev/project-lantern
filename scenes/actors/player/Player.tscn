@@ -53,20 +53,6 @@ bg_color = Color(0.88100183, 0.1337547, 0.28620315, 1)
 
 [node name="Player" type="CharacterBody3D" unique_id=166909891]
 script = ExtResource("3_imb2f")
-sync_position = null
-sync_rotation = null
-sync_camera_rotation_y = null
-sync_pivot_rotation = null
-sync_is_on_floor = null
-player_id = null
-player_name = null
-display_name = null
-name_color = null
-max_health = null
-current_health = null
-shared_velocity = null
-active_slot_index = null
-use_item_state = null
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1985360130]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0469314, 0)
@@ -87,7 +73,7 @@ text = "🔊"
 font_size = 48
 
 [node name="CameraPivot" type="Node3D" parent="." unique_id=88516118]
-transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 1.7510707, 0)
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 2.4590092, 0)
 
 [node name="SpringArm3D" type="SpringArm3D" parent="CameraPivot" unique_id=1244885865]
 

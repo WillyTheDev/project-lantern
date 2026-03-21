@@ -2,8 +2,10 @@ extends Resource
 class_name ItemData
 
 enum Type { WEAPON, ARMOR, CONSUMABLE, UTILITY, LOOT, RANGED, MAGIC }
-enum ArmorSlot { NONE, HEAD, CHEST, LEGS, FEET }
+enum ArmorSlot { NONE, HEAD, CHEST, LEGS, FEET, OFFHAND }
+enum HandType { ONE_HANDED, TWO_HANDED }
 
+@export var hand_type: HandType = HandType.ONE_HANDED
 @export var id: String = ""
 @export var name: String = ""
 @export_multiline var description: String = ""

@@ -6,7 +6,7 @@ signal active_slot_changed(index: int)
 
 const HOTBAR_SIZE = 10
 const BAG_SIZE = 30
-const ARMOR_SIZE = 4
+const ARMOR_SIZE = 5
 
 @export var hotbar: Array[ItemStackData] = []
 @export var bag: Array[ItemStackData] = []

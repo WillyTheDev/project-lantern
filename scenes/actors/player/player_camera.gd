@@ -1,7 +1,7 @@
 extends Camera3D
 
-const MIN_SPRING_LENGTH = 5.5
-const MAX_SPRING_LENGTH = 11.0
+const MIN_SPRING_LENGTH = 3.5
+const MAX_SPRING_LENGTH = 8.0
 const ZOOM_STEP = 0.3
 const MOUSE_SENSIBILITY = 0.002
 

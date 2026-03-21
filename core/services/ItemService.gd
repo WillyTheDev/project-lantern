@@ -27,7 +27,7 @@ func _register_items() -> void:
 	var sword = ItemData.new()
 	sword.id = "rusty_sword"
 	sword.name = "Rusty Sword"
-	sword.description = "A basic blade. Left-click to attack."
+	sword.description = "A basic blade."
 	sword.type = ItemData.Type.WEAPON
 	sword.item_icon_texture = default_icon
 	sword.item_scene = load("res://scenes/items/weapons/RustySword.tscn")
@@ -38,8 +38,9 @@ func _register_items() -> void:
 	var bow = ItemData.new()
 	bow.id = "wooden_bow"
 	bow.name = "Wooden Bow"
-	bow.description = "A simple bow. Hold Left-click to aim, release to shoot."
+	bow.description = "A simple bow."
 	bow.type = ItemData.Type.RANGED
+	bow.hand_type = ItemData.HandType.TWO_HANDED
 	bow.item_icon_texture = default_icon
 	bow.item_scene = load("res://scenes/items/weapons/WoodenBow.tscn")
 	bow.projectile_scene = load("res://scenes/items/weapons/DumbProjectile.tscn")
@@ -47,14 +48,28 @@ func _register_items() -> void:
 	bow.stackable = false
 	_add_item(bow)
 
+	var shield = ItemData.new()
+	shield.id = "wooden_shield"
+	shield.name = "Wooden Shield"
+	shield.description = "A basic wooden shield."
+	shield.type = ItemData.Type.ARMOR
+	shield.armor_slot = ItemData.ArmorSlot.OFFHAND
+	shield.item_icon_texture = default_icon
+	shield.item_scene = load("res://scenes/items/weapons/Shield.tscn")
+	shield.attachment_bone = "ShieldBoneAttachment"
+	shield.stats["stamina"] = 5
+	shield.stackable = false
+	_add_item(shield)
+
 	var staff = ItemData.new()
 	staff.id = "magic_staff"
 	staff.name = "Magic Staff"
-	staff.description = "A mysterious staff. Hold Left-click to charge a spell."
+	staff.description = "A mysterious staff."
 	staff.type = ItemData.Type.MAGIC
+	staff.hand_type = ItemData.HandType.TWO_HANDED
 	staff.item_icon_texture = default_icon
 	staff.item_scene = load("res://scenes/items/weapons/MagicStaff.tscn")
-	staff.projectile_scene = load("res://scenes/items/weapons/DumbProjectile.tscn")
+	staff.projectile_scene = load("res://scenes/items/weapons/MagicMissile.tscn")
 	staff.attachment_bone = "RangedBoneAttachment"
 	staff.stackable = false
 	_add_item(staff)

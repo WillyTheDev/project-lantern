@@ -15,7 +15,7 @@ func _ready() -> void:
 
 func _refill_chest() -> void:
 	items = []
-	var pool = ["lantern", "rusty_sword", "leather_cap", "wooden_bow", "magic_staff"]
+	var pool = ["lantern", "rusty_sword", "leather_cap", "wooden_bow", "magic_staff", "wooden_shield"]
 	for i in range(pool.size()):
 		items.append({"id": pool[i], "quantity": 1})
 

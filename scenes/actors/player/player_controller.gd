@@ -52,15 +52,31 @@ var voip: PlayerVOIP
 
 @export var shared_velocity: Vector3 = Vector3.ZERO
 @export var is_rolling: bool = false
+@export var is_blocking: bool = false
+var _was_blocking_local: bool = false
+@export var is_aiming: bool = false
+var _was_aiming_local: bool = false
+@export var is_shooting: bool = false
+var _was_shooting_local: bool = false
+var attack_cooldown: float = 0.0
 var interact_ray: RayCast3D
 var is_dead: bool = false
 var knockback_velocity: Vector3 = Vector3.ZERO
 
 const MOUSE_SENSIBILITY = 0.002
 
+## The cooldown duration (in seconds) applied after firing a ranged or magic weapon.
+## This prevents spamming and syncs redrawing with the weapon's animation pacing.
+const RANGED_ATTACK_COOLDOWN: float = 1.0
+
 @export var active_slot_index: int = 0:
 	set(v):
 		if active_slot_index != v:
+			is_aiming = false
+			_was_aiming_local = false
+			is_blocking = false
+			_was_blocking_local = false
+			
 			active_slot_index = v
 			if inventory:
 				inventory.set_active_slot(v) # Triggers signals for UI
@@ -74,6 +90,7 @@ const MOUSE_SENSIBILITY = 0.002
 			_sync_held_item_state()
 
 var _current_held_item_node: Node3D = null
+var _offhand_item_node: Node3D = null
 
 @rpc("any_peer", "call_remote", "reliable")
 func sync_inventory_to_clients(inventory_data: Dictionary, stash_data: Dictionary) -> void:
@@ -163,6 +180,7 @@ func _setup_local_player() -> void:
 		inv_ui.initialize_for_player(self) # Bind UI to THIS player
 	
 	inventory.active_slot_changed.connect(refresh_held_item)
+	inventory.inventory_updated.connect(_on_inventory_updated)
 	stats.stats_changed.connect(_on_stats_updated)
 	
 	voip.setup_local()
@@ -194,54 +212,118 @@ func server_request_inventory_sync() -> void:
 		# Use the service to broadcast the current state
 		InventoryService._sync_and_emit(self)
 
+@rpc("any_peer", "call_remote", "reliable")
+func server_set_blocking_rpc(state: bool) -> void:
+	if not NetworkService.is_server(): return
+	var sender_id = multiplayer.get_remote_sender_id()
+	if sender_id != player_id: return
+	
+	is_blocking = state
+	sync_is_blocking_rpc.rpc(is_blocking)
+
+@rpc("any_peer", "call_local", "reliable")
+func sync_is_blocking_rpc(state: bool) -> void:
+	if multiplayer.get_remote_sender_id() != 1 and not NetworkService.is_server(): return
+	is_blocking = state
+
+@rpc("any_peer", "call_remote", "reliable")
+func server_set_aiming_rpc(state: bool) -> void:
+	if not NetworkService.is_server(): return
+	if multiplayer.get_remote_sender_id() != player_id: return
+	is_aiming = state
+	sync_is_aiming_rpc.rpc(is_aiming)
+
+@rpc("any_peer", "call_local", "reliable")
+func sync_is_aiming_rpc(state: bool) -> void:
+	if multiplayer.get_remote_sender_id() != 1 and not NetworkService.is_server(): return
+	is_aiming = state
+
+@rpc("any_peer", "call_remote", "reliable")
+func server_set_shooting_rpc(state: bool) -> void:
+	if not NetworkService.is_server(): return
+	if multiplayer.get_remote_sender_id() != player_id: return
+	is_shooting = state
+	sync_is_shooting_rpc.rpc(is_shooting)
+
+@rpc("any_peer", "call_local", "reliable")
+func sync_is_shooting_rpc(state: bool) -> void:
+	if multiplayer.get_remote_sender_id() != 1 and not NetworkService.is_server(): return
+	is_shooting = state
+
 func _sync_held_item_state() -> void:
 	if is_instance_valid(_current_held_item_node):
 		if _current_held_item_node.has_method("sync_state"):
 			_current_held_item_node.sync_state(use_item_state)
+	if is_instance_valid(_offhand_item_node):
+		if _offhand_item_node.has_method("sync_state"):
+			_offhand_item_node.sync_state(use_item_state)
+
+func _spawn_visual_item(data: ItemData) -> Node3D:
+	var instance = data.item_scene.instantiate()
+	instance.name = "HeldItem_" + data.id
+	var bone_name = data.get("attachment_bone") if "attachment_bone" in data and data.attachment_bone != "" else "SwordBoneAttachment"
+	var skeleton = get_node_or_null("Model/rig_deform/GeneralSkeleton")
+	if skeleton:
+		var target_bone = skeleton.get_node_or_null(bone_name)
+		if target_bone:
+			if target_bone.get_child_count() > 0 and target_bone.get_child(0) is Marker3D:
+				target_bone.get_child(0).add_child(instance)
+			else:
+				target_bone.add_child(instance)
+			return instance
+	instance.queue_free()
+	return null
+
+func _on_inventory_updated() -> void:
+	refresh_held_item()
+
+var _equip_sequence: int = 0
 
 func refresh_held_item(_index: int = -1) -> void:
 	if not is_inside_tree(): return
 		
-	# Immediate removal of old equipped item to prevent conflicts
+	_equip_sequence += 1
+	var current_sequence = _equip_sequence
+	
 	if is_instance_valid(_current_held_item_node):
 		_current_held_item_node.name = "ToBeRemoved"
 		var parent = _current_held_item_node.get_parent()
-		if parent:
-			parent.remove_child(_current_held_item_node)
+		if parent: parent.remove_child(_current_held_item_node)
 		_current_held_item_node.queue_free()
 		_current_held_item_node = null
+		
+	if is_instance_valid(_offhand_item_node):
+		_offhand_item_node.name = "ToBeRemovedOffhand"
+		var p2 = _offhand_item_node.get_parent()
+		if p2: p2.remove_child(_offhand_item_node)
+		_offhand_item_node.queue_free()
+		_offhand_item_node = null
 	
-	# Wait one frame for engine to settle
 	await get_tree().process_frame
 	if not is_inside_tree(): return
+	if current_sequence != _equip_sequence: return
 
 	var item = null
-	# On both server and client, use the synced active_slot_index
 	if inventory:
 		inventory.active_hotbar_index = active_slot_index
 		item = inventory.get_active_item()
 	
-	if not item: return
-	
-	var data = ItemService.get_item(item.id)
-	if data and data.item_scene:
-		var instance = data.item_scene.instantiate()
-		instance.name = "HeldItem"
-		
-		var bone_name = data.get("attachment_bone") if "attachment_bone" in data and data.attachment_bone != "" else "SwordBoneAttachment"
-		# To get the bone, search the GeneralSkeleton
-		var skeleton = get_node_or_null("Model/rig_deform/GeneralSkeleton")
-		if skeleton:
-			var target_bone = skeleton.get_node_or_null(bone_name)
-			if target_bone:
-				# Attach slightly differently if the bone has a specific offset marker
-				if target_bone.get_child_count() > 0 and target_bone.get_child(0) is Marker3D:
-					target_bone.get_child(0).add_child(instance)
-				else:
-					target_bone.add_child(instance)
-				_current_held_item_node = instance
-				# Initial state sync
-				_sync_held_item_state()
+	var main_data = null
+	if item:
+		main_data = ItemService.get_item(item.id)
+		if main_data and main_data.item_scene:
+			_current_held_item_node = _spawn_visual_item(main_data)
+			_sync_held_item_state()
+
+	if inventory and inventory.armor.size() > 4:
+		var offhand = inventory.armor[4]
+		if offhand:
+			var offdata = ItemService.get_item(offhand.id)
+			if offdata and offdata.item_scene:
+				if not main_data or main_data.get("hand_type") != ItemData.HandType.TWO_HANDED:
+					_offhand_item_node = _spawn_visual_item(offdata)
+					if _offhand_item_node and _offhand_item_node.has_method("sync_state"):
+						_offhand_item_node.sync_state(use_item_state)
 
 func _input(event: InputEvent) -> void:
 	if not is_multiplayer_authority(): return
@@ -269,11 +351,16 @@ func _input(event: InputEvent) -> void:
 		interaction.try_interact()
 		
 	if event.is_action_pressed("use_item"):
-		print("[Controller] 'use_item' Pressed")
+		if inventory:
+			var item = inventory.get_active_item()
+			if item:
+				var data = ItemService.get_item(item.id)
+				if data and (data.type == ItemData.Type.RANGED or data.type == ItemData.Type.MAGIC):
+					if is_aiming and attack_cooldown <= 0:
+						combat.request_shoot(item.id)
+						attack_cooldown = RANGED_ATTACK_COOLDOWN
+					return # Ranged/Magic only shoot dynamically via the override!
 		_use_held_item()
-	elif event.is_action_released("use_item"):
-		print("[Controller] 'use_item' Released")
-		_stop_use_held_item()
 
 func request_slot_change(index: int) -> void:
 	# Client-side request to switch slots
@@ -288,13 +375,27 @@ func server_request_slot_change_rpc(index: int) -> void:
 	
 	# Validation
 	if index >= 0 and index < 10:
+		# Force stop any current animation for the OLD item before switching to the new one!
+		if inventory:
+			var item_stack = inventory.get_active_item()
+			if item_stack:
+				var data = ItemService.get_item(item_stack.id)
+				if data:
+					stop_attack_animation.rpc(data.type)
+					
 		active_slot_index = index
 		# Reset use_item_state when changing slots
 		use_item_state = false
 
 func _use_held_item() -> void:
 	if is_multiplayer_authority():
-		print("[Controller] Requesting server USE")
+		if inventory:
+			var item_stack = inventory.get_active_item()
+			if item_stack:
+				var data = ItemService.get_item(item_stack.id)
+				if data and (data.type == ItemData.Type.RANGED or data.type == ItemData.Type.MAGIC):
+					if not is_aiming:
+						return # Strict Aiming: Must hold Right-Click to aim before you can draw!
 		server_request_use_item_rpc.rpc_id(1)
 
 @rpc("any_peer", "call_remote", "reliable")
@@ -311,14 +412,12 @@ func server_request_use_item_rpc() -> void:
 	if item_stack:
 		var data = ItemService.get_item(item_stack.id)
 		if data:
-			# If it's a weapon/bow/magic, we let the combat component handle animations
 			if data.type != ItemData.Type.WEAPON and data.type != ItemData.Type.RANGED and data.type != ItemData.Type.MAGIC:
 				var anim_name = data.use_animation
-				if not anim_name.contains("/"): anim_name = "general/" + anim_name
 				play_general_animation.rpc(anim_name)
-			else:
-				# Trigger combat animation
+			elif data.type == ItemData.Type.WEAPON:
 				play_attack_animation.rpc(data.type)
+			# Note: Ranged/Magic animations are now naturally driven by the is_aiming/is_shooting states
 	
 	# Specific item logic
 	if item_stack:
@@ -348,20 +447,8 @@ func _stop_use_held_item() -> void:
 			if item_stack:
 				var data = ItemService.get_item(item_stack.id)
 				if data and (data.type == ItemData.Type.RANGED or data.type == ItemData.Type.MAGIC):
-					combat.request_shoot(item_stack.id)
-		server_request_stop_use_item_rpc.rpc_id(1)
-
-@rpc("any_peer", "call_remote", "reliable")
-func server_request_stop_use_item_rpc() -> void:
-	if not NetworkService.is_server(): return
-	var sender_id = multiplayer.get_remote_sender_id()
-	if sender_id != player_id: return
-	
-	var item_stack = inventory.get_active_item()
-	if item_stack:
-		var data = ItemService.get_item(item_stack.id)
-		if data:
-			stop_attack_animation.rpc(data.type)
+					if is_aiming: # If they let go of Right-Click early, it safely cancels the shot!
+						combat.request_shoot(item_stack.id)
 
 @rpc("any_peer", "call_local", "reliable")
 func play_general_animation(anim_name: String, blend: float = 0.1):
@@ -414,14 +501,52 @@ func _physics_process(delta: float) -> void:
 	if is_multiplayer_authority():
 		rotation = Vector3.ZERO
 		
-		var is_aiming = false
-		if Input.is_action_pressed("use_item") and inventory:
+		var wants_to_shoot = false
+		if attack_cooldown > 0:
+			attack_cooldown -= delta
+			wants_to_shoot = true
+			
+		if wants_to_shoot != _was_shooting_local:
+			_was_shooting_local = wants_to_shoot
+			is_shooting = wants_to_shoot
+			server_set_shooting_rpc.rpc_id(1, wants_to_shoot)
+		
+		var wants_to_aim = false
+		var wants_to_block = false
+		var has_two_handed = false
+		
+		if inventory:
 			var item = inventory.get_active_item()
 			if item:
 				var data = ItemService.get_item(item.id)
-				if data and (data.type == ItemData.Type.RANGED or data.type == ItemData.Type.MAGIC):
-					is_aiming = true
-					
+				if data:
+					if data.get("hand_type") == ItemData.HandType.TWO_HANDED:
+						has_two_handed = true
+					if Input.is_action_pressed("right_click"):
+						if data.type == ItemData.Type.RANGED or data.type == ItemData.Type.MAGIC:
+							wants_to_aim = true
+						elif data.type == ItemData.Type.WEAPON:
+							wants_to_block = true
+							
+		# Check Offhand for blocking (if not aiming a bow and not hiding offhand)
+		if Input.is_action_pressed("right_click") and not wants_to_aim and not has_two_handed:
+			if inventory and inventory.armor.size() > 4:
+				var offhand = inventory.armor[4]
+				if offhand:
+					var offdata = ItemService.get_item(offhand.id)
+					if offdata and offdata.armor_slot == ItemData.ArmorSlot.OFFHAND:
+						wants_to_block = true
+						
+		if wants_to_block != _was_blocking_local:
+			_was_blocking_local = wants_to_block
+			server_set_blocking_rpc.rpc_id(1, wants_to_block)
+			is_blocking = wants_to_block
+
+		if wants_to_aim != _was_aiming_local:
+			_was_aiming_local = wants_to_aim
+			is_aiming = wants_to_aim
+			server_set_aiming_rpc.rpc_id(1, wants_to_aim)
+
 		var cam = $CameraPivot/SpringArm3D/Camera3D
 		if cam and "target_h_offset" in cam:
 			cam.target_h_offset = 0.6 if is_aiming else 0.0
@@ -495,6 +620,9 @@ func request_attack(damage: float, range: float) -> void:
 func take_damage(amount: float) -> void:
 	if not NetworkService.is_server(): return
 	if is_rolling: return # Invulnerable during roll
+	
+	if is_blocking:
+		amount *= 0.25 # Built-in 75% damage block mitigation!
 	
 	# DIRECT modification on server.
 	current_health -= amount

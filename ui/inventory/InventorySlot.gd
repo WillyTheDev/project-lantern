@@ -89,6 +89,7 @@ func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
 			1: required_slot = ItemData.ArmorSlot.CHEST
 			2: required_slot = ItemData.ArmorSlot.LEGS
 			3: required_slot = ItemData.ArmorSlot.FEET
+			4: required_slot = ItemData.ArmorSlot.OFFHAND
 		if item_data.armor_slot != required_slot: return false
 			
 	return true
