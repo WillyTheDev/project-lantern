@@ -49,11 +49,6 @@ func _setup_spawner_deferred() -> void:
 	player_spawner.spawn_path = players_root.get_path()
 	player_spawner.spawn_function = _global_custom_spawn
 	
-	# Register common spawnable scenes early
-	player_spawner.add_spawnable_scene("res://scenes/actors/player/Player.tscn")
-	player_spawner.add_spawnable_scene("res://scenes/world/interactables/LootDrop.tscn")
-	player_spawner.add_spawnable_scene("res://scenes/actors/enemies/DungeonGuardian.tscn")
-	
 	print("[NetworkService] Global Spawner initialized at: ", player_spawner.spawn_path)
 
 ## Global custom spawn function used by the MultiplayerSpawner.
@@ -86,7 +81,7 @@ func _global_custom_spawn(data: Dictionary) -> Node:
 				node.name_color = Color(color_array[0], color_array[1], color_array[2], 1.0)
 		
 		"enemy":
-			var enemy_scene = preload("res://scenes/actors/enemies/DungeonGuardian.tscn")
+			var enemy_scene = preload("res://scenes/actors/enemies/BaseEnemy.tscn")
 			node = enemy_scene.instantiate()
 			node.name = "Enemy_" + str(node.get_instance_id())
 			
@@ -94,6 +89,8 @@ func _global_custom_spawn(data: Dictionary) -> Node:
 			node = preload("res://scenes/world/interactables/LootDrop.tscn").instantiate()
 			if data.has("items"):
 				node.items = data.items
+				if "sync_items" in node:
+					node.sync_items = data.items
 	
 	if node:
 		var pos = data.get("pos", Vector3.ZERO)
@@ -197,6 +194,17 @@ func _on_peer_connected(id: int) -> void:
 
 func _on_peer_disconnected(id: int) -> void:
 	print("[NetworkService] Peer disconnected: ", id)
+
+## Finds a player node instance by its network peer ID.
+##
+## @param id: The network peer ID to search for.
+## @return: The Player node if found, otherwise null.
+func get_player(id: int) -> Node:
+	if not players_root: return null
+	for child in players_root.get_children():
+		if child.is_in_group("players") and "player_id" in child and child.player_id == id:
+			return child
+	return null
 
 ## Clears the current server connection and connects to a new target server (Shard Handoff).
 ##

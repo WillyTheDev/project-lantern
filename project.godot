@@ -38,6 +38,10 @@ NotificationService="*res://core/services/NotificationService.gd"
 
 run/main_run_args="set PB_SYSTEM_USER=server && set PB_SYSTEM_PASSWORD=RBdDKctr6hR8E6n"
 
+[global_group]
+
+enemy_spawners=""
+
 [input]
 
 move_left={

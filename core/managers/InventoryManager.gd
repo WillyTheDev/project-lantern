@@ -14,20 +14,52 @@ static func recalculate_stats(player: Node3D) -> Dictionary:
 		"strength": player.stats.strength,
 		"intellect": player.stats.intellect,
 		"stamina": player.stats.stamina,
-		"max_health": player.stats.max_health
+		"max_health": player.stats.max_health,
+		"max_mana": player.stats.max_mana,
+		"vampirism": 0.0,
+		"scale_multiplier": 1.0,
+		"speed": 1.0,
+		"knockback_bonus": 1.0,
+		"extra_jumps": 0,
+		"mana_regen": 0.0,
+		"health_regen": 0.0,
+		"thorns": 0.0,
+		"luck": 0.0,
+		"crit_multiplier": 1.5,
+		"cdr": 0.0,
+		"cleave": 1.0,
+		"evasion": 0.0,
+		"multishot": 0
 	}
 	
 	for slot in player.inventory.armor:
 		if slot:
 			var item_def = ItemService.get_item(slot.id)
-			if item_def:
-				total_stats["agility"] += item_def.stats.get("agility", 0)
-				total_stats["strength"] += item_def.stats.get("strength", 0)
-				total_stats["intellect"] += item_def.stats.get("intellect", 0)
-				total_stats["stamina"] += item_def.stats.get("stamina", 0)
+			if item_def and item_def.stat_modifiers:
+				total_stats["agility"] += item_def.stat_modifiers.get("agility", 0)
+				total_stats["strength"] += item_def.stat_modifiers.get("strength", 0)
+				total_stats["intellect"] += item_def.stat_modifiers.get("intellect", 0)
+				total_stats["stamina"] += item_def.stat_modifiers.get("stamina", 0)
+			
+			if slot.custom_data.has("modifiers"):
+				var mods = slot.custom_data["modifiers"]
+				for mod_name in mods:
+					if total_stats.has(mod_name):
+						total_stats[mod_name] += mods[mod_name]
 				
-	total_stats["max_health"] = 100.0 + (total_stats["stamina"] - 10) * 10.0
+	total_stats["max_health"] = LevelManager.calculate_max_hp(total_stats["stamina"])
+	total_stats["max_mana"] = 100.0 + (total_stats["intellect"] - 10) * 10.0
 	return total_stats
+
+## Validates if the player meets all stat requirements to equip the item.
+static func can_equip(item_def: ItemData, stats: PlayerStatsData) -> bool:
+	if not item_def or not stats: return false
+	if stats.agility < item_def.required_stats.get("agility", 0): return false
+	if stats.strength < item_def.required_stats.get("strength", 0): return false
+	if stats.intellect < item_def.required_stats.get("intellect", 0): return false
+	if stats.stamina < item_def.required_stats.get("stamina", 0): return false
+	return true
+
 
 ## Attempts to insert a new item or stack into the player's hotbar or bag inventories.
 ##

@@ -19,8 +19,16 @@ var current_tooltip: Control = null
 var external_slot_count: int = 0
 var player_ref: Node3D = null
 
+# Dynamic UI Elements
+var xp_bar: ProgressBar
+var mana_bar: ProgressBar
+var stats_grid: GridContainer
+var stat_labels: Dictionary = {}
+var stat_buttons: Dictionary = {}
+
 func _ready() -> void:
 	_setup_slots()
+	_setup_dynamic_ui()
 	# Global service signals via EventBus
 	EventBus.external_inventory_updated.connect(_on_external_inventory_updated)
 	EventBus.total_stats_updated.connect(_on_total_stats_updated)
@@ -46,15 +54,69 @@ func initialize_for_player(player: Node3D) -> void:
 	player_ref.stats.stats_changed.connect(_on_base_stats_updated)
 
 	refresh()
-	_on_base_stats_updated(player_ref.stats)
+	_on_base_stats_updated()
 	_on_active_slot_changed(player_ref.inventory.active_hotbar_index)
 
-func _on_base_stats_updated(_stats: PlayerStatsData = null) -> void:
+func _on_base_stats_updated() -> void:
 	_update_stats_label()
 
 func _on_total_stats_updated(_total_stats: Dictionary) -> void:
 	if not is_local_authority: return
 	_update_stats_label()
+
+func _setup_dynamic_ui() -> void:
+	# 1. Setup HUD Bars (XP and Mana)
+	var bar_container = VBoxContainer.new()
+	bar_container.custom_minimum_size = Vector2(300, 40)
+	bar_container.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	bar_container.position = Vector2(20, -60)
+	hotbar_hud.add_child(bar_container)
+	
+	xp_bar = ProgressBar.new()
+	xp_bar.custom_minimum_size = Vector2(300, 15)
+	xp_bar.show_percentage = true
+	var sb_xp = StyleBoxFlat.new()
+	sb_xp.bg_color = Color(0.6, 0.2, 0.8)
+	xp_bar.add_theme_stylebox_override("fill", sb_xp)
+	bar_container.add_child(xp_bar)
+	
+	mana_bar = ProgressBar.new()
+	mana_bar.custom_minimum_size = Vector2(300, 15)
+	mana_bar.show_percentage = true
+	var sb_mana = StyleBoxFlat.new()
+	sb_mana.bg_color = Color(0.2, 0.4, 0.9)
+	mana_bar.add_theme_stylebox_override("fill", sb_mana)
+	bar_container.add_child(mana_bar)
+	
+	# 2. Setup Stats Grid
+	stats_grid = GridContainer.new()
+	stats_grid.columns = 3
+	stats_grid.add_theme_constant_override("h_separation", 10)
+	stats_grid.add_theme_constant_override("v_separation", 5)
+	
+	var left_section = stats_label.get_parent()
+	left_section.add_child(stats_grid)
+	
+	var stat_names = ["strength", "agility", "intellect", "stamina"]
+	for s_name in stat_names:
+		var name_lbl = Label.new()
+		name_lbl.text = s_name.to_upper() + ":"
+		stats_grid.add_child(name_lbl)
+		
+		var val_lbl = Label.new()
+		val_lbl.text = "10"
+		stat_labels[s_name] = val_lbl
+		stats_grid.add_child(val_lbl)
+		
+		var btn = Button.new()
+		btn.text = "+"
+		btn.custom_minimum_size = Vector2(24, 24)
+		btn.pressed.connect(_on_stat_button_pressed.bind(s_name))
+		stat_buttons[s_name] = btn
+		stats_grid.add_child(btn)
+
+func _on_stat_button_pressed(stat_name: String) -> void:
+	InventoryService.request_spend_attribute_point(stat_name)
 
 ## Calculates text formatting and updates the visual UI labels for player stats.
 func _update_stats_label() -> void:
@@ -65,9 +127,32 @@ func _update_stats_label() -> void:
 	var total_int = InventoryService.get_total_intellect()
 	var total_sta = InventoryService.get_total_stamina()
 	
-	stats_label.text = "LVL: %d (XP: %d)\nSTR: %d\nAGI: %d\nINT: %d\nSTA: %d" % [
-		stats.level, stats.experience, total_str, total_agi, total_int, total_sta
+	# Update top labels
+	stats_label.text = "LVL: %d\nXP: %d / %d\nPOINTS: %d" % [
+		stats.level, stats.experience, LevelManager.get_experience_for_level(stats.level + 1), stats.available_points
 	]
+	
+	# Update Grid
+	stat_labels["strength"].text = str(total_str)
+	stat_labels["agility"].text = str(total_agi)
+	stat_labels["intellect"].text = str(total_int)
+	stat_labels["stamina"].text = str(total_sta)
+	
+	for s_name in stat_buttons.keys():
+		stat_buttons[s_name].visible = (stats.available_points > 0)
+		
+	# Update HUD Bars
+	if is_instance_valid(xp_bar):
+		var next_xp = LevelManager.get_experience_for_level(stats.level + 1)
+		var prev_xp = LevelManager.get_experience_for_level(stats.level) if stats.level > 1 else 0
+		xp_bar.min_value = prev_xp
+		xp_bar.max_value = next_xp
+		xp_bar.value = stats.experience
+		
+	if is_instance_valid(mana_bar):
+		var total_mana = InventoryManager.recalculate_stats(player_ref).get("max_mana", 100.0)
+		mana_bar.max_value = total_mana
+		mana_bar.value = stats.current_mana
 
 func _on_external_inventory_updated() -> void:
 	if not is_local_authority: return
@@ -183,7 +268,7 @@ func _on_slot_mouse_entered(slot: Control) -> void:
 	if current_tooltip: current_tooltip.queue_free()
 	current_tooltip = TOOLTIP_SCENE.instantiate()
 	tooltip_container.add_child(current_tooltip)
-	current_tooltip.display(item.id)
+	current_tooltip.display(item)
 	_update_tooltip_pos()
 
 func _on_slot_mouse_exited() -> void:

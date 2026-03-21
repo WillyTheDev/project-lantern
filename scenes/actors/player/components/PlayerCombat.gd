@@ -47,6 +47,8 @@ func _perform_attack_rpc(damage: float, range: float) -> void:
 	if sender_id != 0 and sender_id != player.player_id: return
 
 	
+	var total_stats = InventoryManager.recalculate_stats(player)
+	
 	# Cleave System: Use a sphere check in front of the player
 	var space_state = player.get_world_3d().direct_space_state
 	var forward = -player.global_transform.basis.z
@@ -54,7 +56,7 @@ func _perform_attack_rpc(damage: float, range: float) -> void:
 	
 	var query = PhysicsShapeQueryParameters3D.new()
 	var sphere = SphereShape3D.new()
-	sphere.radius = range # Large enough to catch multiple targets in front
+	sphere.radius = range * total_stats.get("cleave", 1.0) # Apply dynamic Cleave bonus size!
 	query.shape = sphere
 	query.transform = Transform3D(Basis(), attack_pos)
 	query.collision_mask = 3 # Layers 1 (Players) and 2 (Enemies)
@@ -71,12 +73,26 @@ func _perform_attack_rpc(damage: float, range: float) -> void:
 			target = target.get_parent()
 			
 		if target.has_method("take_damage") and target != player:
-			target.take_damage(damage)
+			# Critical Hit check
+			var crit_chance = total_stats.get("agility", 0) * 0.01
+			var final_damage = damage
+			if randf() < crit_chance:
+				final_damage *= total_stats.get("crit_multiplier", 1.5)
+				
+			target.take_damage(final_damage, player)
 			hit_something = true
 			
 			# Apply knockback
 			if target.has_method("apply_knockback"):
-				target.apply_knockback(player.global_position, 4.0)
+				var base_force = 4.0
+				target.apply_knockback(player.global_position, base_force * total_stats.get("knockback_bonus", 1.0))
+				
+			# Apply Vampirism
+			var vamp = total_stats.get("vampirism", 0.0)
+			if vamp > 0.0:
+				player.stats.current_health += (damage * vamp)
+				if player.has_method("_play_heal_fx"):
+					player._play_heal_fx.rpc()
 	
 	# Feedback for the attacker (visuals or sounds can be added here)
 	if hit_something:
@@ -143,32 +159,56 @@ func _perform_shoot_rpc(item_id: String, shoot_dir: Vector3 = Vector3.ZERO) -> v
 		var bone = skeleton.get_node_or_null(data.attachment_bone)
 		if bone: origin = bone.global_position
 			
-	# Server calculates actual hit completely instantly using RayCast
-	var space_state = player.get_world_3d().direct_space_state
-	var query = PhysicsRayQueryParameters3D.create(origin, origin + (shoot_dir * 100.0), 3) # Mask 1&2
-	query.exclude = [player.get_rid()]
-	var result = space_state.intersect_ray(query)
-	var hit_pos = origin + (shoot_dir * 100.0)
+	var total_stats = InventoryManager.recalculate_stats(player)
+
+	var num_shots = 1 + total_stats.get("multishot", 0)
+	var spread_angle = 15.0 # Degrees spread per extra multishot 
 	
-	var target_path = NodePath()
-	
-	if result:
-		hit_pos = result.position
-		var target = result.collider
-		if not target.has_method("take_damage") and target.get_parent() and target.get_parent().has_method("take_damage"):
-			target = target.get_parent()
-		if target.has_method("take_damage") and target != player:
-			target_path = target.get_path()
-			var damage = 25.0
-			if data.get("stats") and data.stats.has("strength"):
-				damage += data.stats.strength
-			target.take_damage(damage)
-			if target.has_method("apply_knockback"):
-				target.apply_knockback(player.global_position, 2.0)
-	
-	# Tell all clients to spawn the purely visual projectile.
-	var speed = data.get("projectile_speed") if data.get("projectile_speed") != null else 25.0
-	_spawn_visual_projectile_rpc.rpc(item_id, origin, hit_pos, speed, target_path)
+	for i in range(num_shots):
+		# Calculate angle offset (e.g., -15, 0, +15)
+		var offset_deg = (i - float(num_shots - 1) / 2.0) * spread_angle
+		var offset_rad = deg_to_rad(offset_deg)
+		var actual_dir = shoot_dir.rotated(Vector3.UP, offset_rad)
+		
+		# Server calculates actual hit completely instantly using RayCast
+		var space_state = player.get_world_3d().direct_space_state
+		var query = PhysicsRayQueryParameters3D.create(origin, origin + (actual_dir * 100.0), 3) # Mask 1&2
+		query.exclude = [player.get_rid()]
+		var result = space_state.intersect_ray(query)
+		var hit_pos = origin + (actual_dir * 100.0)
+		
+		var target_path = NodePath()
+		if result:
+			hit_pos = result.position
+			var target = result.collider
+			if not target.has_method("take_damage") and target.get_parent() and target.get_parent().has_method("take_damage"):
+				target = target.get_parent()
+				
+			if target.has_method("take_damage") and target != player:
+				target_path = target.get_path()
+				var damage = 25.0
+				if data.get("stat_modifiers") and data.stat_modifiers.has("strength"):
+					damage += data.stat_modifiers.strength
+					
+				# Ranged Critical Hit Check
+				var crit_chance = total_stats.get("agility", 0) * 0.01
+				if randf() < crit_chance:
+					damage *= total_stats.get("crit_multiplier", 1.5)
+					
+				target.take_damage(damage, player)
+				
+				if target.has_method("apply_knockback"):
+					target.apply_knockback(player.global_position, 2.0 * total_stats.get("knockback_bonus", 1.0))
+					
+					var vamp = total_stats.get("vampirism", 0.0)
+					if vamp > 0.0:
+						player.stats.current_health += (damage * vamp)
+						if player.has_method("_play_heal_fx"):
+							player._play_heal_fx.rpc()
+		
+		# Tell all clients to spawn the purely visual projectile.
+		var speed = data.get("projectile_speed") if data.get("projectile_speed") != null else 25.0
+		_spawn_visual_projectile_rpc.rpc(item_id, origin, hit_pos, speed, target_path)
 
 @rpc("any_peer", "call_local", "reliable")
 func _spawn_visual_projectile_rpc(item_id: String, start_pos: Vector3, target_pos: Vector3, speed: float, target_path: NodePath = NodePath()) -> void:

@@ -23,26 +23,62 @@ script/source = "extends PanelContainer
 
 @onready var name_label: Label = %ItemName
 @onready var desc_label: Label = %ItemDescription
-@onready var stats_label: Label = %ItemStats
+@onready var stats_label: RichTextLabel = %ItemStats
 
-func display(item_id: String) -> void:
-	var data = ItemService.get_item(item_id)
+func display(stack: ItemStackData) -> void:
+	if not stack: return
+	var data = ItemService.get_item(stack.id)
 	if not data: return
 	
-	name_label.text = data.name
+	# 1. Name & Rarity
+	name_label.text = stack.custom_data.get(\"name\", data.name)
+	var rarity = stack.custom_data.get(\"rarity\", data.rarity)
+	
+	match rarity:
+		ItemData.Rarity.RARE: name_label.add_theme_color_override(\"font_color\", Color(0.2, 0.8, 1.0)) # Cyan
+		ItemData.Rarity.EPIC: name_label.add_theme_color_override(\"font_color\", Color(0.8, 0.3, 1.0)) # Purple
+		ItemData.Rarity.UNIQUE: name_label.add_theme_color_override(\"font_color\", Color(1.0, 0.5, 0.0)) # Orange
+		_: name_label.add_theme_color_override(\"font_color\", Color.WHITE)
+		
+	# 2. Description
 	desc_label.text = data.description
 	
+	# 3. Stats (Base + Custom)
 	var stats_text = \"\"
-	for stat in data.stats:
-		if data.stats[stat] != 0:
-			stats_text += \"%s: +%d\\n\" % [stat.capitalize(), data.stats[stat]]
 	
-	stats_label.text = stats_text.strip_edges()
-	stats_label.visible = stats_label.text != \"\"
+	# Merged Modifiers
+	var display_mods = data.stat_modifiers.duplicate()
+	if stack.custom_data.has(\"modifiers\"):
+		var custom_mods = stack.custom_data[\"modifiers\"]
+		for m in custom_mods:
+			if display_mods.has(m):
+				display_mods[m] += custom_mods[m]
+			else:
+				display_mods[m] = custom_mods[m]
+	
+	for stat in display_mods:
+		var val = display_mods[stat]
+		if val != 0:
+			var prefix = \"+\" if val >= 0 else \"\"
+			var suffix = \"%\" if _is_percent_stat(stat) else \"\"
+			stats_text += \"[color=#57ff61]%s: %s%s%s[/color]\\n\" % [stat.capitalize(), prefix, _format_val(val, stat), suffix]
+	
+	stats_label.bbcode_enabled = true
+	stats_label.clear()
+	stats_label.append_text(stats_text.strip_edges())
+	stats_label.visible = stats_text.strip_edges() != \"\"
 	
 	# Force refresh layout
 	custom_minimum_size = Vector2(250, 0)
 	size = Vector2.ZERO
+
+func _is_percent_stat(s: String) -> bool:
+	return s in [\"vampirism\", \"speed\", \"knockback_bonus\", \"cdr\", \"evasion\", \"thorns\", \"cleave\"]
+
+func _format_val(v: Variant, stat_name: String) -> String:
+	if v is float:
+		return \"%.1f\" % (v * 100.0) if _is_percent_stat(stat_name) else \"%.1f\" % v
+	return str(v)
 "
 
 [node name="ItemTooltip" type="PanelContainer" unique_id=1984160185]
@@ -73,9 +109,11 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "This is a description of the item."
 
-[node name="ItemStats" type="Label" parent="VBoxContainer" unique_id=1766660546]
+[node name="ItemStats" type="RichTextLabel" parent="VBoxContainer" unique_id=1766660546]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.341176, 1, 0.380392, 1)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/default_color = Color(0.341176, 1, 0.380392, 1)
+theme_override_font_sizes/normal_font_size = 14
+bbcode_enabled = true
 text = "Stats..."
+fit_content = true

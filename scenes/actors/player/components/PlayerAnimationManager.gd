@@ -168,9 +168,14 @@ func play_general(anim_name: String, _blend: float = 0.1):
 		var state_name = anim_name.split("/")[-1]
 		if state_name == "Death_A": state_name = "Death01"
 		
-		# Since it's a BlendTree now, we just travel on both
-		playback_base.travel(state_name)
-		playback_upper.travel(state_name)
+		
+		var base_sm = anim_tree.tree_root.get_node("BaseMovement") as AnimationNodeStateMachine
+		if base_sm and base_sm.has_node(state_name):
+			playback_base.travel(state_name)
+			
+		var upper_sm = anim_tree.tree_root.get_node("UpperBody") as AnimationNodeStateMachine
+		if upper_sm and upper_sm.has_node(state_name):
+			playback_upper.travel(state_name)
 
 func play_melee_one_hand_attack():
 	play_attack(ItemData.Type.WEAPON)

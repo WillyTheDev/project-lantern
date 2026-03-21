@@ -1,12 +1,32 @@
 extends StaticBody3D
 
 @export var items: Array = [] # Array of {"id": "...", "quantity": 1}
+var sync_items: Array:
+	set(val):
+		sync_items = val
+		items = val
+		_update_visuals()
+
+var sync_position: Vector3:
+	set(val):
+		sync_position = val
+		global_position = val
+
 var is_open: bool = false
 
 func _ready() -> void:
-	pass
+	_update_visuals()
+
+func _update_visuals() -> void:
+	var label = get_node_or_null("Label3D")
+	if label:
+		if items.size() > 0:
+			label.text = "LOOT [E]\n(%d items)" % items.size()
+		else:
+			label.text = ""
 
 func interact(player: Node3D) -> void:
+	print("[LootDrop] Interaction started at: ", get_path(), " Server: ", NetworkService.is_server())
 	if not NetworkService.is_server(): return
 	
 	if items.size() == 0:
@@ -25,7 +45,9 @@ func interact(player: Node3D) -> void:
 
 @rpc("authority", "call_local", "reliable")
 func _open_loot_ui(loot_items: Array, path: NodePath) -> void:
-	print("[Loot] Client received RPC to open loot UI.")
+	print("[LootDrop] Client received _open_loot_ui with ", loot_items.size(), " items.")
+	for i in range(loot_items.size()):
+		print("  - Item ", i, ": ", loot_items[i])
 	InventoryService.open_external_inventory(loot_items, path)
 
 @rpc("any_peer", "call_remote", "reliable")

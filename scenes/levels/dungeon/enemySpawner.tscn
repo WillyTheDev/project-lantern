@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://btj5jldyaj7qc"]
+
+[node name="EnemySpawner" type="Node3D" unique_id=1410396602 groups=["enemy_spawners"]]
+
+[node name="Marker3D" type="Marker3D" parent="." unique_id=1704432228]
+transform = Transform3D(0.99984586, 0.01755711, 0, -0.01755711, 0.99984586, 0, 0, 0, 1, 0, 0, 0)

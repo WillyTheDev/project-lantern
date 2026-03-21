@@ -31,7 +31,7 @@ func _register_items() -> void:
 	sword.type = ItemData.Type.WEAPON
 	sword.item_icon_texture = default_icon
 	sword.item_scene = load("res://scenes/items/weapons/RustySword.tscn")
-	sword.stats["strength"] = 2
+	sword.stat_modifiers["strength"] = 2
 	sword.stackable = false
 	_add_item(sword)
 
@@ -57,7 +57,7 @@ func _register_items() -> void:
 	shield.item_icon_texture = default_icon
 	shield.item_scene = load("res://scenes/items/weapons/Shield.tscn")
 	shield.attachment_bone = "ShieldBoneAttachment"
-	shield.stats["stamina"] = 5
+	shield.stat_modifiers["stamina"] = 5
 	shield.stackable = false
 	_add_item(shield)
 
@@ -81,12 +81,39 @@ func _register_items() -> void:
 	helm.type = ItemData.Type.ARMOR
 	helm.armor_slot = ItemData.ArmorSlot.HEAD
 	helm.item_icon_texture = default_icon
-	helm.stats["stamina"] = 5
+	helm.stat_modifiers["stamina"] = 5
 	helm.stackable = false
-	_add_item(helm)
+	# --- PROCEDURAL BASES ---
+	_register_procedural_base("base_head", "Helmet", ItemData.ArmorSlot.HEAD)
+	_register_procedural_base("base_chest", "Chestplate", ItemData.ArmorSlot.CHEST)
+	_register_procedural_base("base_legs", "Leggings", ItemData.ArmorSlot.LEGS)
+	_register_procedural_base("base_feet", "Boots", ItemData.ArmorSlot.FEET)
+
+func _register_procedural_base(p_id: String, p_name: String, p_slot: ItemData.ArmorSlot) -> void:
+	var item = ItemData.new()
+	item.id = p_id
+	item.name = p_name
+	item.type = ItemData.Type.ARMOR
+	item.armor_slot = p_slot
+	item.item_icon_texture = load("res://icon.svg") # Placeholder
+	item.stackable = false
+	_add_item(item)
 
 func _add_item(item: ItemData) -> void:
 	items[item.id] = item
 
 func get_item(id: String) -> ItemData:
-	return items.get(id)
+	return items.get(id, null)
+
+## Returns a filtered list of all registered item IDs that match a specific type.
+## Useful for category-based random loot generation.
+##
+## @param type: The ItemData.Type enum value to filter by.
+## @return: An Array of String IDs.
+func get_item_ids_by_type(type: ItemData.Type) -> Array[String]:
+	var result: Array[String] = []
+	for id in items:
+		var item = items[id]
+		if item.type == type:
+			result.append(id)
+	return result

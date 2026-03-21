@@ -32,6 +32,12 @@ class_name DungeonGenerator
 @export var corridor_complexity: float = 0.6
 @export var dungeon_seed: int = 0
 
+@export_group("Spawning Settings")
+@export var enemy_spawner_scene: PackedScene
+@export var max_spawners_per_room: int = 3
+@export var spawner_spawn_radius: float = 3.0
+@export var spawner_spawn_height: float = 1.5
+
 @export_group("Editor Tools")
 @export var auto_load_templates: bool = false:
 	set(val):
@@ -315,7 +321,9 @@ func _instantiate_grid() -> void:
 			
 		var data = _select_scene_and_rotation(pos)
 		if data.scene:
-			_place_scene(pos, data.scene, data.rotation)
+			var room_inst = _place_scene(pos, data.scene, data.rotation)
+			if cell.type in ["simple", "special"]:
+				_populate_room_with_spawners(room_inst)
 
 func _select_scene_and_rotation(pos: Vector3i) -> Dictionary:
 	var cell = _logical_grid[pos]
@@ -444,6 +452,29 @@ func _place_scene(pos: Vector3i, scene: PackedScene, rot: int) -> Node3D:
 	else:
 		inst.owner = self
 	return inst
+
+func _populate_room_with_spawners(room_node: Node3D) -> void:
+	if not enemy_spawner_scene:
+		return
+		
+	var num_spawners = randi_range(0, max_spawners_per_room)
+	for i in range(num_spawners):
+		var spawner = enemy_spawner_scene.instantiate()
+		room_node.add_child(spawner)
+		
+		var angle = randf() * TAU
+		var radius = sqrt(randf()) * spawner_spawn_radius
+		
+		var offset_x = cos(angle) * radius
+		var offset_z = sin(angle) * radius
+		
+		spawner.position = Vector3(offset_x, spawner_spawn_height, offset_z)
+		
+		if Engine.is_editor_hint():
+			var root = get_tree().edited_scene_root
+			spawner.owner = root if root else self
+		else:
+			spawner.owner = room_node.owner
 
 func _get_random_empty_pos(y: int) -> Vector3i:
 	for i in range(500):

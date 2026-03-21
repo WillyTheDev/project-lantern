@@ -4,14 +4,18 @@ class_name ItemData
 enum Type { WEAPON, ARMOR, CONSUMABLE, UTILITY, LOOT, RANGED, MAGIC }
 enum ArmorSlot { NONE, HEAD, CHEST, LEGS, FEET, OFFHAND }
 enum HandType { ONE_HANDED, TWO_HANDED }
+enum Rarity { COMMON, RARE, EPIC, UNIQUE }
+
 
 @export var hand_type: HandType = HandType.ONE_HANDED
 @export var id: String = ""
 @export var name: String = ""
 @export_multiline var description: String = ""
 @export var type: Type = Type.LOOT
+@export var rarity: Rarity = Rarity.COMMON
 @export var armor_slot: ArmorSlot = ArmorSlot.NONE
 @export var item_icon_texture: Texture2D
+@export var ability_scene: PackedScene # Extracted active ability logic / spell (For Epics/Uniques)
 @export var item_scene: PackedScene # Scene to spawn when dropped or equipped
 @export var projectile_scene: PackedScene # The visual projectile for ranged/magic attacks
 @export var projectile_speed: float = 25.0
@@ -20,8 +24,16 @@ enum HandType { ONE_HANDED, TWO_HANDED }
 @export var max_stack: int = 99
 @export var use_animation: String = "pickUp" # Default animation for using/consuming
 
-## Stats: agility, strength, intellect, stamina
-@export var stats: Dictionary = {
+## Modifiers applied to the character's stats when equipped
+@export var stat_modifiers: Dictionary = {
+	"agility": 0,
+	"strength": 0,
+	"intellect": 0,
+	"stamina": 0
+}
+
+## Required stats to equip this item
+@export var required_stats: Dictionary = {
 	"agility": 0,
 	"strength": 0,
 	"intellect": 0,

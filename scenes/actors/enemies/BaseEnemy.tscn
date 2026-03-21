@@ -1,7 +1,14 @@
-[gd_scene format=3 uid="uid://cdf1k4bes36rj"]
+[gd_scene format=3 uid="uid://bod1bn28qfvip"]
 
-[ext_resource type="Script" path="res://scenes/actors/enemies/DungeonGuardian.gd" id="1_fuuur"]
-[ext_resource type="Shader" uid="uid://c6krdbbvun156" path="res://scenes/effects/HitFlash.gdshader" id="2_shader"]
+[ext_resource type="Script" path="res://scenes/actors/enemies/BaseEnemy.gd" id="1_fuuur"]
+[ext_resource type="Shader" path="res://scenes/effects/HitFlash.gdshader" id="2_shader"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_flash"]
+render_priority = 0
+shader = ExtResource("2_shader")
+shader_parameter/albedo = Color(0.09131398, 0.09131158, 0.13522676, 1)
+shader_parameter/hit_intensity = 0.0
+shader_parameter/hit_color = Color(1, 1, 1, 1)
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_guardian"]
 radius = 0.4
@@ -11,13 +18,6 @@ height = 1.8
 radius = 0.4
 height = 1.8
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_flash"]
-render_priority = 0
-shader = ExtResource("2_shader")
-shader_parameter/albedo = Color(0.09131398, 0.09131158, 0.13522676, 1)
-shader_parameter/hit_intensity = 0.0
-shader_parameter/hit_color = Color(1, 1, 1, 1)
-
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_guardian"]
 properties/0/path = NodePath(".:sync_position")
 properties/0/spawn = true
@@ -26,7 +26,7 @@ properties/1/path = NodePath(".:sync_rotation")
 properties/1/spawn = true
 properties/1/replication_mode = 1
 
-[node name="DungeonGuardian" type="CharacterBody3D" unique_id=1259664814]
+[node name="BaseEnemy" type="CharacterBody3D" unique_id=1259664814]
 collision_layer = 2
 script = ExtResource("1_fuuur")
 

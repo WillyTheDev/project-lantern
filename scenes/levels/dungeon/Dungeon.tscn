@@ -17,10 +17,11 @@
 [ext_resource type="PackedScene" uid="uid://bfxy87jehavbt" path="res://scenes/dungeon_rooms/PortalRoom/SmallRoomPortal.tscn" id="12_h2a2t"]
 [ext_resource type="PackedScene" uid="uid://ca6ayf6gj3bvx" path="res://scenes/dungeon_rooms/StairsRoomDown/SmallRoomStairsDown.tscn" id="13_e4mhq"]
 [ext_resource type="PackedScene" uid="uid://danllyy42xvjf" path="res://scenes/dungeon_rooms/SpecialRoom/SmallRoomSpecial.tscn" id="13_rtf4p"]
-[ext_resource type="Script" uid="uid://6pfrkefi01s4" path="res://scenes/dungeon_rooms/DungeonRoom.gd" id="16_febvj"]
+[ext_resource type="PackedScene" uid="uid://btj5jldyaj7qc" path="res://scenes/levels/dungeon/enemySpawner.tscn" id="17_l182x"]
+[ext_resource type="Script" uid="uid://6pfrkefi01s4" path="res://scenes/dungeon_rooms/DungeonRoom.gd" id="18_l182x"]
 
 [sub_resource type="Gradient" id="Gradient_1xixt"]
-colors = PackedColorArray(0, 0.13463837, 0.22877827, 1, 0.0034714786, 0, 0.14487231, 1)
+colors = PackedColorArray(0.09359463, 0.21713266, 0.27885345, 1, 0.3624738, 0.45977736, 0.7826519, 1)
 
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_n3u0n"]
 gradient = SubResource("Gradient_1xixt")
@@ -37,6 +38,7 @@ sky_material = SubResource("PanoramaSkyMaterial_aaol2")
 background_mode = 2
 sky = SubResource("Sky_n5qrj")
 ambient_light_source = 3
+ambient_light_color = Color(0.4910105, 0.44386095, 0.27580518, 1)
 
 [node name="Dungeon" type="Node3D" unique_id=14728333]
 script = ExtResource("1_1xixt")
@@ -54,803 +56,806 @@ stairs_down_room = ExtResource("13_e4mhq")
 portal_room = ExtResource("12_h2a2t")
 special_rooms = Array[PackedScene]([ExtResource("13_rtf4p")])
 simple_rooms = Array[PackedScene]([ExtResource("6_spawn")])
-floor_width = 10
-floor_height = 10
-dungeon_seed = 779751957
+floors = 1
+dungeon_seed = 3489501176
+enemy_spawner_scene = ExtResource("17_l182x")
 
-[node name="Room_4_0_5_3" type="Node3D" parent="DungeonGenerator" unique_id=776629996 instance=ExtResource("10_h2a2t")]
-transform = Transform3D(1, 0, -1.7484555e-07, 0, 1, 0, 1.7484555e-07, 0, 1, 32, 0, 40)
-script = ExtResource("16_febvj")
+[node name="Room_10_0_4_2" type="Node3D" parent="DungeonGenerator" unique_id=776629996 instance=ExtResource("10_h2a2t")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 80, 0, 32)
+script = ExtResource("18_l182x")
 has_north = true
 mesh_rotation_offset = 1
 
-[node name="Room_7_0_8_0" type="Node3D" parent="DungeonGenerator" unique_id=282953131 instance=ExtResource("12_febvj")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 56, 0, 64)
-script = ExtResource("16_febvj")
+[node name="Room_3_0_15_0" type="Node3D" parent="DungeonGenerator" unique_id=34356974 instance=ExtResource("12_h2a2t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 0, 120)
+script = ExtResource("18_l182x")
 has_west = true
 
-[node name="Room_7_1_8_0" type="Node3D" parent="DungeonGenerator" unique_id=1528240049 instance=ExtResource("13_e4mhq")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 56, 4, 64)
-script = ExtResource("16_febvj")
-has_north = true
-has_south = true
-mesh_rotation_offset = 1
-
-[node name="Room_4_1_7_0" type="Node3D" parent="DungeonGenerator" unique_id=1321193375 instance=ExtResource("12_febvj")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 4, 56)
-script = ExtResource("16_febvj")
+[node name="Room_5_0_17_2" type="Node3D" parent="DungeonGenerator" unique_id=1912961195 instance=ExtResource("6_spawn")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 40, 0, 136)
+script = ExtResource("18_l182x")
 has_west = true
 
-[node name="Room_4_2_7_0" type="Node3D" parent="DungeonGenerator" unique_id=1654871166 instance=ExtResource("13_e4mhq")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 32, 8, 56)
-script = ExtResource("16_febvj")
-has_north = true
-has_south = true
-mesh_rotation_offset = 1
-
-[node name="Room_8_2_4_3" type="Node3D" parent="DungeonGenerator" unique_id=1441826949 instance=ExtResource("12_h2a2t")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 64, 8, 32)
-script = ExtResource("16_febvj")
+[node name="Room_22_0_16_0" type="Node3D" parent="DungeonGenerator" unique_id=2125360475 instance=ExtResource("13_rtf4p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 176, 0, 128)
+script = ExtResource("18_l182x")
 has_west = true
 
-[node name="Room_2_0_8_1" type="Node3D" parent="DungeonGenerator" unique_id=816238055 instance=ExtResource("13_rtf4p")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 16, 0, 64)
-script = ExtResource("16_febvj")
+[node name="EnemySpawner" type="Node3D" parent="DungeonGenerator/Room_22_0_16_0" unique_id=1410396602 groups=["enemy_spawners"] instance=ExtResource("17_l182x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.4350367, 1.5, 0.5867141)
+
+[node name="@Node3D@27805" type="Node3D" parent="DungeonGenerator/Room_22_0_16_0" unique_id=401975497 groups=["enemy_spawners"] instance=ExtResource("17_l182x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3064276, 1.5, -0.6925717)
+
+[node name="Room_10_0_11_1" type="Node3D" parent="DungeonGenerator" unique_id=1591993520 instance=ExtResource("13_rtf4p")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 80, 0, 88)
+script = ExtResource("18_l182x")
 has_west = true
 
-[node name="Room_4_0_4_0" type="Node3D" parent="DungeonGenerator" unique_id=1882610177 instance=ExtResource("6_spawn")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 0, 32)
-script = ExtResource("16_febvj")
+[node name="Room_0_0_14_3" type="Node3D" parent="DungeonGenerator" unique_id=1401268803 instance=ExtResource("6_spawn")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 0, 0, 112)
+script = ExtResource("18_l182x")
 has_west = true
 
-[node name="Room_2_0_4_1" type="Node3D" parent="DungeonGenerator" unique_id=253344883 instance=ExtResource("6_spawn")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 16, 0, 32)
-script = ExtResource("16_febvj")
+[node name="EnemySpawner" type="Node3D" parent="DungeonGenerator/Room_0_0_14_3" unique_id=2078623985 groups=["enemy_spawners"] instance=ExtResource("17_l182x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.4177123, 1.5, 0.6024652)
+
+[node name="Room_24_0_8_0" type="Node3D" parent="DungeonGenerator" unique_id=851788476 instance=ExtResource("13_rtf4p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 192, 0, 64)
+script = ExtResource("18_l182x")
 has_west = true
 
-[node name="Room_8_0_2_0" type="Node3D" parent="DungeonGenerator" unique_id=955067478 instance=ExtResource("6_spawn")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64, 0, 16)
-script = ExtResource("16_febvj")
+[node name="EnemySpawner" type="Node3D" parent="DungeonGenerator/Room_24_0_8_0" unique_id=1982378832 groups=["enemy_spawners"] instance=ExtResource("17_l182x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.233608, 1.5, -2.351332)
+
+[node name="Room_23_0_8_2" type="Node3D" parent="DungeonGenerator" unique_id=1671147834 instance=ExtResource("13_rtf4p")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 184, 0, 64)
+script = ExtResource("18_l182x")
 has_west = true
 
-[node name="Room_0_0_8_2" type="Node3D" parent="DungeonGenerator" unique_id=1395275258 instance=ExtResource("6_spawn")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 0, 0, 64)
-script = ExtResource("16_febvj")
+[node name="EnemySpawner" type="Node3D" parent="DungeonGenerator/Room_23_0_8_2" unique_id=1441464184 groups=["enemy_spawners"] instance=ExtResource("17_l182x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.96894544, 1.5, -1.9455355)
+
+[node name="Room_3_0_9_2" type="Node3D" parent="DungeonGenerator" unique_id=1636315833 instance=ExtResource("6_spawn")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 24, 0, 72)
+script = ExtResource("18_l182x")
 has_west = true
 
-[node name="Room_2_0_0_2" type="Node3D" parent="DungeonGenerator" unique_id=610072338 instance=ExtResource("6_spawn")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 16, 0, 0)
-script = ExtResource("16_febvj")
+[node name="EnemySpawner" type="Node3D" parent="DungeonGenerator/Room_3_0_9_2" unique_id=320394510 groups=["enemy_spawners"] instance=ExtResource("17_l182x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.9498091, 1.5, 0.5183346)
+
+[node name="@Node3D@27806" type="Node3D" parent="DungeonGenerator/Room_3_0_9_2" unique_id=2010348679 groups=["enemy_spawners"] instance=ExtResource("17_l182x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.9894534, 1.5, 0.90955716)
+
+[node name="Room_12_0_24_1" type="Node3D" parent="DungeonGenerator" unique_id=657595911 instance=ExtResource("6_spawn")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 96, 0, 192)
+script = ExtResource("18_l182x")
 has_west = true
 
-[node name="Room_6_0_6_3" type="Node3D" parent="DungeonGenerator" unique_id=583761323 instance=ExtResource("6_spawn")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 48, 0, 48)
-script = ExtResource("16_febvj")
+[node name="EnemySpawner" type="Node3D" parent="DungeonGenerator/Room_12_0_24_1" unique_id=1531381186 groups=["enemy_spawners"] instance=ExtResource("17_l182x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.549988, 1.5, 0.5115089)
+
+[node name="@Node3D@27807" type="Node3D" parent="DungeonGenerator/Room_12_0_24_1" unique_id=1239514773 groups=["enemy_spawners"] instance=ExtResource("17_l182x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.01086347, 1.5, 1.8994561)
+
+[node name="@Node3D@27808" type="Node3D" parent="DungeonGenerator/Room_12_0_24_1" unique_id=1230994926 groups=["enemy_spawners"] instance=ExtResource("17_l182x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.018255837, 1.5, -1.129125)
+
+[node name="Room_6_0_17_0" type="Node3D" parent="DungeonGenerator" unique_id=131339316 instance=ExtResource("6_spawn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48, 0, 136)
+script = ExtResource("18_l182x")
 has_west = true
 
-[node name="Room_4_0_6_1" type="Node3D" parent="DungeonGenerator" unique_id=610052220 instance=ExtResource("6_spawn")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 32, 0, 48)
-script = ExtResource("16_febvj")
+[node name="EnemySpawner" type="Node3D" parent="DungeonGenerator/Room_6_0_17_0" unique_id=454386136 groups=["enemy_spawners"] instance=ExtResource("17_l182x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.9878513, 1.5, -1.599107)
+
+[node name="@Node3D@27809" type="Node3D" parent="DungeonGenerator/Room_6_0_17_0" unique_id=1416039479 groups=["enemy_spawners"] instance=ExtResource("17_l182x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1402715, 1.5, 1.0766251)
+
+[node name="@Node3D@27810" type="Node3D" parent="DungeonGenerator/Room_6_0_17_0" unique_id=1371233747 groups=["enemy_spawners"] instance=ExtResource("17_l182x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4244968, 1.5, 0.7004267)
+
+[node name="Room_7_0_5_0" type="Node3D" parent="DungeonGenerator" unique_id=1443337517 instance=ExtResource("13_rtf4p")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 56, 0, 40)
+script = ExtResource("18_l182x")
 has_west = true
 
-[node name="Room_3_0_6_2" type="Node3D" parent="DungeonGenerator" unique_id=1208107663 instance=ExtResource("6_spawn")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 24, 0, 48)
-script = ExtResource("16_febvj")
+[node name="EnemySpawner" type="Node3D" parent="DungeonGenerator/Room_7_0_5_0" unique_id=898264761 groups=["enemy_spawners"] instance=ExtResource("17_l182x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.7955415, 1.5, 0.9716208)
+
+[node name="@Node3D@27811" type="Node3D" parent="DungeonGenerator/Room_7_0_5_0" unique_id=965124811 groups=["enemy_spawners"] instance=ExtResource("17_l182x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8648773, 1.5, 1.383443)
+
+[node name="@Node3D@27812" type="Node3D" parent="DungeonGenerator/Room_7_0_5_0" unique_id=1813160866 groups=["enemy_spawners"] instance=ExtResource("17_l182x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2788618, 1.5, -0.88069665)
+
+[node name="Room_19_0_17_3" type="Node3D" parent="DungeonGenerator" unique_id=1603019048 instance=ExtResource("6_spawn")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 152, 0, 136)
+script = ExtResource("18_l182x")
 has_west = true
 
-[node name="Room_7_0_2_0" type="Node3D" parent="DungeonGenerator" unique_id=1683754394 instance=ExtResource("6_spawn")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 56, 0, 16)
-script = ExtResource("16_febvj")
+[node name="Room_1_0_17_1" type="Node3D" parent="DungeonGenerator" unique_id=711034213 instance=ExtResource("6_spawn")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 8, 0, 136)
+script = ExtResource("18_l182x")
 has_west = true
 
-[node name="Room_4_0_7_0" type="Node3D" parent="DungeonGenerator" unique_id=1985848096 instance=ExtResource("6_spawn")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 0, 56)
-script = ExtResource("16_febvj")
-has_west = true
+[node name="EnemySpawner" type="Node3D" parent="DungeonGenerator/Room_1_0_17_1" unique_id=1813603937 groups=["enemy_spawners"] instance=ExtResource("17_l182x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3589797, 1.5, -2.6678374)
 
-[node name="Room_3_0_0_3" type="Node3D" parent="DungeonGenerator" unique_id=1790003690 instance=ExtResource("13_rtf4p")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 24, 0, 0)
-script = ExtResource("16_febvj")
-has_west = true
+[node name="@Node3D@27813" type="Node3D" parent="DungeonGenerator/Room_1_0_17_1" unique_id=1078487163 groups=["enemy_spawners"] instance=ExtResource("17_l182x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.14955771, 1.5, -1.01724)
 
-[node name="Room_1_1_8_2" type="Node3D" parent="DungeonGenerator" unique_id=961986176 instance=ExtResource("6_spawn")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 8, 4, 64)
-script = ExtResource("16_febvj")
-has_west = true
-
-[node name="Room_9_1_7_1" type="Node3D" parent="DungeonGenerator" unique_id=2090481608 instance=ExtResource("6_spawn")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 72, 4, 56)
-script = ExtResource("16_febvj")
-has_west = true
-
-[node name="Room_3_1_7_2" type="Node3D" parent="DungeonGenerator" unique_id=808195548 instance=ExtResource("13_rtf4p")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 24, 4, 56)
-script = ExtResource("16_febvj")
-has_west = true
-
-[node name="Room_0_1_7_3" type="Node3D" parent="DungeonGenerator" unique_id=842803550 instance=ExtResource("6_spawn")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 0, 4, 56)
-script = ExtResource("16_febvj")
-has_west = true
-
-[node name="Room_8_1_0_3" type="Node3D" parent="DungeonGenerator" unique_id=1019041585 instance=ExtResource("6_spawn")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 64, 4, 0)
-script = ExtResource("16_febvj")
-has_west = true
-
-[node name="Room_9_1_0_3" type="Node3D" parent="DungeonGenerator" unique_id=283566201 instance=ExtResource("6_spawn")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 72, 4, 0)
-script = ExtResource("16_febvj")
-has_west = true
-
-[node name="Room_5_1_8_0" type="Node3D" parent="DungeonGenerator" unique_id=1191604502 instance=ExtResource("6_spawn")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 4, 64)
-script = ExtResource("16_febvj")
-has_west = true
-
-[node name="Room_8_1_2_3" type="Node3D" parent="DungeonGenerator" unique_id=753629527 instance=ExtResource("6_spawn")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 64, 4, 16)
-script = ExtResource("16_febvj")
-has_west = true
-
-[node name="Room_8_1_9_1" type="Node3D" parent="DungeonGenerator" unique_id=199381380 instance=ExtResource("6_spawn")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 64, 4, 72)
-script = ExtResource("16_febvj")
-has_west = true
-
-[node name="Room_2_1_8_0" type="Node3D" parent="DungeonGenerator" unique_id=873032723 instance=ExtResource("6_spawn")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 4, 64)
-script = ExtResource("16_febvj")
-has_west = true
-
-[node name="Room_8_1_6_1" type="Node3D" parent="DungeonGenerator" unique_id=1679577718 instance=ExtResource("13_rtf4p")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 64, 4, 48)
-script = ExtResource("16_febvj")
-has_west = true
-
-[node name="Room_7_1_3_1" type="Node3D" parent="DungeonGenerator" unique_id=490510795 instance=ExtResource("6_spawn")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 56, 4, 24)
-script = ExtResource("16_febvj")
-has_west = true
-
-[node name="Room_9_2_8_1" type="Node3D" parent="DungeonGenerator" unique_id=1343084176 instance=ExtResource("6_spawn")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 72, 8, 64)
-script = ExtResource("16_febvj")
-has_west = true
-
-[node name="Room_1_2_9_2" type="Node3D" parent="DungeonGenerator" unique_id=330891514 instance=ExtResource("6_spawn")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 8, 8, 72)
-script = ExtResource("16_febvj")
-has_west = true
-
-[node name="Room_3_2_9_0" type="Node3D" parent="DungeonGenerator" unique_id=1740730917 instance=ExtResource("6_spawn")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 8, 72)
-script = ExtResource("16_febvj")
-has_west = true
-
-[node name="Room_1_2_4_1" type="Node3D" parent="DungeonGenerator" unique_id=920396958 instance=ExtResource("13_rtf4p")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 8, 8, 32)
-script = ExtResource("16_febvj")
-has_west = true
-
-[node name="Room_1_2_1_2" type="Node3D" parent="DungeonGenerator" unique_id=1200279652 instance=ExtResource("6_spawn")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 8, 8, 8)
-script = ExtResource("16_febvj")
-has_west = true
-
-[node name="Room_0_2_2_2" type="Node3D" parent="DungeonGenerator" unique_id=527154196 instance=ExtResource("6_spawn")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 0, 8, 16)
-script = ExtResource("16_febvj")
-has_west = true
-
-[node name="Room_2_2_5_2" type="Node3D" parent="DungeonGenerator" unique_id=1382894631 instance=ExtResource("6_spawn")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 16, 8, 40)
-script = ExtResource("16_febvj")
-has_west = true
-
-[node name="Room_4_2_6_0" type="Node3D" parent="DungeonGenerator" unique_id=1063504518 instance=ExtResource("6_spawn")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 8, 48)
-script = ExtResource("16_febvj")
-has_west = true
-
-[node name="Room_4_2_0_3" type="Node3D" parent="DungeonGenerator" unique_id=470674585 instance=ExtResource("6_spawn")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 32, 8, 0)
-script = ExtResource("16_febvj")
-has_west = true
-
-[node name="Room_9_2_5_0" type="Node3D" parent="DungeonGenerator" unique_id=30354636 instance=ExtResource("6_spawn")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 72, 8, 40)
-script = ExtResource("16_febvj")
-has_west = true
-
-[node name="Room_1_2_2_2" type="Node3D" parent="DungeonGenerator" unique_id=1839956362 instance=ExtResource("13_rtf4p")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 8, 8, 16)
-script = ExtResource("16_febvj")
-has_west = true
-
-[node name="Room_3_2_7_1" type="Node3D" parent="DungeonGenerator" unique_id=883872318 instance=ExtResource("6_spawn")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 24, 8, 56)
-script = ExtResource("16_febvj")
-has_west = true
-
-[node name="Room_3_0_4_3" type="Node3D" parent="DungeonGenerator" unique_id=956242953 instance=ExtResource("6_febvj")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 24, 0, 32)
-script = ExtResource("16_febvj")
-has_north = true
-has_east = true
-has_south = true
-has_west = true
-
-[node name="Room_5_0_6_1" type="Node3D" parent="DungeonGenerator" unique_id=21830607 instance=ExtResource("5_7tmse")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 40, 0, 48)
-script = ExtResource("16_febvj")
+[node name="Room_9_0_4_3" type="Node3D" parent="DungeonGenerator" unique_id=1114582028 instance=ExtResource("5_7tmse")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 72, 0, 32)
+script = ExtResource("18_l182x")
 has_north = true
 has_south = true
 has_west = true
 
-[node name="Room_6_0_7_1" type="Node3D" parent="DungeonGenerator" unique_id=1244576499 instance=ExtResource("5_l182x")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 48, 0, 56)
-script = ExtResource("16_febvj")
+[node name="Room_8_0_4_0" type="Node3D" parent="DungeonGenerator" unique_id=1345359867 instance=ExtResource("4_e4mhq")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64, 0, 32)
+script = ExtResource("18_l182x")
 has_east = true
 has_west = true
 type = "corridor"
 
-[node name="Room_6_0_8_1" type="Node3D" parent="DungeonGenerator" unique_id=2073345147 instance=ExtResource("5_7tmse")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 48, 0, 64)
-script = ExtResource("16_febvj")
-has_north = true
-has_south = true
-has_west = true
-
-[node name="Room_2_0_6_2" type="Node3D" parent="DungeonGenerator" unique_id=823742946 instance=ExtResource("5_7tmse")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 16, 0, 48)
-script = ExtResource("16_febvj")
-has_north = true
-has_south = true
-has_west = true
-
-[node name="Room_2_0_7_2" type="Node3D" parent="DungeonGenerator" unique_id=1206475657 instance=ExtResource("6_febvj")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 16, 0, 56)
-script = ExtResource("16_febvj")
-has_north = true
-has_east = true
-has_south = true
-has_west = true
-
-[node name="Room_1_0_8_1" type="Node3D" parent="DungeonGenerator" unique_id=1751615980 instance=ExtResource("5_7tmse")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 8, 0, 64)
-script = ExtResource("16_febvj")
-has_north = true
-has_south = true
-has_west = true
-
-[node name="Room_4_0_3_3" type="Node3D" parent="DungeonGenerator" unique_id=1155145730 instance=ExtResource("5_7tmse")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 32, 0, 24)
-script = ExtResource("16_febvj")
-has_north = true
-has_south = true
-has_west = true
-
-[node name="Room_5_0_3_2" type="Node3D" parent="DungeonGenerator" unique_id=2092592102 instance=ExtResource("4_e4mhq")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 40, 0, 24)
-script = ExtResource("16_febvj")
-has_east = true
-has_west = true
-type = "corridor"
-
-[node name="Room_6_0_3_3" type="Node3D" parent="DungeonGenerator" unique_id=741888306 instance=ExtResource("6_6t384")]
-transform = Transform3D(1, 0, -1.7484555e-07, 0, 1, 0, 1.7484555e-07, 0, 1, 48, 0, 24)
-script = ExtResource("16_febvj")
+[node name="Room_7_0_4_1" type="Node3D" parent="DungeonGenerator" unique_id=1310178256 instance=ExtResource("6_6t384")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 56, 0, 32)
+script = ExtResource("18_l182x")
 has_north = true
 has_west = true
 mesh_rotation_offset = 1
 
-[node name="Room_6_0_2_1" type="Node3D" parent="DungeonGenerator" unique_id=344845406 instance=ExtResource("6_6t384")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 48, 0, 16)
-script = ExtResource("16_febvj")
+[node name="Room_6_0_5_2" type="Node3D" parent="DungeonGenerator" unique_id=1019128511 instance=ExtResource("7_s75y7")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 48, 0, 40)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_5_0_5_1" type="Node3D" parent="DungeonGenerator" unique_id=444490157 instance=ExtResource("6_6t384")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 40, 0, 40)
+script = ExtResource("18_l182x")
 has_north = true
 has_west = true
 mesh_rotation_offset = 1
 
-[node name="Room_2_0_3_2" type="Node3D" parent="DungeonGenerator" unique_id=573694251 instance=ExtResource("5_7tmse")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 16, 0, 24)
-script = ExtResource("16_febvj")
-has_north = true
-has_south = true
-has_west = true
-
-[node name="Room_2_0_2_3" type="Node3D" parent="DungeonGenerator" unique_id=697971296 instance=ExtResource("6_c3c4p")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 16, 0, 16)
-script = ExtResource("16_febvj")
-has_east = true
-has_west = true
-type = "corridor"
-
-[node name="Room_2_0_1_1" type="Node3D" parent="DungeonGenerator" unique_id=1362498482 instance=ExtResource("5_l182x")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 16, 0, 8)
-script = ExtResource("16_febvj")
-has_east = true
-has_west = true
-type = "corridor"
-
-[node name="Room_3_0_5_1" type="Node3D" parent="DungeonGenerator" unique_id=482469054 instance=ExtResource("5_7tmse")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 24, 0, 40)
-script = ExtResource("16_febvj")
-has_north = true
-has_south = true
-has_west = true
-
-[node name="Room_2_0_5_2" type="Node3D" parent="DungeonGenerator" unique_id=2135624922 instance=ExtResource("5_7tmse")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 16, 0, 40)
-script = ExtResource("16_febvj")
-has_north = true
-has_south = true
-has_west = true
-
-[node name="Room_1_0_7_1" type="Node3D" parent="DungeonGenerator" unique_id=298925929 instance=ExtResource("6_6t384")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 8, 0, 56)
-script = ExtResource("16_febvj")
+[node name="Room_5_0_6_3" type="Node3D" parent="DungeonGenerator" unique_id=750036281 instance=ExtResource("6_6t384")]
+transform = Transform3D(1, 0, -1.7484555e-07, 0, 1, 0, 1.7484555e-07, 0, 1, 40, 0, 48)
+script = ExtResource("18_l182x")
 has_north = true
 has_west = true
 mesh_rotation_offset = 1
 
-[node name="Room_3_0_7_3" type="Node3D" parent="DungeonGenerator" unique_id=982141587 instance=ExtResource("5_7tmse")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 24, 0, 56)
-script = ExtResource("16_febvj")
+[node name="Room_4_0_6_1" type="Node3D" parent="DungeonGenerator" unique_id=1246660829 instance=ExtResource("6_6t384")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 32, 0, 48)
+script = ExtResource("18_l182x")
 has_north = true
-has_south = true
 has_west = true
+mesh_rotation_offset = 1
 
-[node name="Room_3_0_3_1" type="Node3D" parent="DungeonGenerator" unique_id=1760446497 instance=ExtResource("6_febvj")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 24, 0, 24)
-script = ExtResource("16_febvj")
+[node name="Room_4_0_7_3" type="Node3D" parent="DungeonGenerator" unique_id=1637146344 instance=ExtResource("6_6t384")]
+transform = Transform3D(1, 0, -1.7484555e-07, 0, 1, 0, 1.7484555e-07, 0, 1, 32, 0, 56)
+script = ExtResource("18_l182x")
 has_north = true
-has_east = true
-has_south = true
 has_west = true
+mesh_rotation_offset = 1
 
-[node name="Room_3_0_1_1" type="Node3D" parent="DungeonGenerator" unique_id=1130142430 instance=ExtResource("4_e4mhq")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 24, 0, 8)
-script = ExtResource("16_febvj")
-has_east = true
+[node name="Room_3_0_7_1" type="Node3D" parent="DungeonGenerator" unique_id=1450055486 instance=ExtResource("6_6t384")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 24, 0, 56)
+script = ExtResource("18_l182x")
+has_north = true
 has_west = true
-type = "corridor"
+mesh_rotation_offset = 1
 
-[node name="Room_3_0_2_3" type="Node3D" parent="DungeonGenerator" unique_id=118908420 instance=ExtResource("3_e4mhq")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 24, 0, 16)
-script = ExtResource("16_febvj")
-has_east = true
-has_west = true
-type = "corridor"
-
-[node name="Room_3_0_8_0" type="Node3D" parent="DungeonGenerator" unique_id=1585871311 instance=ExtResource("6_6t384")]
+[node name="Room_3_0_8_1" type="Node3D" parent="DungeonGenerator" unique_id=69493931 instance=ExtResource("4_e4mhq")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 24, 0, 64)
-script = ExtResource("16_febvj")
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_3_0_10_3" type="Node3D" parent="DungeonGenerator" unique_id=519721029 instance=ExtResource("6_6t384")]
+transform = Transform3D(1, 0, -1.7484555e-07, 0, 1, 0, 1.7484555e-07, 0, 1, 24, 0, 80)
+script = ExtResource("18_l182x")
 has_north = true
 has_west = true
 mesh_rotation_offset = 1
 
-[node name="Room_4_0_8_1" type="Node3D" parent="DungeonGenerator" unique_id=1938409672 instance=ExtResource("5_7tmse")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 32, 0, 64)
-script = ExtResource("16_febvj")
-has_north = true
-has_south = true
-has_west = true
-
-[node name="Room_5_0_8_0" type="Node3D" parent="DungeonGenerator" unique_id=975508617 instance=ExtResource("4_e4mhq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0, 64)
-script = ExtResource("16_febvj")
+[node name="Room_2_0_10_0" type="Node3D" parent="DungeonGenerator" unique_id=1552678448 instance=ExtResource("5_l182x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 80)
+script = ExtResource("18_l182x")
 has_east = true
 has_west = true
 type = "corridor"
 
-[node name="Room_5_0_4_2" type="Node3D" parent="DungeonGenerator" unique_id=1368708678 instance=ExtResource("6_6t384")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 40, 0, 32)
-script = ExtResource("16_febvj")
+[node name="Room_1_0_10_2" type="Node3D" parent="DungeonGenerator" unique_id=920576276 instance=ExtResource("4_e4mhq")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 8, 0, 80)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_0_0_10_1" type="Node3D" parent="DungeonGenerator" unique_id=413021337 instance=ExtResource("6_6t384")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 0, 0, 80)
+script = ExtResource("18_l182x")
 has_north = true
 has_west = true
 mesh_rotation_offset = 1
 
-[node name="Room_5_0_5_3" type="Node3D" parent="DungeonGenerator" unique_id=314390890 instance=ExtResource("6_c3c4p")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 40, 0, 40)
-script = ExtResource("16_febvj")
+[node name="Room_0_0_11_1" type="Node3D" parent="DungeonGenerator" unique_id=462446441 instance=ExtResource("4_e4mhq")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, 0, 88)
+script = ExtResource("18_l182x")
 has_east = true
 has_west = true
 type = "corridor"
 
-[node name="Room_8_1_8_0" type="Node3D" parent="DungeonGenerator" unique_id=107595717 instance=ExtResource("5_7tmse")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64, 4, 64)
-script = ExtResource("16_febvj")
-has_north = true
-has_south = true
-has_west = true
-
-[node name="Room_6_1_8_1" type="Node3D" parent="DungeonGenerator" unique_id=799773960 instance=ExtResource("6_febvj")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 48, 4, 64)
-script = ExtResource("16_febvj")
-has_north = true
+[node name="Room_0_0_12_1" type="Node3D" parent="DungeonGenerator" unique_id=1537824727 instance=ExtResource("3_e4mhq")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, 0, 96)
+script = ExtResource("18_l182x")
 has_east = true
-has_south = true
 has_west = true
+type = "corridor"
 
-[node name="Room_4_1_8_2" type="Node3D" parent="DungeonGenerator" unique_id=270852681 instance=ExtResource("6_febvj")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 32, 4, 64)
-script = ExtResource("16_febvj")
-has_north = true
+[node name="Room_0_0_13_1" type="Node3D" parent="DungeonGenerator" unique_id=2096601260 instance=ExtResource("5_l182x")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, 0, 104)
+script = ExtResource("18_l182x")
 has_east = true
-has_south = true
 has_west = true
+type = "corridor"
 
-[node name="Room_3_1_8_1" type="Node3D" parent="DungeonGenerator" unique_id=49164638 instance=ExtResource("5_7tmse")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 24, 4, 64)
-script = ExtResource("16_febvj")
-has_north = true
-has_south = true
-has_west = true
-
-[node name="Room_0_1_8_0" type="Node3D" parent="DungeonGenerator" unique_id=546817285 instance=ExtResource("6_6t384")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, 4, 64)
-script = ExtResource("16_febvj")
+[node name="Room_0_0_15_0" type="Node3D" parent="DungeonGenerator" unique_id=288907231 instance=ExtResource("6_6t384")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, 0, 120)
+script = ExtResource("18_l182x")
 has_north = true
 has_west = true
 mesh_rotation_offset = 1
 
-[node name="Room_8_1_7_1" type="Node3D" parent="DungeonGenerator" unique_id=1041892710 instance=ExtResource("6_febvj")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 64, 4, 56)
-script = ExtResource("16_febvj")
-has_north = true
-has_east = true
-has_south = true
-has_west = true
-
-[node name="Room_8_1_5_1" type="Node3D" parent="DungeonGenerator" unique_id=1952251574 instance=ExtResource("5_l182x")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 64, 4, 40)
-script = ExtResource("16_febvj")
-has_east = true
-has_west = true
-type = "corridor"
-
-[node name="Room_8_1_4_0" type="Node3D" parent="DungeonGenerator" unique_id=1739596695 instance=ExtResource("5_7tmse")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64, 4, 32)
-script = ExtResource("16_febvj")
+[node name="Room_1_0_15_3" type="Node3D" parent="DungeonGenerator" unique_id=2004076302 instance=ExtResource("5_7tmse")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 8, 0, 120)
+script = ExtResource("18_l182x")
 has_north = true
 has_south = true
 has_west = true
 
-[node name="Room_7_1_4_1" type="Node3D" parent="DungeonGenerator" unique_id=1653972826 instance=ExtResource("5_7tmse")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 56, 4, 32)
-script = ExtResource("16_febvj")
+[node name="Room_2_0_15_3" type="Node3D" parent="DungeonGenerator" unique_id=146095688 instance=ExtResource("5_7tmse")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 16, 0, 120)
+script = ExtResource("18_l182x")
 has_north = true
 has_south = true
 has_west = true
 
-[node name="Room_8_1_3_1" type="Node3D" parent="DungeonGenerator" unique_id=2048781848 instance=ExtResource("6_febvj")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 64, 4, 24)
-script = ExtResource("16_febvj")
+[node name="Room_4_0_15_0" type="Node3D" parent="DungeonGenerator" unique_id=1850859398 instance=ExtResource("5_7tmse")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 0, 120)
+script = ExtResource("18_l182x")
 has_north = true
-has_east = true
 has_south = true
 has_west = true
 
-[node name="Room_8_1_1_2" type="Node3D" parent="DungeonGenerator" unique_id=94142350 instance=ExtResource("6_febvj")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 64, 4, 8)
-script = ExtResource("16_febvj")
+[node name="Room_4_0_16_1" type="Node3D" parent="DungeonGenerator" unique_id=639308935 instance=ExtResource("5_7tmse")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 32, 0, 128)
+script = ExtResource("18_l182x")
 has_north = true
-has_east = true
 has_south = true
 has_west = true
 
-[node name="Room_7_1_2_1" type="Node3D" parent="DungeonGenerator" unique_id=1027568947 instance=ExtResource("6_c3c4p")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 56, 4, 16)
-script = ExtResource("16_febvj")
+[node name="Room_5_0_16_3" type="Node3D" parent="DungeonGenerator" unique_id=346457519 instance=ExtResource("5_7tmse")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 40, 0, 128)
+script = ExtResource("18_l182x")
+has_north = true
+has_south = true
+has_west = true
+
+[node name="Room_1_0_16_3" type="Node3D" parent="DungeonGenerator" unique_id=1217281666 instance=ExtResource("5_l182x")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 8, 0, 128)
+script = ExtResource("18_l182x")
 has_east = true
 has_west = true
 type = "corridor"
 
-[node name="Room_7_1_1_1" type="Node3D" parent="DungeonGenerator" unique_id=771910463 instance=ExtResource("6_6t384")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 56, 4, 8)
-script = ExtResource("16_febvj")
+[node name="Room_9_0_5_0" type="Node3D" parent="DungeonGenerator" unique_id=711870633 instance=ExtResource("6_6t384")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 72, 0, 40)
+script = ExtResource("18_l182x")
 has_north = true
 has_west = true
 mesh_rotation_offset = 1
 
-[node name="Room_9_1_1_0" type="Node3D" parent="DungeonGenerator" unique_id=85991429 instance=ExtResource("5_7tmse")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 72, 4, 8)
-script = ExtResource("16_febvj")
+[node name="Room_10_0_5_0" type="Node3D" parent="DungeonGenerator" unique_id=297610336 instance=ExtResource("5_7tmse")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80, 0, 40)
+script = ExtResource("18_l182x")
 has_north = true
 has_south = true
 has_west = true
 
-[node name="Room_6_1_7_2" type="Node3D" parent="DungeonGenerator" unique_id=432557874 instance=ExtResource("5_7tmse")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 48, 4, 56)
-script = ExtResource("16_febvj")
-has_north = true
-has_south = true
-has_west = true
-
-[node name="Room_6_1_6_0" type="Node3D" parent="DungeonGenerator" unique_id=2083504401 instance=ExtResource("5_7tmse")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48, 4, 48)
-script = ExtResource("16_febvj")
-has_north = true
-has_south = true
-has_west = true
-
-[node name="Room_6_1_5_1" type="Node3D" parent="DungeonGenerator" unique_id=1052481241 instance=ExtResource("5_l182x")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 48, 4, 40)
-script = ExtResource("16_febvj")
+[node name="Room_10_0_6_1" type="Node3D" parent="DungeonGenerator" unique_id=1694511023 instance=ExtResource("5_l182x")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 80, 0, 48)
+script = ExtResource("18_l182x")
 has_east = true
 has_west = true
 type = "corridor"
 
-[node name="Room_6_1_4_1" type="Node3D" parent="DungeonGenerator" unique_id=322931233 instance=ExtResource("6_6t384")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 48, 4, 32)
-script = ExtResource("16_febvj")
+[node name="Room_10_0_7_1" type="Node3D" parent="DungeonGenerator" unique_id=827205504 instance=ExtResource("3_e4mhq")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 80, 0, 56)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_10_0_8_1" type="Node3D" parent="DungeonGenerator" unique_id=1345725906 instance=ExtResource("7_s75y7")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 80, 0, 64)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_10_0_9_0" type="Node3D" parent="DungeonGenerator" unique_id=457746029 instance=ExtResource("5_7tmse")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80, 0, 72)
+script = ExtResource("18_l182x")
+has_north = true
+has_south = true
+has_west = true
+
+[node name="Room_10_0_10_2" type="Node3D" parent="DungeonGenerator" unique_id=1416146457 instance=ExtResource("5_7tmse")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 80, 0, 80)
+script = ExtResource("18_l182x")
+has_north = true
+has_south = true
+has_west = true
+
+[node name="Room_6_0_18_3" type="Node3D" parent="DungeonGenerator" unique_id=192010176 instance=ExtResource("3_e4mhq")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 48, 0, 144)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_6_0_19_0" type="Node3D" parent="DungeonGenerator" unique_id=395437466 instance=ExtResource("6_6t384")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 48, 0, 152)
+script = ExtResource("18_l182x")
 has_north = true
 has_west = true
 mesh_rotation_offset = 1
 
-[node name="Room_9_1_3_0" type="Node3D" parent="DungeonGenerator" unique_id=1669031476 instance=ExtResource("5_7tmse")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 72, 4, 24)
-script = ExtResource("16_febvj")
-has_north = true
-has_south = true
-has_west = true
-
-[node name="Room_9_1_2_1" type="Node3D" parent="DungeonGenerator" unique_id=1757847662 instance=ExtResource("3_e4mhq")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 72, 4, 16)
-script = ExtResource("16_febvj")
+[node name="Room_7_0_19_0" type="Node3D" parent="DungeonGenerator" unique_id=1950988005 instance=ExtResource("5_l182x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 56, 0, 152)
+script = ExtResource("18_l182x")
 has_east = true
 has_west = true
 type = "corridor"
 
-[node name="Room_7_1_7_0" type="Node3D" parent="DungeonGenerator" unique_id=1112395710 instance=ExtResource("4_e4mhq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 56, 4, 56)
-script = ExtResource("16_febvj")
-has_east = true
-has_west = true
-type = "corridor"
-
-[node name="Room_6_1_9_3" type="Node3D" parent="DungeonGenerator" unique_id=1764940389 instance=ExtResource("6_6t384")]
-transform = Transform3D(1, 0, -1.7484555e-07, 0, 1, 0, 1.7484555e-07, 0, 1, 48, 4, 72)
-script = ExtResource("16_febvj")
+[node name="Room_8_0_19_2" type="Node3D" parent="DungeonGenerator" unique_id=1722326828 instance=ExtResource("6_6t384")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 64, 0, 152)
+script = ExtResource("18_l182x")
 has_north = true
 has_west = true
 mesh_rotation_offset = 1
 
-[node name="Room_5_1_9_0" type="Node3D" parent="DungeonGenerator" unique_id=356243964 instance=ExtResource("6_c3c4p")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 4, 72)
-script = ExtResource("16_febvj")
+[node name="Room_8_0_20_3" type="Node3D" parent="DungeonGenerator" unique_id=485875244 instance=ExtResource("6_c3c4p")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 64, 0, 160)
+script = ExtResource("18_l182x")
 has_east = true
 has_west = true
 type = "corridor"
 
-[node name="Room_4_1_9_0" type="Node3D" parent="DungeonGenerator" unique_id=123017625 instance=ExtResource("6_6t384")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 32, 4, 72)
-script = ExtResource("16_febvj")
+[node name="Room_8_0_21_1" type="Node3D" parent="DungeonGenerator" unique_id=1859526144 instance=ExtResource("3_e4mhq")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 64, 0, 168)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_8_0_22_0" type="Node3D" parent="DungeonGenerator" unique_id=779621042 instance=ExtResource("6_6t384")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 64, 0, 176)
+script = ExtResource("18_l182x")
 has_north = true
 has_west = true
 mesh_rotation_offset = 1
 
-[node name="Room_3_1_6_1" type="Node3D" parent="DungeonGenerator" unique_id=689087632 instance=ExtResource("6_6t384")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 24, 4, 48)
-script = ExtResource("16_febvj")
+[node name="Room_9_0_22_2" type="Node3D" parent="DungeonGenerator" unique_id=361956536 instance=ExtResource("6_6t384")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 72, 0, 176)
+script = ExtResource("18_l182x")
 has_north = true
 has_west = true
 mesh_rotation_offset = 1
 
-[node name="Room_4_1_6_0" type="Node3D" parent="DungeonGenerator" unique_id=101306439 instance=ExtResource("4_e4mhq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 4, 48)
-script = ExtResource("16_febvj")
-has_east = true
-has_west = true
-type = "corridor"
-
-[node name="Room_5_1_6_0" type="Node3D" parent="DungeonGenerator" unique_id=1088504554 instance=ExtResource("7_s75y7")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 4, 48)
-script = ExtResource("16_febvj")
-has_east = true
-has_west = true
-type = "corridor"
-
-[node name="Room_9_1_6_3" type="Node3D" parent="DungeonGenerator" unique_id=63189436 instance=ExtResource("5_l182x")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 72, 4, 48)
-script = ExtResource("16_febvj")
-has_east = true
-has_west = true
-type = "corridor"
-
-[node name="Room_9_1_5_3" type="Node3D" parent="DungeonGenerator" unique_id=100031450 instance=ExtResource("4_e4mhq")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 72, 4, 40)
-script = ExtResource("16_febvj")
-has_east = true
-has_west = true
-type = "corridor"
-
-[node name="Room_9_1_4_3" type="Node3D" parent="DungeonGenerator" unique_id=793989452 instance=ExtResource("5_l182x")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 72, 4, 32)
-script = ExtResource("16_febvj")
-has_east = true
-has_west = true
-type = "corridor"
-
-[node name="Room_3_2_8_3" type="Node3D" parent="DungeonGenerator" unique_id=413487894 instance=ExtResource("7_s75y7")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 24, 8, 64)
-script = ExtResource("16_febvj")
-has_east = true
-has_west = true
-type = "corridor"
-
-[node name="Room_2_2_9_0" type="Node3D" parent="DungeonGenerator" unique_id=1252757594 instance=ExtResource("7_s75y7")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 8, 72)
-script = ExtResource("16_febvj")
-has_east = true
-has_west = true
-type = "corridor"
-
-[node name="Room_3_2_6_2" type="Node3D" parent="DungeonGenerator" unique_id=293074658 instance=ExtResource("5_7tmse")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 24, 8, 48)
-script = ExtResource("16_febvj")
-has_north = true
-has_south = true
-has_west = true
-
-[node name="Room_3_2_5_3" type="Node3D" parent="DungeonGenerator" unique_id=569536761 instance=ExtResource("6_febvj")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 24, 8, 40)
-script = ExtResource("16_febvj")
-has_north = true
-has_east = true
-has_south = true
-has_west = true
-
-[node name="Room_2_2_4_2" type="Node3D" parent="DungeonGenerator" unique_id=1470033532 instance=ExtResource("6_febvj")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 16, 8, 32)
-script = ExtResource("16_febvj")
-has_north = true
-has_east = true
-has_south = true
-has_west = true
-
-[node name="Room_1_2_3_2" type="Node3D" parent="DungeonGenerator" unique_id=333049278 instance=ExtResource("5_7tmse")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 8, 8, 24)
-script = ExtResource("16_febvj")
-has_north = true
-has_south = true
-has_west = true
-
-[node name="Room_2_2_1_3" type="Node3D" parent="DungeonGenerator" unique_id=1787920195 instance=ExtResource("5_7tmse")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 16, 8, 8)
-script = ExtResource("16_febvj")
-has_north = true
-has_south = true
-has_west = true
-
-[node name="Room_3_2_1_2" type="Node3D" parent="DungeonGenerator" unique_id=1441369027 instance=ExtResource("4_e4mhq")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 24, 8, 8)
-script = ExtResource("16_febvj")
-has_east = true
-has_west = true
-type = "corridor"
-
-[node name="Room_4_2_1_0" type="Node3D" parent="DungeonGenerator" unique_id=377137113 instance=ExtResource("5_7tmse")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 8, 8)
-script = ExtResource("16_febvj")
-has_north = true
-has_south = true
-has_west = true
-
-[node name="Room_5_2_6_3" type="Node3D" parent="DungeonGenerator" unique_id=822926878 instance=ExtResource("6_6t384")]
-transform = Transform3D(1, 0, -1.7484555e-07, 0, 1, 0, 1.7484555e-07, 0, 1, 40, 8, 48)
-script = ExtResource("16_febvj")
+[node name="Room_9_0_23_0" type="Node3D" parent="DungeonGenerator" unique_id=1602883914 instance=ExtResource("6_6t384")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 72, 0, 184)
+script = ExtResource("18_l182x")
 has_north = true
 has_west = true
 mesh_rotation_offset = 1
 
-[node name="Room_5_2_5_3" type="Node3D" parent="DungeonGenerator" unique_id=705464692 instance=ExtResource("6_febvj")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 40, 8, 40)
-script = ExtResource("16_febvj")
-has_north = true
-has_east = true
-has_south = true
-has_west = true
-
-[node name="Room_6_2_5_2" type="Node3D" parent="DungeonGenerator" unique_id=573082749 instance=ExtResource("3_e4mhq")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 48, 8, 40)
-script = ExtResource("16_febvj")
+[node name="Room_10_0_23_2" type="Node3D" parent="DungeonGenerator" unique_id=159250282 instance=ExtResource("5_l182x")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 80, 0, 184)
+script = ExtResource("18_l182x")
 has_east = true
 has_west = true
 type = "corridor"
 
-[node name="Room_7_2_5_2" type="Node3D" parent="DungeonGenerator" unique_id=1161930037 instance=ExtResource("7_s75y7")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 56, 8, 40)
-script = ExtResource("16_febvj")
+[node name="Room_11_0_23_2" type="Node3D" parent="DungeonGenerator" unique_id=88981573 instance=ExtResource("7_s75y7")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 88, 0, 184)
+script = ExtResource("18_l182x")
 has_east = true
 has_west = true
 type = "corridor"
 
-[node name="Room_8_2_5_0" type="Node3D" parent="DungeonGenerator" unique_id=1170351363 instance=ExtResource("6_febvj")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64, 8, 40)
-script = ExtResource("16_febvj")
-has_north = true
-has_east = true
-has_south = true
-has_west = true
-
-[node name="Room_9_2_6_0" type="Node3D" parent="DungeonGenerator" unique_id=878898928 instance=ExtResource("5_7tmse")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 72, 8, 48)
-script = ExtResource("16_febvj")
+[node name="Room_12_0_23_3" type="Node3D" parent="DungeonGenerator" unique_id=2097806210 instance=ExtResource("5_7tmse")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 96, 0, 184)
+script = ExtResource("18_l182x")
 has_north = true
 has_south = true
 has_west = true
 
-[node name="Room_9_2_7_3" type="Node3D" parent="DungeonGenerator" unique_id=653619425 instance=ExtResource("5_l182x")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 72, 8, 56)
-script = ExtResource("16_febvj")
+[node name="Room_13_0_23_0" type="Node3D" parent="DungeonGenerator" unique_id=31246759 instance=ExtResource("4_e4mhq")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 104, 0, 184)
+script = ExtResource("18_l182x")
 has_east = true
 has_west = true
 type = "corridor"
 
-[node name="Room_8_2_6_0" type="Node3D" parent="DungeonGenerator" unique_id=334212304 instance=ExtResource("6_6t384")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 64, 8, 48)
-script = ExtResource("16_febvj")
+[node name="Room_14_0_23_0" type="Node3D" parent="DungeonGenerator" unique_id=1570314663 instance=ExtResource("7_s75y7")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 112, 0, 184)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_15_0_23_0" type="Node3D" parent="DungeonGenerator" unique_id=1875601678 instance=ExtResource("4_e4mhq")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 120, 0, 184)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_16_0_23_2" type="Node3D" parent="DungeonGenerator" unique_id=132233785 instance=ExtResource("7_s75y7")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 128, 0, 184)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_17_0_23_0" type="Node3D" parent="DungeonGenerator" unique_id=1930399024 instance=ExtResource("4_e4mhq")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 136, 0, 184)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_18_0_23_2" type="Node3D" parent="DungeonGenerator" unique_id=1958521580 instance=ExtResource("4_e4mhq")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 144, 0, 184)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_19_0_23_3" type="Node3D" parent="DungeonGenerator" unique_id=1193468477 instance=ExtResource("6_6t384")]
+transform = Transform3D(1, 0, -1.7484555e-07, 0, 1, 0, 1.7484555e-07, 0, 1, 152, 0, 184)
+script = ExtResource("18_l182x")
 has_north = true
 has_west = true
 mesh_rotation_offset = 1
 
-[node name="Room_2_2_2_0" type="Node3D" parent="DungeonGenerator" unique_id=1790122851 instance=ExtResource("5_7tmse")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 8, 16)
-script = ExtResource("16_febvj")
-has_north = true
-has_south = true
-has_west = true
-
-[node name="Room_4_2_2_1" type="Node3D" parent="DungeonGenerator" unique_id=364298571 instance=ExtResource("4_e4mhq")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 32, 8, 16)
-script = ExtResource("16_febvj")
+[node name="Room_19_0_22_1" type="Node3D" parent="DungeonGenerator" unique_id=1973749081 instance=ExtResource("7_s75y7")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 152, 0, 176)
+script = ExtResource("18_l182x")
 has_east = true
 has_west = true
 type = "corridor"
 
-[node name="Room_4_2_3_3" type="Node3D" parent="DungeonGenerator" unique_id=929938057 instance=ExtResource("6_c3c4p")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 32, 8, 24)
-script = ExtResource("16_febvj")
+[node name="Room_19_0_21_3" type="Node3D" parent="DungeonGenerator" unique_id=16033728 instance=ExtResource("6_c3c4p")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 152, 0, 168)
+script = ExtResource("18_l182x")
 has_east = true
 has_west = true
 type = "corridor"
 
-[node name="Room_4_2_4_1" type="Node3D" parent="DungeonGenerator" unique_id=476085317 instance=ExtResource("5_7tmse")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 32, 8, 32)
-script = ExtResource("16_febvj")
-has_north = true
-has_south = true
+[node name="Room_19_0_20_3" type="Node3D" parent="DungeonGenerator" unique_id=511735882 instance=ExtResource("4_e4mhq")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 152, 0, 160)
+script = ExtResource("18_l182x")
+has_east = true
 has_west = true
+type = "corridor"
 
-[node name="Room_5_2_4_2" type="Node3D" parent="DungeonGenerator" unique_id=1958446095 instance=ExtResource("6_6t384")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 40, 8, 32)
-script = ExtResource("16_febvj")
+[node name="Room_19_0_19_3" type="Node3D" parent="DungeonGenerator" unique_id=45348874 instance=ExtResource("5_l182x")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 152, 0, 152)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_19_0_18_1" type="Node3D" parent="DungeonGenerator" unique_id=848184397 instance=ExtResource("3_e4mhq")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 152, 0, 144)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_20_0_17_3" type="Node3D" parent="DungeonGenerator" unique_id=1452988676 instance=ExtResource("6_6t384")]
+transform = Transform3D(1, 0, -1.7484555e-07, 0, 1, 0, 1.7484555e-07, 0, 1, 160, 0, 136)
+script = ExtResource("18_l182x")
 has_north = true
 has_west = true
 mesh_rotation_offset = 1
 
-[node name="Room_2_2_3_0" type="Node3D" parent="DungeonGenerator" unique_id=1635271748 instance=ExtResource("5_7tmse")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 8, 24)
-script = ExtResource("16_febvj")
+[node name="Room_20_0_16_2" type="Node3D" parent="DungeonGenerator" unique_id=1887246105 instance=ExtResource("5_7tmse")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 160, 0, 128)
+script = ExtResource("18_l182x")
 has_north = true
 has_south = true
 has_west = true
 
-[node name="Room_3_2_4_3" type="Node3D" parent="DungeonGenerator" unique_id=1831707911 instance=ExtResource("5_7tmse")]
-transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 24, 8, 32)
-script = ExtResource("16_febvj")
-has_north = true
-has_south = true
-has_west = true
-
-[node name="Room_4_2_5_0" type="Node3D" parent="DungeonGenerator" unique_id=1098594970 instance=ExtResource("4_e4mhq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 8, 40)
-script = ExtResource("16_febvj")
+[node name="Room_21_0_16_0" type="Node3D" parent="DungeonGenerator" unique_id=1958801068 instance=ExtResource("5_l182x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 168, 0, 128)
+script = ExtResource("18_l182x")
 has_east = true
 has_west = true
 type = "corridor"
+
+[node name="Room_23_0_16_3" type="Node3D" parent="DungeonGenerator" unique_id=61360948 instance=ExtResource("6_6t384")]
+transform = Transform3D(1, 0, -1.7484555e-07, 0, 1, 0, 1.7484555e-07, 0, 1, 184, 0, 128)
+script = ExtResource("18_l182x")
+has_north = true
+has_west = true
+mesh_rotation_offset = 1
+
+[node name="Room_23_0_15_3" type="Node3D" parent="DungeonGenerator" unique_id=1377176377 instance=ExtResource("4_e4mhq")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 184, 0, 120)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_23_0_14_3" type="Node3D" parent="DungeonGenerator" unique_id=1047761336 instance=ExtResource("7_s75y7")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 184, 0, 112)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_23_0_13_1" type="Node3D" parent="DungeonGenerator" unique_id=1131287758 instance=ExtResource("5_l182x")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 184, 0, 104)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_23_0_12_3" type="Node3D" parent="DungeonGenerator" unique_id=215270781 instance=ExtResource("7_s75y7")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 184, 0, 96)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_23_0_11_3" type="Node3D" parent="DungeonGenerator" unique_id=3457417 instance=ExtResource("7_s75y7")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 184, 0, 88)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_23_0_10_1" type="Node3D" parent="DungeonGenerator" unique_id=1843648509 instance=ExtResource("7_s75y7")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 184, 0, 80)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_23_0_9_2" type="Node3D" parent="DungeonGenerator" unique_id=89454716 instance=ExtResource("5_7tmse")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 184, 0, 72)
+script = ExtResource("18_l182x")
+has_north = true
+has_south = true
+has_west = true
+
+[node name="Room_11_0_10_2" type="Node3D" parent="DungeonGenerator" unique_id=1090318120 instance=ExtResource("7_s75y7")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 88, 0, 80)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_12_0_10_0" type="Node3D" parent="DungeonGenerator" unique_id=1188987118 instance=ExtResource("5_l182x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 96, 0, 80)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_13_0_10_2" type="Node3D" parent="DungeonGenerator" unique_id=1391393215 instance=ExtResource("6_c3c4p")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 104, 0, 80)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_14_0_10_0" type="Node3D" parent="DungeonGenerator" unique_id=274494813 instance=ExtResource("5_l182x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 112, 0, 80)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_15_0_10_0" type="Node3D" parent="DungeonGenerator" unique_id=2118482430 instance=ExtResource("5_l182x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 120, 0, 80)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_16_0_10_0" type="Node3D" parent="DungeonGenerator" unique_id=476209070 instance=ExtResource("5_l182x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 128, 0, 80)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_17_0_10_0" type="Node3D" parent="DungeonGenerator" unique_id=2001190837 instance=ExtResource("7_s75y7")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 136, 0, 80)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_18_0_10_2" type="Node3D" parent="DungeonGenerator" unique_id=858729380 instance=ExtResource("5_l182x")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 144, 0, 80)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_19_0_10_2" type="Node3D" parent="DungeonGenerator" unique_id=955856453 instance=ExtResource("6_6t384")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 152, 0, 80)
+script = ExtResource("18_l182x")
+has_north = true
+has_west = true
+mesh_rotation_offset = 1
+
+[node name="Room_19_0_11_3" type="Node3D" parent="DungeonGenerator" unique_id=12760524 instance=ExtResource("7_s75y7")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 152, 0, 88)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_19_0_12_1" type="Node3D" parent="DungeonGenerator" unique_id=349217556 instance=ExtResource("4_e4mhq")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 152, 0, 96)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_19_0_13_0" type="Node3D" parent="DungeonGenerator" unique_id=536105936 instance=ExtResource("6_6t384")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 152, 0, 104)
+script = ExtResource("18_l182x")
+has_north = true
+has_west = true
+mesh_rotation_offset = 1
+
+[node name="Room_20_0_13_2" type="Node3D" parent="DungeonGenerator" unique_id=1806579319 instance=ExtResource("6_6t384")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 160, 0, 104)
+script = ExtResource("18_l182x")
+has_north = true
+has_west = true
+mesh_rotation_offset = 1
+
+[node name="Room_20_0_14_1" type="Node3D" parent="DungeonGenerator" unique_id=505635746 instance=ExtResource("7_s75y7")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 160, 0, 112)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_20_0_15_1" type="Node3D" parent="DungeonGenerator" unique_id=630673876 instance=ExtResource("6_c3c4p")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 160, 0, 120)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_9_0_9_2" type="Node3D" parent="DungeonGenerator" unique_id=313934825 instance=ExtResource("3_e4mhq")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 72, 0, 72)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_8_0_9_2" type="Node3D" parent="DungeonGenerator" unique_id=2061794770 instance=ExtResource("5_l182x")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 64, 0, 72)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_7_0_9_2" type="Node3D" parent="DungeonGenerator" unique_id=759734223 instance=ExtResource("5_l182x")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 56, 0, 72)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_6_0_9_2" type="Node3D" parent="DungeonGenerator" unique_id=539344218 instance=ExtResource("7_s75y7")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 48, 0, 72)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_5_0_9_2" type="Node3D" parent="DungeonGenerator" unique_id=1948263033 instance=ExtResource("6_c3c4p")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 40, 0, 72)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_4_0_9_3" type="Node3D" parent="DungeonGenerator" unique_id=2079947225 instance=ExtResource("5_7tmse")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 32, 0, 72)
+script = ExtResource("18_l182x")
+has_north = true
+has_south = true
+has_west = true
+
+[node name="Room_4_0_14_3" type="Node3D" parent="DungeonGenerator" unique_id=1454346948 instance=ExtResource("3_e4mhq")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 32, 0, 112)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_4_0_13_1" type="Node3D" parent="DungeonGenerator" unique_id=171512933 instance=ExtResource("4_e4mhq")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 32, 0, 104)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_4_0_12_3" type="Node3D" parent="DungeonGenerator" unique_id=948081502 instance=ExtResource("3_e4mhq")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 32, 0, 96)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_4_0_11_3" type="Node3D" parent="DungeonGenerator" unique_id=1634469573 instance=ExtResource("4_e4mhq")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 32, 0, 88)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_4_0_10_3" type="Node3D" parent="DungeonGenerator" unique_id=603005049 instance=ExtResource("6_c3c4p")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 32, 0, 80)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_2_0_16_0" type="Node3D" parent="DungeonGenerator" unique_id=949497157 instance=ExtResource("6_6t384")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 16, 0, 128)
+script = ExtResource("18_l182x")
+has_north = true
+has_west = true
+mesh_rotation_offset = 1
+
+[node name="Room_3_0_16_2" type="Node3D" parent="DungeonGenerator" unique_id=166548426 instance=ExtResource("3_e4mhq")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 24, 0, 128)
+script = ExtResource("18_l182x")
+has_east = true
+has_west = true
+type = "corridor"
+
+[node name="Room_6_0_16_2" type="Node3D" parent="DungeonGenerator" unique_id=1622607465 instance=ExtResource("6_6t384")]
+transform = Transform3D(1.1924881e-08, 0, 1, 0, 1, 0, -1, 0, 1.1924881e-08, 48, 0, 128)
+script = ExtResource("18_l182x")
+has_north = true
+has_west = true
+mesh_rotation_offset = 1
+
+[node name="Room_24_0_9_3" type="Node3D" parent="DungeonGenerator" unique_id=340958937 instance=ExtResource("6_6t384")]
+transform = Transform3D(1, 0, -1.7484555e-07, 0, 1, 0, 1.7484555e-07, 0, 1, 192, 0, 72)
+script = ExtResource("18_l182x")
+has_north = true
+has_west = true
+mesh_rotation_offset = 1
 
 [node name="RoomSpawner" type="MultiplayerSpawner" parent="." unique_id=1000001]
 unique_name_in_owner = true

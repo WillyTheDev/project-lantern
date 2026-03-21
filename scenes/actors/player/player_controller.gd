@@ -50,6 +50,8 @@ var voip: PlayerVOIP
 			if NetworkService.is_server() and current_health <= 0 and not is_dead:
 				_on_death()
 
+var _current_jumps: int = 0
+
 @export var shared_velocity: Vector3 = Vector3.ZERO
 @export var is_rolling: bool = false
 @export var is_blocking: bool = false
@@ -91,6 +93,9 @@ const RANGED_ATTACK_COOLDOWN: float = 1.0
 
 var _current_held_item_node: Node3D = null
 var _offhand_item_node: Node3D = null
+
+# Tracks instantiated abilities from Epic/Unique items
+var _active_ability_nodes: Dictionary = {}
 
 @rpc("any_peer", "call_remote", "reliable")
 func sync_inventory_to_clients(inventory_data: Dictionary, stash_data: Dictionary) -> void:
@@ -158,6 +163,7 @@ func _ready() -> void:
 	
 	# Initial held item refresh
 	refresh_held_item()
+	_refresh_abilities()
 	
 	_update_nametag()
 	
@@ -180,6 +186,7 @@ func _setup_local_player() -> void:
 		inv_ui.initialize_for_player(self) # Bind UI to THIS player
 	
 	inventory.active_slot_changed.connect(refresh_held_item)
+	inventory.active_slot_changed.connect(_refresh_abilities)
 	inventory.inventory_updated.connect(_on_inventory_updated)
 	stats.stats_changed.connect(_on_stats_updated)
 	
@@ -276,6 +283,7 @@ func _spawn_visual_item(data: ItemData) -> Node3D:
 
 func _on_inventory_updated() -> void:
 	refresh_held_item()
+	_refresh_abilities()
 
 var _equip_sequence: int = 0
 
@@ -325,6 +333,44 @@ func refresh_held_item(_index: int = -1) -> void:
 					if _offhand_item_node and _offhand_item_node.has_method("sync_state"):
 						_offhand_item_node.sync_state(use_item_state)
 
+func _refresh_abilities(_index: int = -1) -> void:
+	if not is_inside_tree() or not inventory: return
+	
+	var equipped_ids = []
+	
+	# Gather all considered equipped items: Armor slots + Active hotbar slot
+	for armor_slot in inventory.armor:
+		if armor_slot:
+			equipped_ids.append(armor_slot.id)
+			
+	var active_item = inventory.get_active_item()
+	if active_item:
+		equipped_ids.append(active_item.id)
+		
+	# Remove abilities that are no longer equipped
+	var keys_to_remove = []
+	for id in _active_ability_nodes.keys():
+		if not equipped_ids.has(id):
+			var node = _active_ability_nodes[id]
+			if is_instance_valid(node):
+				var p = node.get_parent()
+				if p: p.remove_child(node)
+				node.queue_free()
+			keys_to_remove.append(id)
+			
+	for id in keys_to_remove:
+		_active_ability_nodes.erase(id)
+		
+	# Add new abilities
+	for id in equipped_ids:
+		if not _active_ability_nodes.has(id):
+			var item_def = ItemService.get_item(id)
+			if item_def and item_def.get("ability_scene") and item_def.ability_scene != null:
+				var ability_instance = item_def.ability_scene.instantiate()
+				ability_instance.name = "Ability_" + id
+				combat.add_child(ability_instance)
+				_active_ability_nodes[id] = ability_instance
+
 func _input(event: InputEvent) -> void:
 	if not is_multiplayer_authority(): return
 	
@@ -361,8 +407,10 @@ func _input(event: InputEvent) -> void:
 					if data.type == ItemData.Type.RANGED or data.type == ItemData.Type.MAGIC:
 						handled_by_aim = true
 						if is_aiming and attack_cooldown <= 0:
+							var total_stats = InventoryManager.recalculate_stats(self)
+							var cdr = total_stats.get("cdr", 0.0)
 							combat.request_shoot(item.id)
-							attack_cooldown = RANGED_ATTACK_COOLDOWN
+							attack_cooldown = RANGED_ATTACK_COOLDOWN * max(0.1, 1.0 - cdr)
 		
 		# Generic item use (Sword, consumables, lantern, etc.)
 		if not handled_by_aim and is_multiplayer_authority():
@@ -418,10 +466,10 @@ func server_request_use_item_rpc() -> void:
 		var data = ItemService.get_item(item_stack.id)
 		if data and data.type == ItemData.Type.CONSUMABLE:
 			# Healing Potion
-			if data.stats.has("heal_amount"):
-				current_health += data.stats["heal_amount"]
+			if data.stat_modifiers.has("heal_amount"):
+				current_health += data.stat_modifiers["heal_amount"]
 				current_health = min(current_health, max_health)
-				print("[Player] Healed for: ", data.stats["heal_amount"], " New Health: ", current_health)
+				print("[Player] Healed for: ", data.stat_modifiers["heal_amount"], " New Health: ", current_health)
 			
 			# Consume item
 			item_stack.quantity -= 1
@@ -522,6 +570,20 @@ func _physics_process(delta: float) -> void:
 						elif data.type == ItemData.Type.WEAPON:
 							wants_to_block = true
 							
+		# Jump tracking
+		var extra_jumps_allowed = 0
+		if inventory:
+			var total_stats = InventoryManager.recalculate_stats(self)
+			extra_jumps_allowed = total_stats.get("extra_jumps", 0)
+
+		if is_on_floor():
+			_current_jumps = 0
+			
+		var is_jumping_allowed = (is_on_floor() or _current_jumps < extra_jumps_allowed)
+
+		if Input.is_action_just_pressed("jump") and is_jumping_allowed and not (animations.is_attacking() or is_aiming or is_rolling):
+			velocity.y = movement.jump_velocity
+			_current_jumps += 1
 		# Check Offhand for blocking (if not aiming a bow and not hiding offhand)
 		if Input.is_action_pressed("right_click") and not wants_to_aim and not has_two_handed:
 			if inventory and inventory.armor.size() > 4:
@@ -608,20 +670,33 @@ func _update_nametag() -> void:
 
 # --- COMBAT ---
 
-func request_attack(damage: float, range: float) -> void:
-	combat.request_attack(damage, range)
+func request_attack(damage: float, attack_range: float) -> void:
+	combat.request_attack(damage, attack_range)
 
-func take_damage(amount: float) -> void:
+func take_damage(amount: float, source_node: Node = null) -> void:
 	if not NetworkService.is_server(): return
 	if is_rolling: return # Invulnerable during roll
 	
-	if is_blocking:
-		amount *= 0.25 # Built-in 75% damage block mitigation!
+	var total_stats = InventoryManager.recalculate_stats(self)
 	
-	# DIRECT modification on server.
-	current_health -= amount
-	# Trigger visual effects on all clients
-	_play_damage_fx_rpc.rpc(amount)
+	# Handle Evasion
+	var evasion = total_stats.get("evasion", 0.0)
+	if evasion > 0.0 and randf() < evasion:
+		return # Completely avoid damage!
+	
+	var actual_damage = amount - (stats.stamina * 0.5) # Basic armor scaling
+	actual_damage = max(1.0, actual_damage)
+	
+	current_health -= actual_damage
+	_play_damage_fx_rpc.rpc(actual_damage)
+	
+	# Handle Thorns (Reflect Damage)
+	var thorns = total_stats.get("thorns", 0.0)
+	if thorns > 0.0 and source_node != null and is_instance_valid(source_node):
+		if source_node.has_method("take_damage") and source_node != self:
+			var reflect_damage = actual_damage * thorns
+			# Ensure we pass null back to avoid infinite Thorns loops!
+			source_node.take_damage(reflect_damage, null)
 
 func apply_knockback(source_position: Vector3, force: float) -> void:
 	if not NetworkService.is_server(): return
@@ -645,8 +720,8 @@ func _apply_knockback_rpc(source_position: Vector3, force: float) -> void:
 var _damage_fx_cooldown: float = 0.0
 
 @rpc("any_peer", "call_local", "reliable")
-func _play_damage_fx_rpc(amount: float) -> void:
-	# This RPC is now purely visual feedback
+func _play_damage_fx_rpc(_amount: float) -> void:
+	if is_dead: return # This RPC is now purely visual feedback
 	if multiplayer.get_remote_sender_id() != 1 and not NetworkService.is_server(): return
 	
 	var now = Time.get_ticks_msec() / 1000.0
@@ -669,6 +744,11 @@ func _on_stats_updated() -> void:
 	# Server should ensure current_health matches stats on first load
 	if NetworkService.is_server() and current_health != stats.current_health:
 		current_health = stats.current_health
+	
+	var total_stats = InventoryManager.recalculate_stats(self)
+	# Apply dynamic visual scale
+	var sm = total_stats.get("scale_multiplier", 1.0)
+	$Model.scale = Vector3(sm, sm, sm)
 
 func _on_death() -> void:
 	if not NetworkService.is_server(): return

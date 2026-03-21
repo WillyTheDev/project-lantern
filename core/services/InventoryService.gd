@@ -131,8 +131,37 @@ func add_item(player: Node3D, item_id: String, quantity: int = 1) -> bool:
 ## @param amount: The amount of experience to add.
 func add_experience_to_player(player: Node3D, amount: int) -> void:
 	if not player: return
-	player.stats.experience += amount
+	
+	var leveled_up = LevelManager.add_experience(player.stats, amount)
+	if leveled_up:
+		print("[InventoryService] Player ", player.player_name, " leveled up to ", player.stats.level)
+		
 	_sync_and_emit(player)
+
+## Client-side request to spend an available attribute point.
+func request_spend_attribute_point(attribute: String) -> void:
+	if NetworkService.is_server():
+		var p = get_local_player()
+		if p: server_request_spend_attribute_point(attribute, p.player_id)
+	elif multiplayer.has_multiplayer_peer():
+		rpc_id(1, "server_request_spend_attribute_point", attribute)
+
+@rpc("any_peer", "call_remote", "reliable")
+func server_request_spend_attribute_point(attribute: String, force_sender_id: int = -1) -> void:
+	if not NetworkService.is_server(): return
+	var sender_id = force_sender_id if force_sender_id != -1 else multiplayer.get_remote_sender_id()
+	
+	var players = get_tree().get_nodes_in_group("players").filter(func(p): return is_instance_valid(p) and p.player_id == sender_id)
+	if players.size() == 0: return
+	var player = players[0]
+	
+	if LevelManager.spend_attribute_point(player.stats, attribute):
+		print("[InventoryService] Player ", player.player_name, " successfully spent a point on ", attribute)
+		recalculate_stats(player)
+		_sync_and_emit(player)
+	else:
+		print("[InventoryService] Invalid point spend request by ", player.player_name, " for ", attribute)
+
 
 ## Server-Authoritative: Handles the consequences of a player's death,
 ## such as clearing inventory and resetting stats.
@@ -274,6 +303,21 @@ func move_item(player: Node3D, from_type: String, from_idx: int, to_type: String
 	
 	var item_to_move = from_arr[from_idx]
 	if item_to_move:
+		if to_type == "armor":
+			# Validate requirements before equipping
+			var processed_to_move = item_to_move
+			if item_to_move is Dictionary:
+				processed_to_move = ItemStackData.from_dict(item_to_move)
+			
+			var item_def = ItemService.get_item(processed_to_move.id)
+			if item_def and not InventoryManager.can_equip(item_def, player.stats):
+				print("[InventoryService] Player ", player.player_name, " does not meet stat requirements to equip ", processed_to_move.id)
+				if player.is_multiplayer_authority():
+					NotificationService.send_error("You do not meet the stat requirements to equip this item.")
+				elif NetworkService.is_server():
+					PocketBaseRPCManager.notify_client_status.rpc_id(player.player_id, "You do not meet the stat requirements to equip this item.")
+				return
+				
 		print("[InventoryService] Moving item: ", item_to_move.id, " x", item_to_move.quantity)
 	
 	InventoryManager.move_item(from_arr, from_idx, to_arr, to_idx)
@@ -299,12 +343,21 @@ func move_item(player: Node3D, from_type: String, from_idx: int, to_type: String
 
 ## Exposes a remote external container (like a chest or loot drop) to the local UI.
 func open_external_inventory(items: Array, path: NodePath = "", type: String = "external") -> void:
+	print("[InventoryService] Opening external inventory of type: ", type, " from: ", path)
 	external_inventory.clear()
 	for item in items:
 		if item is Dictionary:
-			external_inventory.append(ItemStackData.from_dict(item))
-		else:
+			var stack = ItemStackData.from_dict(item)
+			if stack:
+				print("  - Discovered item (Dict): ", stack.id, " x", stack.quantity)
+				external_inventory.append(stack)
+			else:
+				print("  - ERROR: Failed to convert item dictionary to stack: ", item)
+		elif item is ItemStackData:
+			print("  - Discovered item (Resource): ", item.id, " x", item.quantity)
 			external_inventory.append(item)
+		else:
+			print("  - WARNING: Mystery item format in loot: ", typeof(item))
 	
 	current_external_type = type
 	
